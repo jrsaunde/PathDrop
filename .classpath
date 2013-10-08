@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Jamie/Documents/onePK-sdk-java-rel-1.0.0.84.20130808-all (2)/onePK-sdk-java-rel-1.0.0.84.20130808-all/sdk-java-1.0.0.84/sdk-java-1.0.0.84/java/lib/libonep-core-rel-1.0.0.84.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jamie/Documents/onePK-sdk-java-rel-1.0.0.84.20130808-all (2)/onePK-sdk-java-rel-1.0.0.84.20130808-all/sdk-java-1.0.0.84/sdk-java-1.0.0.84/java/lib/libthrift-0.6.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jamie/Documents/onePK-sdk-java-rel-1.0.0.84.20130808-all (2)/onePK-sdk-java-rel-1.0.0.84.20130808-all/sdk-java-1.0.0.84/sdk-java-1.0.0.84/java/lib/slf4j-api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jamie/Documents/onePK-sdk-java-rel-1.0.0.84.20130808-all (2)/onePK-sdk-java-rel-1.0.0.84.20130808-all/sdk-java-1.0.0.84/sdk-java-1.0.0.84/java/lib/slf4j-simple-1.6.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

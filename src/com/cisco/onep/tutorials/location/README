@@ -1,0 +1,36 @@
+Location Tutorial
+--------------------------
+
+This tutorial will demonstrate the onePK Location Service Set. This tutorial
+is intended to show the very basics of how to change, set, and remove
+locations, filters, and event listeners.
+
+At the beginning, this tutorial will connect to the Network Element. The
+tutorial for connecting to a Network Element can be seen in the Session
+Element tutorial. Next, this tutorial will add Civic Locations, Custom
+Locations, and Geo Locations to both the Network Element and to the Interface
+Ethernet 0/1. Next, this tutorial will add Location Change Event
+Listeners to both the Network Element and to Ethernet 0/1 interface. Finally,
+this tutorial will remove the listener and disconnect from the Network Element.
+
+To build this tutorial:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/location/LocationTutorial.java
+
+To run this tutorial:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.location.LocationTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    Where username and password are configured on the network element
+    you are connecting to.
+
+

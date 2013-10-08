@@ -1,0 +1,31 @@
+Session Tutorial
+----------------
+
+This tutorial is intended for application developers who wish to have more
+fine-grained control over the connections made between onePK applications
+and network elements.
+
+In onePK, a session represents an authenticated channel of communication
+between an application and a network element. This tutorial will demonstrate
+how to configure a session, how to get the properties and statistics of a
+session, and how to reconnect to a disconnected session.
+
+To build this tutorial:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/session/SessionTutorial.java
+
+To run this tutorial:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.session.SessionTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    Where username and password are configured on the network element
+    you are connecting to.

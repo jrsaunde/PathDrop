@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<topology xmlns="http://www.cisco.com/VIRL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="0.3" xsi:schemaLocation="http://www.cisco.com/VIRL http://cide.cisco.com/vmmaestro/schema/virl.xsd">
+    <node name="router1" type="SIMPLE" subtype="vios" location="188,263" vmImage="/usr/share/vmcloud/data/images/vios.ova">
+        <extensions>
+            <entry key="bootstrap configuration" type="String">/home/cisco/vmcloud-example-networks/large/router1.con</entry>
+        </extensions>
+        <interface name="GigabitEthernet0/0"/>
+        <interface name="GigabitEthernet0/1"/>
+        <interface name="GigabitEthernet0/2"/>
+    </node>
+    <node name="router2" type="SIMPLE" subtype="vios" location="188,263" vmImage="/usr/share/vmcloud/data/images/vios.ova">
+        <extensions>
+            <entry key="bootstrap configuration" type="String">/home/cisco/vmcloud-example-networks/large/router2.con</entry>
+        </extensions>
+        <interface name="GigabitEthernet0/0"/>
+        <interface name="GigabitEthernet0/1"/>
+        <interface name="GigabitEthernet0/2"/>
+        <interface name="GigabitEthernet0/3"/>
+    </node>
+    <node name="router3" type="SIMPLE" subtype="vios" location="188,263" vmImage="/usr/share/vmcloud/data/images/vios.ova">
+        <extensions>
+            <entry key="bootstrap configuration" type="String">/home/cisco/vmcloud-example-networks/large/router3.con</entry>
+        </extensions>
+        <interface name="GigabitEthernet0/0"/>
+        <interface name="GigabitEthernet0/1"/>
+        <interface name="GigabitEthernet0/2"/>
+        <interface name="GigabitEthernet0/3"/>
+    </node>
+    <node name="router4" type="SIMPLE" subtype="vios" location="188,263" vmImage="/usr/share/vmcloud/data/images/vios.ova">
+        <extensions>
+            <entry key="bootstrap configuration" type="String">/home/cisco/vmcloud-example-networks/large/router4.con</entry>
+        </extensions>
+        <interface name="GigabitEthernet0/0"/>
+        <interface name="GigabitEthernet0/1"/>
+    </node>
+    <node name="router5" type="SIMPLE" subtype="vios" location="188,263" vmImage="/usr/share/vmcloud/data/images/vios.ova">
+        <extensions>
+            <entry key="bootstrap configuration" type="String">/home/cisco/vmcloud-example-networks/large/router5.con</entry>
+        </extensions>
+        <interface name="GigabitEthernet0/0"/>
+        <interface name="GigabitEthernet0/1"/>
+        <interface name="GigabitEthernet0/2"/>
+        <interface name="GigabitEthernet0/3"/>
+    </node>
+    <node name="router6" type="SIMPLE" subtype="vios" location="188,263" vmImage="/usr/share/vmcloud/data/images/vios.ova">
+        <extensions>
+            <entry key="bootstrap configuration" type="String">/home/cisco/vmcloud-example-networks/large/router6.con</entry>
+        </extensions>
+        <interface name="GigabitEthernet0/0"/>
+        <interface name="GigabitEthernet0/1"/>
+    </node>
+    <node name="vmc_lan_1" type="SEGMENT" location="374,520"/>
+    <connection src="/topology/node[1]/interface[1]" dst="/topology/node[7]"/>
+    <connection src="/topology/node[1]/interface[2]" dst="/topology/node[2]/interface[1]"/>
+    <connection src="/topology/node[1]/interface[3]" dst="/topology/node[3]/interface[1]"/>
+    <connection src="/topology/node[2]/interface[2]" dst="/topology/node[3]/interface[2]"/>
+    <connection src="/topology/node[2]/interface[3]" dst="/topology/node[4]/interface[1]"/>
+    <connection src="/topology/node[2]/interface[4]" dst="/topology/node[5]/interface[1]"/>
+    <connection src="/topology/node[3]/interface[3]" dst="/topology/node[5]/interface[2]"/>
+    <connection src="/topology/node[3]/interface[4]" dst="/topology/node[6]/interface[1]"/>
+    <connection src="/topology/node[4]/interface[2]" dst="/topology/node[5]/interface[3]"/>
+    <connection src="/topology/node[5]/interface[4]" dst="/topology/node[6]/interface[2]"/>
+
+</topology>

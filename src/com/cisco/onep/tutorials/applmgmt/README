@@ -1,0 +1,177 @@
+Application Management/CLI Extension onePK Services Tutorial
+--------------------------
+
+The Application Management tutorial demonstrates the use of the CLI Extension
+APIs. It demonstrates how an application can define data that is managed
+by the network element, and how the managed data can appear
+to be fully integrated
+into the network element's configuration infrastructure.
+It also shows the capability of the onePK application to extend a network element's
+command-line-based management interface (CLI).
+
+These steps need to be followed:
+
+1. An XML properties file, cli_ext_tutorial_app.xml, is defined for this tutorial.
+It is based on an example schema provided by the SDK - onep_cli_ext_schema.xsd.
+
+2. Use the transformation xml2xsd-convertor.xslt (XSLT convertor) provided by the SDK to generate
+an application-specific XSD. This XSD is used to install the new application CLIs in the network element.
+
+3. Copy the application-specific XSD to the network element.  Then, issue an install CLI command so that the XSD
+can be inserted into the network element CLI tree.
+The install Exec command syntax is as follows:
+
+    * onep install <xsd-location> <config-domain>
+
+4. Once you have installed the XSD into the network element CLI tree, you can write your application
+    to retrieve application config data and handle config and exec events. Follow the instructions in the
+    Application Management Tutorial to write your example application.
+
+The cli_ext_tutorial_app.xml, cli_ext_schema.xsd, and xml2xsd-convertor.xslt files can be found here:
+  <SDK Location>/java/tutorials/src/main/resources/applmgmt
+
+
+
+===========================================================
+Sample commands :
+
+config t
+switch(config)# onep applications app_stat
+switch(config-onep-apps)# cli_tutorial_app v0.2 instance1
+switch(config-demo-v0.2)# app-category name routing
+switch(config-demo-v0.2)# app-stats routing-stats
+switch(config-demo-v0.2-stat)# users user-count 20
+switch(config-demo-v0.2-stat)# price amount 1
+
+show command:
+switch# sh onep application cli_tutorial_app v0.2 app_stat instance1 app-category
+
+==============================================================
+
+Here is the properties file for the above and example handlers and the calls to install them.
+
+*****************************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+config
+    app-category name <name>
+
+    app-stats <stat>
+          user user-count <count>
+          price amount <amount>
+
+
+show
+          sh onep application cli_tutorial_app v0.2 <config-domain> [<instance-name>] app-category
+          sh onep application cli_tutorial_app v0.2 <config-domain> [<instance-name>] statistics
+
+-->
+<?xml-stylesheet type="text/xsl" href="xml2xsd-convertor.xslt"?>
+<cli_ext:application app-name="cli_tutorial_app" version="0.2" description="Cli Extension Tutorial Application" app-namespace-prefix="demo" app-mode-prompt-prefix="demo" app-namespace="http://www.cisco.com/demo_app" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cli_ext="http://www.cisco.com/onep/cli_ext:0.1" xsi:schemaLocation="http://www.cisco.com/onep/cli_ext:0.1 cli_ext_schema.xsd">
+  <cli_ext:config-cmds>
+    <cli_ext:scalar-cmd name="app_category_cmd">
+      <cli_ext:keyword>
+        <cli_ext:name>app-category</cli_ext:name>
+        <cli_ext:help>config onep app category name</cli_ext:help>
+      </cli_ext:keyword>
+      <cli_ext:param>
+        <cli_ext:name>name</cli_ext:name>
+        <cli_ext:help>string</cli_ext:help>
+        <cli_ext:type>
+                <cli_ext:string/>
+        </cli_ext:type>
+      </cli_ext:param>
+    </cli_ext:scalar-cmd>
+     <cli_ext:list-cmd name="app_stat_cmd">
+             <cli_ext:param>
+             <cli_ext:name>app-stats</cli_ext:name>
+                <cli_ext:help>add app statistics</cli_ext:help>
+                <cli_ext:type>
+                    <cli_ext:string/>
+                </cli_ext:type>
+                </cli_ext:param>
+        <cli_ext:mode mode-prompt="stat">
+        <cli_ext:scalar-cmd name="users_cmd">
+        <cli_ext:keyword>
+            <cli_ext:name>users</cli_ext:name>
+            <cli_ext:help>Number of users</cli_ext:help>
+        </cli_ext:keyword>
+        <cli_ext:param>
+            <cli_ext:name>count</cli_ext:name>
+            <cli_ext:help>count</cli_ext:help>
+            <cli_ext:type>
+                <cli_ext:integer/>
+            </cli_ext:type>
+        </cli_ext:param>
+        </cli_ext:scalar-cmd>
+        <cli_ext:scalar-cmd name="price_cmd">
+        <cli_ext:keyword>
+            <cli_ext:name>price</cli_ext:name>
+            <cli_ext:help>purchase price</cli_ext:help>
+        </cli_ext:keyword>
+        <cli_ext:param>
+            <cli_ext:name>amount</cli_ext:name>
+            <cli_ext:help>number</cli_ext:help>
+            <cli_ext:type>
+                <cli_ext:integer/>
+            </cli_ext:type>
+        </cli_ext:param>
+        </cli_ext:scalar-cmd>
+        </cli_ext:mode>
+        </cli_ext:list-cmd>
+  </cli_ext:config-cmds>
+  <cli_ext:show-cmds>
+    <cli_ext:exec-cmd name="show_category_cmd">
+            <cli_ext:keyword>
+                <cli_ext:name>app-category</cli_ext:name>
+                <cli_ext:help>show onep app's category name</cli_ext:help>
+            </cli_ext:keyword>
+    </cli_ext:exec-cmd>
+    <cli_ext:exec-cmd name="show_stat_cmd">
+            <cli_ext:keyword>
+                <cli_ext:name>statistics</cli_ext:name>
+                <cli_ext:help>onep app statistics</cli_ext:help>
+            </cli_ext:keyword>
+    </cli_ext:exec-cmd>
+  </cli_ext:show-cmds>
+
+  <cli_ext:exec-cmds>
+        <cli_ext:exec-cmd name="clear_stat_cmd">
+            <cli_ext:keyword>
+                <cli_ext:name>clear</cli_ext:name>
+                <cli_ext:help>clear</cli_ext:help>
+            </cli_ext:keyword>
+            <cli_ext:keyword>
+                <cli_ext:name>statistics</cli_ext:name>
+                <cli_ext:help>statistics</cli_ext:help>
+            </cli_ext:keyword>
+
+        </cli_ext:exec-cmd>
+    </cli_ext:exec-cmds>
+</cli_ext:application>
+
+******************************************************************
+
+To build this tutorial:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/applmgmt/ApplicationManagedDataTutorial.java
+
+To run this tutorial:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.applmgmt.ApplicationManagedDataTutorial \
+         -a <element address> -u <username> -p <password> \
+        -n <application name> -d <app domain> -i <instance> \
+        [-t <0=tls | 1=tcp>]
+
+
+    Where username and password are configured on the network element
+    you are connecting to.
+
+

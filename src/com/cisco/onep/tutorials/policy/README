@@ -1,0 +1,115 @@
+QOS Policy Tutorial
+--------------------------
+
+This tutorial shows how a onePK application creates a QOS Policy. The QOS
+Policy object is a top level object in a hierarchy of objects that define
+class, filter and action objects for applying QOS policy to interface targets.
+
+The Policy object is associated with a target (or interface). A Policy may
+have a child policy.
+
+A QOS policy may have the following Actions:
+
+ - Mark packet
+ - Shape traffic
+ - Police traffic
+ - Priority queue
+ - Class-based queue
+ - Fair queue
+ - Weighted Random Early Discard (WRED)
+
+Class objects are used to classify packet flows through the Network Element.
+Each Class object may contain several Filter objects. When a Class is included
+in a Policy it may be associated with several Actions. When one of the
+Filters in the Class is matched the associated Actions in the Class are
+performed.
+
+Multiple Class objects can be defined within a Policy object. For example,
+several Class objects may be used to define a Policy with a set of different
+queuing Actions. Each Class in a Policy has a sequence number which is used
+to order the evaluation and triggering of filters between the different
+Classes in the same Policy.
+
+A Class may also be added to one or more Policies. A Class must be removed
+from all Policy objects before it can be deleted. In the Java API a Class is
+called a ClassMap.
+
+The Filter object specifies the events to be matched. There may be several
+Filter objects in a Class object. A Filter cannot be added to more than
+one Class. There are different types of Filter objects that specify the
+details of each filter event to be matched. The following filters are
+supported:
+
+- Access Control List (ACL) Filter. ACL filters reference an ACL that has been
+  set up on the same Network Element. See the ACL Tutorial.
+
+- Packet Length Filter. This provides a filter on minimum and maximum IP 
+  packet lengths.
+ 
+- DSCP Filter. This provides a match on the DSCP field in the IP header.
+
+- L2 Class of Service Filter. L2 COS refers to Priority Code Point (PCP) field
+  in 802.1Q tagged Ethernet frames.
+
+- MAC Filter. This provides a match on Ethernet source and destination MAC 
+  addresses.
+
+- QOS Group Filter. A QOS group is an internal tag that can be a attached to a 
+  packet.
+  Up to 8 QOS group values may be added to each filter.
+
+- MPLS Experimental Label Filter. This provides a match on the MPLS 
+  Experimental Label.
+ 
+- Protocol Filter. This provides a match on a wide variety of L3 and L4 
+  protocols.
+  Protocol filters may be loaded onto a Network Element using NBAR Protocol 
+  Packs,
+  Protocol filters may be loaded onto a Network Element using NBAR Protocol 
+  Packs,
+  or created using the CLI. The ONEP Application is able learn about all NBAR 
+  protocols
+  that are currently available on the Network Element.
+ 
+- VLAN Filter. This provides a match on the VLAN field of 802.1Q tagged
+  Ethernet frames. Up to 8 VLANs may be added to a VLAN filter.
+
+Steps to take. There are four steps to set up a QOS Policy:
+
+ - Create the QOS Policy on the Network Element.
+ - Create a Class on the Network Element and add the Class to the Policy.
+ - Create Filters and add them to the Class.
+ - Create Actions and add them to the Class in the Policy.
+ - Apply the Policy to the interface Target. At this point the Policy is
+   active on the Network Element.
+   
+
+To build these tutorials:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/policy/ACLTutorial.java
+    javac com/cisco/onep/tutorials/policy/QOSTutorial.java
+
+To run these tutorials:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.policy.ACLTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.policy.QOSTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    Where username and password are configured on the network element
+    you are connecting to.
+
