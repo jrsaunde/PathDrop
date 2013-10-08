@@ -1,0 +1,70 @@
+ Network Interfaces Tutorial
+--------------------------
+
+This tutorial connects to a network element and retrieves interface information
+about it.  The interface information includes a list of all interfaces plus
+property information about each interface.  Property information includes
+slot, port, speed, etc.  The tutorial also retrieves and displays interface
+configuration and status information.
+
+Additionally this tutorial registers for interface state change and interface
+statistics events.
+When state changes occur or interface statistics thresholds are crossed on an
+interface a callback will be made back to the application.
+
+
+To build this tutorial:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/interface/NetworkInterfaceTutorial.java
+
+To run this tutorial:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.interface.NetworkInterfaceTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+Where username and password are configured on the network element you are connecting to.
+
+Optionally contents of NetworkInterfaceTutorial are separated into following 3 tutorials.
+
+    To build and run them:
+
+    javac com/cisco/onep/tutorials/interface/InterfaceAddressTutorial.java
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.interface.InterfaceAddressTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    javac com/cisco/onep/tutorials/interface/InterfaceStateChangeTutorial.java
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.interface.InterfaceStateChangeTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    javac com/cisco/onep/tutorials/interface/InterfaceStatisticsTutorial.java
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.interface.InterfaceStatisticsTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+Where username and password are configured on the network element you are connecting to.
+

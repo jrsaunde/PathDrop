@@ -1,0 +1,32 @@
+Routing Service Set Tutorial
+--------------------------
+
+This is the onePK Routing Service Set Tutorial in which the C Routing API is
+demonstrated. The following program will first, establish a session with the
+connecting Network Element (see Session Element Tutorial). Next, this program
+will read the routes from the present RIB and display them to the user. Next,
+this program will add and delete custom application routes to the Network
+Element. The program will then add a listener so that it can receive up/down
+route notifications in the RIB. Finally, this program will cleanup and
+disconnect from the Network Element.
+
+To build this tutorial:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/routing/RoutingTutorial.java
+
+To run this tutorial:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.routing.RoutingTutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    Where username and password are configured on the network element
+    you are connecting to.
+

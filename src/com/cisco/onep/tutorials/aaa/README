@@ -1,0 +1,100 @@
+AAA Tutorial
+------------
+
+This tutorial demonstrates the onepPK AAA (Authentication, Authorization, and
+Accounting) Service Set. The AAA Service Set provides AAA client
+functionality to onePK applications.
+
+You will learn how to authenticate a user, how to read the user's
+authorization attributes configured on the AAA server, and how to send
+accounting requests to the AAA server.
+
+To build this tutorial:
+
+    export CLASSPATH='onePK-sdk-<version>/java/lib/*:.'
+    cd onePK-sdk-<version>/java/tutorials/src/main/java
+    javac com/cisco/onep/tutorials/aaa/AAATutorial.java
+
+To run this tutorial:
+
+    java \
+        [-Djavax.net.ssl.keyStore=<path to keyStore>] \
+        [-Djavax.net.ssl.keyStorePassword=<keyStore password>] \
+        [-Djavax.net.ssl.trustStore=<path to trustStore>] \
+        [-Djavax.net.ssl.trustStorePassword=<trustStore password>] \
+        com.cisco.onep.tutorials.aaa.AAATutorial \
+         -a <element address> -u <username> -p <password> \
+        [-t <0=tls | 1=tcp>]
+
+    Where username and password are configured on the network element
+    you are connecting to.
+
++-------------------+       +-----------------+       +------------+
+|                   |       |                 |       |            |
+| onePK Application | <---> | Network Element | <---> | AAA Server |
+|                   |       |                 |       |            |
++-------------------+       +-----------------+       +------------+
+
+The AAA server must first be configured with the necessary users and user
+authorization profiles for the application. The network element which the
+application connect to must also be configured to use the AAA server.
+
+The following example is on IOS and will be using FreeRADIUS as the AAA
+server. Your configuration may vary depending on the platform and AAA server
+you are using.
+
+
+Configuring FreeRADIUS
+
+Create a user in the "users" configuration file. This will be the username and
+password used to connect to the network element. Here we will use user1/pass1.
+
+user1	Cleartext-Password := "pass1"
+	Cisco-AVPair += "priv-lvl=15",
+
+To enable auto-accounting for a user, append the following:
+
+	Cisco-AVPair += "auto-acct=enable",
+
+To authorize a user to use a specific onePK application, add a Cisco-AVPair of
+the type "allowed-app=<app-name>". The app-name is the unique name given to a
+onePK application. For the AAA Tutorial, append the following to user1's
+configuration:
+
+	Cisco-AVPair += "allowed-app=com.cisco.onep.tutorials.aaa.AAATutorial",
+
+In additional to the enumerated AAA attributes, the onePK AAA client recognizes
+app-specific attributes "allowed-action=<app-name>:<action>" and
+"app-attr=<app-attr-name>:<type>:<app-attr-value>". For the AAA Tutorial,
+append the following to user1's configuration:
+
+	Cisco-AVPair += "allowed-action=com.cisco.onep.tutorials.aaa.AAATutorial:walk",
+	Cisco-AVPair += "allowed-action=com.cisco.onep.tutorials.aaa.AAATutorial:run",
+	Cisco-AVPair += "allowed-action=com.cisco.onep.tutorials.aaa.AAATutorial:custom",
+	Cisco-AVPair += "app-attr=aaa-tutorial-custom:string:jump"
+
+The full user configuration for the AAA Tutorial is as follows:
+
+user1	Cleartext-Password := "pass1"
+	Cisco-AVPair += "priv-lvl=15",
+	Cisco-AVPair += "auto-acct=enable",
+	Cisco-AVPair += "allowed-app=com.cisco.onep.tutorials.aaa.AAATutorial",
+	Cisco-AVPair += "allowed-action=com.cisco.onep.tutorials.aaa.AAATutorial:walk",
+	Cisco-AVPair += "allowed-action=com.cisco.onep.tutorials.aaa.AAATutorial:run",
+	Cisco-AVPair += "allowed-action=com.cisco.onep.tutorials.aaa.AAATutorial:custom",
+	Cisco-AVPair += "app-attr=aaa-tutorial-custom:string:jump"
+
+
+Configuring IOS
+
+The IOS device must also be configured to use the AAA server that we have
+configured for the onePK service. Issue the following commands in the CLI:
+
+IOS>enable
+IOS#configure terminal
+IOS(config)#aaa new-model
+IOS(config)#radius-server host <ip-of-radius-server> [auth-port <port-#>] [acct-port <port-#>] [key <pre-shared-key>]
+IOS(config)#aaa authentication onep default group radius
+IOS(config)#aaa authorization onep default group radius
+IOS(config)#aaa accounting onep default group radius
+IOS(config)#end

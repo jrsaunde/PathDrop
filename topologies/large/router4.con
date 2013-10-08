@@ -1,0 +1,139 @@
+version 15.3
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Router4
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!         
+!
+!
+!
+ip cef
+no ipv6 cef
+ipv6 multicast rpf use-bgp
+!
+multilink bundle-name authenticated
+!
+!
+!
+username cisco privilege 15 password 0 cisco
+!
+redundancy
+!
+!
+! 
+!
+!
+!
+!
+!
+!
+!         
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ ip address 10.10.50.140 255.255.255.0
+ duplex auto
+ speed auto
+ no shutdown
+!
+interface GigabitEthernet0/1
+ ip address 10.10.60.140 255.255.255.0
+ no shutdown
+ duplex auto
+ speed auto
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
+!
+control-plane
+!
+banner exec ^C
+**************************************************************************
+* vIOS - Cisco Systems Confidential                                      *
+*                                                                        *
+* This software is provided as is without warranty for internal          *
+* development and testing purposes only under the terms of the Cisco     *
+* onePK Software Development Kit License Agreement. Under no             *
+* circumstances may this software be used for production purposes or     *
+* deployed in a production environment.                                  *
+*                                                                        *
+* By using the software, you agree to abide by the terms and conditions  *
+* of the Cisco onePK Software Development Kit License Agreement as well  *
+* as the terms and conditions of the Cisco End User License Agreement at *
+* http://www.cisco.com/go/eula                                           *
+*                                                                        *
+* Unauthorized use or distribution of this software is expressly         *
+* Prohibited.                                                            *
+**************************************************************************^C
+banner incoming ^C
+**************************************************************************
+* vIOS - Cisco Systems Confidential                                      *
+*                                                                        *
+* This software is provided as is without warranty for internal          *
+* development and testing purposes only under the terms of the Cisco     *
+* onePK Software Development Kit License Agreement. Under no             *
+* circumstances may this software be used for production purposes or     *
+* deployed in a production environment.                                  *
+*                                                                        *
+* By using the software, you agree to abide by the terms and conditions  *
+* of the Cisco onePK Software Development Kit License Agreement as well  *
+* as the terms and conditions of the Cisco End User License Agreement at *
+* http://www.cisco.com/go/eula                                           *
+*                                                                        *
+* Unauthorized use or distribution of this software is expressly         *
+* Prohibited.                                                            *
+**************************************************************************^C
+banner login ^C
+**************************************************************************
+* vIOS - Cisco Systems Confidential                                      *
+*                                                                        *
+* This software is provided as is without warranty for internal          *
+* development and testing purposes only under the terms of the Cisco     *
+* onePK Software Development Kit License Agreement. Under no             *
+* circumstances may this software be used for production purposes or     *
+* deployed in a production environment.                                  *
+*                                                                        *
+* By using the software, you agree to abide by the terms and conditions  *
+* of the Cisco onePK Software Development Kit License Agreement as well  *
+* as the terms and conditions of the Cisco End User License Agreement at *
+* http://www.cisco.com/go/eula                                           *
+*                                                                        *
+* Unauthorized use or distribution of this software is expressly         *
+* Prohibited.                                                            *
+**************************************************************************^C
+!
+line con 0
+line aux 0
+line vty 0 4
+ transport input all
+!
+onep
+ transport type tcp
+ transport type tls disable-remotecert-validation
+ start
+!
+end
+
+
