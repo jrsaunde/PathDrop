@@ -47,12 +47,12 @@ public class NetworkDiscovery {
 			addresses = new ArrayList<InetAddress>();
 			NetworkElement node = networkApplication.getNetworkElement(startAddress);
 			System.out.println("Start Node is " + startAddress);
-			Graph master = getNeighbors(node, username, password);
+			getNeighbors(node, username, password);
 			
 			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			List<Node>  nodes = master.getNodeList();
-			List<Edge> edges = master.getEdgeList(Edge.EdgeType.UNDIRECTED);
+			List<Node>  nodes = graph.getNodeList();
+			List<Edge> edges = graph.getEdgeList(Edge.EdgeType.UNDIRECTED);
 			
 			for(Node device: nodes){
 				System.out.println(device.getName());
@@ -96,7 +96,7 @@ public class NetworkDiscovery {
 		
 		List<Node> daughters = topology.getGraph().getNodeList();
 		if(graph == null){	//This is our first node
-			graph = topology.getGraph();
+			this.graph = topology.getGraph();
 		}
 		List<Edge> edges = topology.getGraph().getEdgeList(Edge.EdgeType.UNDIRECTED);
 		
