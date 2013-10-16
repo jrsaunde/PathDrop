@@ -45,14 +45,8 @@ public class TopologyDiscovery extends BaseTutorial {
             if (!tutorial.connect("TopologyDiscovery")) {
                 System.exit(1);
             }
+            System.out.println("Test");
             Topology topology = tutorial.discoverCDPTopology();
-            //tutorial.addTopologyListener(topology);
-            /* Shut the interfaces down to see TopologyEventType.EDGES_DELETE */
-            //tutorial.simulateShutdown(true);
-            //Thread.sleep(SLEEP);
-            /* And bring them back up again to see TopologyEventType.EDGES_ADD */
-            //tutorial.simulateShutdown(false);
-            //Thread.sleep(SLEEP);
         } catch (Exception e) {
             tutorial.disconnect();
             tutorial.getLogger().error(e.getLocalizedMessage(), e);
@@ -174,7 +168,7 @@ public class TopologyDiscovery extends BaseTutorial {
                 if( ! devices.contains(tailNode.getName())){
                 	devices.add(tailNode.getName());
                 }
-                getLogger().info(headNode.getName() + " " + headNodeConnector.getName() + "  <>  " + tailNodeConnector.getName() + " " + tailNode.getName());
+                getLogger().info(headNode.getName() + " " + headNodeConnector.getName() + "  <>  " + tailNodeConnector.getName() + " " + tailNode.getName() + " hash:" + headNode.hashCode() + " " + tailNode.hashCode());
             }
             getLogger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             getLogger().info("Devices:");
@@ -188,11 +182,15 @@ public class TopologyDiscovery extends BaseTutorial {
     
     public Topology checkDaughter(InetAddress daughterAddress) throws OnepException {
     	
-    	getLogger().info(daughterAddress.toString());
+    	getLogger().info(daughterAddress.toString());			//logging to console for information purposes only
+    	
+    	//Setup a session to the Network Element
     	NetworkApplication networkApplication = NetworkApplication.getInstance();
     	daughter = networkApplication.getNetworkElement(daughterAddress);
     	SessionConfig daughterConfig = new SessionConfig(SessionTransportMode.SOCKET);
         daughterConfig.setPort(OnepConstants.ONEP_PORT);
+        
+        //Connect to the Network Element
     	SessionHandle daughterSession = daughter.connect("CISCO", "cisco", daughterConfig);
     	
     	/* Create a topology object */
