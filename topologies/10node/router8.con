@@ -3,7 +3,7 @@ service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
 !
-hostname Router5
+hostname Router8
 !
 boot-start-marker
 boot-end-marker
@@ -47,34 +47,34 @@ redundancy
 !
 !
 interface GigabitEthernet0/0
- ip address 10.192.50.150 255.255.255.0
+ ip address 10.192.160.180 255.255.255.0
  duplex auto
  speed auto
  no shutdown
 !
 interface GigabitEthernet0/1
- ip address 10.192.60.150 255.255.255.0
+ ip address 10.192.110.180 255.255.255.0
  no shutdown
  duplex auto
  speed auto
 !
 interface GigabitEthernet0/2
- ip address 10.192.80.150 255.255.255.0
+ ip address 10.192.120.180 255.255.255.0
  no shutdown
  duplex auto
  speed auto
 !
 interface GigabitEthernet0/3
- ip address 10.192.90.150 255.255.255.0
+ ip address 10.192.170.180 255.255.255.0
  no shutdown
  duplex auto
  speed auto
 !
 router rip
- network 10.192.50.0
- network 10.192.60.0
- network 10.192.80.0
- network 10.192.90.0
+ network 10.192.160.0
+ network 10.192.110.0
+ network 10.192.120.0
+ network 10.192.170.0
 !
 ip forward-protocol nd
 !

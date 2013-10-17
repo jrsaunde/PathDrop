@@ -70,11 +70,25 @@ interface GigabitEthernet0/3
  duplex auto
  speed auto
 !
+interface GigabitEthernet0/4
+ ip address 10.192.120.150 255.255.255.0
+ no shutdown
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/5
+ ip address 10.192.130.150 255.255.255.0
+ no shutdown
+ duplex auto
+ speed auto
+!
 router rip
  network 10.192.50.0
  network 10.192.60.0
  network 10.192.80.0
  network 10.192.90.0
+ network 10.192.120.0
+ network 10.192.130.0
 !
 ip forward-protocol nd
 !
