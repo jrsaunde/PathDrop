@@ -25,115 +25,107 @@ public class NetworkDiscovery {
 	public Graph graph = null;
 	public List<InetAddress> addresses;
 	public NetworkApplication networkApplication = NetworkApplication.getInstance();
+	public SessionConfig nodeConfig;
 	
 	
 	public static void main(String args[]) {
+		/*Parse input arguments*/
 		String start = args[0];
 		String username = args[1];
 		String password = args[2];
+		
 		try {
 			System.out.println("Start Node is " + start + " with " + username + "/" + password);
+
 			InetAddress startNode = InetAddress.getByName(start);
 			NetworkDiscovery network = new NetworkDiscovery(startNode, username, password);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.exit(0);
 	}
 	
 
 	public NetworkDiscovery(InetAddress startAddress, String username, String password) {
+		
+		long startTime = System.nanoTime();		//TODO: Testing code (keeping track of startTime)
 		try {
-			addresses = new ArrayList<InetAddress>();
-			NetworkElement node = networkApplication.getNetworkElement(startAddress);
-			System.out.println("Start Node is " + startAddress);
+			/*Initialize the global variables*/
+			initalizeGlobals();
+			
+			/*Set up the Start Node*/
+			NetworkElement node = networkApplication.getNetworkElement(startAddress);			
+			
+			/*Run recursive network discovery*/
 			getNeighbors(node, username, password);
 			
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			List<Node>  nodes = graph.getNodeList();
-			List<Edge> edges = graph.getEdgeList(Edge.EdgeType.UNDIRECTED);
+			/*Print out the Global graph*/
+			printNetwork();
 			
-			for(Node device: nodes){
-				System.out.println(device.getName());
-			}
-			for(Edge edge: edges){
-				System.out.println(edge.getHeadNode().getName() 
-								 + "[" + edge.getHeadNodeConnector().getName() + "] <> [" 
-								 + edge.getTailNodeConnector().getName() + "] "
-								 + edge.getTailNode().getName());
-				
-			}
 		} catch (OnepException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.exit(0);
-		//return;
+		
+		/*TODO: Testing code for timing the program execution time*/
+		long endTime = System.nanoTime();
+		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
+		
+		return;
 	}
 	
 	private Graph getNeighbors(NetworkElement node, String username, String password) throws OnepException{
 		
-		//SessionConfig nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
-		//nodeConfig.setPort(OnepConstants.ONEP_PORT);
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println("getNeighbors: " + node.getAddress() + " hash: " + node.hashCode());
-		//Connect to the node
-		//SessionHandle nodeSession = node.connect(username, password, nodeConfig);
-		SessionHandle nodeSession2 = node.connect(username, password);
+		//System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		//System.out.println("getNeighbors: " + node.getAddress() + " hash: " + node.hashCode());
 		
-		//System.out.println("UDI is: " + node.getProperty().getUDI());
+		
+		/*Connect to the node */		
+		SessionHandle nodeSession = node.connect(username, password, this.nodeConfig);
+		
+		/* Add all of the local IP addresses to our master list */
 		List <NetworkInterface> interfaceList = node.getInterfaceList(new InterfaceFilter());
 		
 		for(NetworkInterface inter : interfaceList){
 			if(inter.getAddressList().size() > 0 ){
-				System.out.println(inter.getName() + " " + inter.getAddressList().get(0));
-				addresses.add(inter.getAddressList().get(0));
+				//System.out.println(inter.getName() + " " + inter.getAddressList().get(0));
+				this.addresses.add(inter.getAddressList().get(0));
 			}
 		}
-		//Get Topology object
+		
+		/*Get Topology object */
 		Topology topology = new Topology(node, TopologyType.CDP);
 		
-		List<Node> daughters = topology.getGraph().getNodeList();
-		if(graph == null){	//This is our first node
+		/*If this is the first node, we set out global graph equal to this graph*/
+		if(this.graph == null){
 			this.graph = topology.getGraph();
 		}
+		
+		/* Check all of the neighbors to see if we've been there yet*/
 		List<Edge> edges = topology.getGraph().getEdgeList(Edge.EdgeType.UNDIRECTED);
 		
 		for(Edge edge: edges){
-			System.out.println("Edge node :" + edge.getTailNode().getName() + " Hash: " + edge.getTailNode().hashCode());
-			//System.out.println("TailNode ConnectorHash: " + edge.getTailNodeConnector().hashCode());
+			//System.out.println("Edge node :" + edge.getTailNode().getName() + " Hash: " + edge.getTailNode().hashCode());
+	
+			/* If we haven't seen this IP address before, we haven't been to this device, we need to go to it*/
 			if(!addressInNetwork(edge.getTailNodeConnector().getAddressList().get(0))){
-				System.out.println("Daughter: " + edge.getTailNode().toString());
-				System.out.println("Connecting to Daughter: " + edge.getTailNodeConnector().getAddressList().get(0).toString());
+				//System.out.println("Daughter: " + edge.getTailNode().toString());
+				//System.out.println("Connecting to Daughter: " + edge.getTailNodeConnector().getAddressList().get(0).toString());
+				
+				/*Connect to neighbor and run recursive discovery*/
 				NetworkElement daughterNode = networkApplication.getNetworkElement(edge.getTailNodeConnector().getAddressList().get(0));
 				Graph daughterGraph = getNeighbors(daughterNode, username, password);
+				
+				/*Disconnect from the daughterNode NetworkElement since we are done*/
+				daughterNode.disconnect();
+				
+				/*Add the graph we got from the neighbor to the global graph*/
 				this.graph.concatenate(daughterGraph);
-				System.out.println("Edge List: " + daughterGraph.getEdgeList(Edge.EdgeType.UNDIRECTED).toString());
-
 			}
-//			if(!daughterInNetwork(edge.getTailNode())){	//if new node discovered
-//				System.out.println("Daughter: " + edge.getTailNode().toString());
-//				System.out.println("Connecting to Daughter: " + edge.getTailNodeConnector().getAddressList().get(0).toString());
-//				NetworkElement daughterNode = networkApplication.getNetworkElement(edge.getTailNodeConnector().getAddressList().get(0));
-//				//this.graph.concatenate(topology.getGraph());
-//				Graph daughterGraph = getNeighbors(daughterNode, username, password);
-//				System.out.println("Edge List: " + daughterGraph.getEdgeList(Edge.EdgeType.UNDIRECTED).toString());
-//			}
 		}
-		System.out.println("***WE JUST STEPPED OUT***");
-//		for(Node daughter: daughters){
-//				System.out.println(daughter.toString());
-//			if(!daughterInNetwork(daughter)){	//if new node discovered
-//				System.out.println(daughter.getAddressList().toString());
-//				NetworkElement daughterNode = networkApplication.getNetworkElement(daughter.getAddressList().get(0));
-//				this.graph.concatenate(topology.getGraph());
-//				getNeighbors(daughterNode, username, password);
-//			}
-//		}
-		
+		//System.out.println("***WE JUST STEPPED OUT***");
+		/*Return our graph (not our neighbors)*/
 		return topology.getGraph();
-		
 	}
 
 
@@ -155,14 +147,47 @@ public class NetworkDiscovery {
 	}
 	
 	private boolean addressInNetwork(InetAddress address){
-		System.out.println("checking: IP address: " + address.toString());
-		if(addresses.contains(address)){
-			System.out.println("Found IP address - true");
+		/*Checks to see if the IP address is in our master list of addresses*/
+		
+		//System.out.println("checking: IP address: " + address.toString());
+		
+		if(this.addresses.contains(address)){
+			//System.out.println("Found IP address - true");
 			return true;
 		}
-		System.out.println("New IP address - false");
+		//System.out.println("New IP address - false");
 		return false;
 		
+	}
+	
+	private void printNetwork() throws OnepException{
+		
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println("Network Summary");
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		
+		
+		/*Print out all of the device names*/
+		List<Node>  nodes = this.graph.getNodeList();
+		for(Node device: nodes){
+			System.out.println(device.getName());
+		}
+		
+		/*Print out all of the connections*/
+		List<Edge> edges = this.graph.getEdgeList(Edge.EdgeType.UNDIRECTED);
+		for(Edge edge: edges){
+			System.out.println(edge.getHeadNode().getName() 
+							 + "[" + edge.getHeadNodeConnector().getName() + "] <> [" 
+							 + edge.getTailNodeConnector().getName() + "] "
+							 + edge.getTailNode().getName());
+		}
+	}
+	
+	private void initalizeGlobals(){
+		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
+		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
+		
+		this.addresses = new ArrayList<InetAddress>();
 	}
 }
 
