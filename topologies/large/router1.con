@@ -47,19 +47,19 @@ redundancy
 !
 !
 interface GigabitEthernet0/0
- ip address 10.10.10.110 255.255.255.0
+ ip address 10.192.1.110 255.255.255.0
  duplex auto
  speed auto
  no shutdown
 !
 interface GigabitEthernet0/1
- ip address 10.10.20.110 255.255.255.0
+ ip address 10.192.10.110 255.255.255.0
  no shutdown
  duplex auto
  speed auto
 !
 interface GigabitEthernet0/2
- ip address 10.10.30.110 255.255.255.0
+ ip address 10.192.20.110 255.255.255.0
  no shutdown
  duplex auto
  speed auto

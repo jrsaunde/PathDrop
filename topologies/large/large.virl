@@ -53,12 +53,16 @@
     <connection src="/topology/node[1]/interface[1]" dst="/topology/node[7]"/>
     <connection src="/topology/node[1]/interface[2]" dst="/topology/node[2]/interface[1]"/>
     <connection src="/topology/node[1]/interface[3]" dst="/topology/node[3]/interface[1]"/>
+
     <connection src="/topology/node[2]/interface[2]" dst="/topology/node[3]/interface[2]"/>
     <connection src="/topology/node[2]/interface[3]" dst="/topology/node[4]/interface[1]"/>
     <connection src="/topology/node[2]/interface[4]" dst="/topology/node[5]/interface[1]"/>
+
     <connection src="/topology/node[3]/interface[3]" dst="/topology/node[5]/interface[2]"/>
     <connection src="/topology/node[3]/interface[4]" dst="/topology/node[6]/interface[1]"/>
+
     <connection src="/topology/node[4]/interface[2]" dst="/topology/node[5]/interface[3]"/>
+
     <connection src="/topology/node[5]/interface[4]" dst="/topology/node[6]/interface[2]"/>
 
 </topology>
