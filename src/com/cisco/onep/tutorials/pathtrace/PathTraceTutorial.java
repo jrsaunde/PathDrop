@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import com.cisco.onep.core.exception.OnepException;
 import com.cisco.onep.pathtrace.CPUProfile;
+import com.cisco.onep.pathtrace.EchoProfile;
 import com.cisco.onep.pathtrace.PathSpecifier;
 import com.cisco.onep.pathtrace.PathTrace;
 import com.cisco.onep.pathtrace.PathTrace.ProtocolType;
@@ -180,18 +181,27 @@ public class PathTraceTutorial extends BaseTutorial {
             getLogger().info("Node hostname: " + node.getName());
             ProfileType profileType = node.getProfileType();
             getLogger().info("  Type: " + profileType);
-            if (profileType == ProfileType.CPU) {
+            if (profileType == ProfileType.ECHO) {
                 CPUProfile cpuProfile = (CPUProfile) node.getProfile();
                 getLogger().info("  One minute CPU utlization: " +
                                  cpuProfile.getOneMinuteCPUUtilization());
                 getLogger().info("  Collection time stamp: " +
                                  cpuProfile.getCollectionTimeStamp());
+            }else if(profileType == ProfileType.ECHO){
+            	EchoProfile echo = (EchoProfile) node.getProfile();
+            	System.out.println("IP address: " +
+						echo.getReachabilityAddress().toString());
+            	System.out.println("Input Int: " + 
+						echo.getIngressInterfaceName());
+            	System.out.println("Output Int: " +
+						echo.getEgressInterfaceName().toString());
+
             }
         }
         // END SNIPPET: displayAttributes
     }
 
-    /**
+    /**	
      * @see com.cisco.onep.tutorials.BaseTutorial#parseOptions()
      */
     @Override

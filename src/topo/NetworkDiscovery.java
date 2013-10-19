@@ -24,7 +24,7 @@ public class NetworkDiscovery {
 
 	public Graph graph = null;
 	public List<InetAddress> addresses;
-	public NetworkApplication networkApplication = NetworkApplication.getInstance();
+	public NetworkApplication discoveryApplication = NetworkApplication.getInstance();
 	public SessionConfig nodeConfig;
 	
 	
@@ -55,7 +55,7 @@ public class NetworkDiscovery {
 			initalizeGlobals();
 			
 			/*Set up the Start Node*/
-			NetworkElement node = networkApplication.getNetworkElement(startAddress);			
+			NetworkElement node = discoveryApplication.getNetworkElement(startAddress);			
 			
 			/*Run recursive network discovery*/
 			getNeighbors(node, username, password);
@@ -106,14 +106,15 @@ public class NetworkDiscovery {
 		
 		for(Edge edge: edges){
 			//System.out.println("Edge node :" + edge.getTailNode().getName() + " Hash: " + edge.getTailNode().hashCode());
-	
+			
+			InetAddress neighborIP = edge.getTailNodeConnector().getAddressList().get(0);
 			/* If we haven't seen this IP address before, we haven't been to this device, we need to go to it*/
-			if(!addressInNetwork(edge.getTailNodeConnector().getAddressList().get(0))){
+			if(!addressInNetwork(neighborIP)){
 				//System.out.println("Daughter: " + edge.getTailNode().toString());
 				//System.out.println("Connecting to Daughter: " + edge.getTailNodeConnector().getAddressList().get(0).toString());
 				
 				/*Connect to neighbor and run recursive discovery*/
-				NetworkElement daughterNode = networkApplication.getNetworkElement(edge.getTailNodeConnector().getAddressList().get(0));
+				NetworkElement daughterNode = discoveryApplication.getNetworkElement(neighborIP);
 				Graph daughterGraph = getNeighbors(daughterNode, username, password);
 				
 				/*Disconnect from the daughterNode NetworkElement since we are done*/
