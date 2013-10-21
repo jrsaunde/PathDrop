@@ -3,8 +3,13 @@ package topo;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
+import com.cisco.onep.cfgmgr.common.ArrayListMultimap;
 import com.cisco.onep.core.exception.OnepException;
 import com.cisco.onep.core.util.OnepConstants;
 import com.cisco.onep.element.NetworkApplication;
@@ -182,12 +187,50 @@ public class NetworkDiscovery {
 							 + edge.getTailNodeConnector().getName() + "] "
 							 + edge.getTailNode().getName());
 		}
+		
+		
+		
+		//Print all possible routes
+		System.out.println("Routes from " + nodes.get(0).getName() + " to " + nodes.get(nodes.size()-1).getName());
+		enumerate(nodes.get(0), nodes.get(nodes.size()-1));
 	}
+	
+	private ArrayList<Node> getConnected(List<Edge> connectedEdges){
+		ArrayList<Node> connectedNodes = new ArrayList<Node>();
+		for(int x=0; x <connectedEdges.size(); x++){
+			connectedNodes.add(connectedEdges.get(x).getTailNode());
+		}
+		return connectedNodes;
+	}
+	
+	private Stack<String> path = new Stack<String>();
+	private ArrayList<Node> onPath = new ArrayList<Node>();
+	
+	/* modified version of enumerate method by Robert Sedgewick and Kevin Wayne in AllPaths.java */
+	private void enumerate(Node v, Node t) {
+	        // add node v to current path from s
+	        path.push(v.getName());
+	        onPath.add(v);
+
+	        // found path from s to t - currently prints in reverse order because of stack
+	        if (v.equals(t)) System.out.println(path);
+	        // consider all neighbors that would continue path with repeating a node
+	        else {
+	        	ArrayList<Node> connected = getConnected(graph.getEdgeListByNode(Edge.EdgeType.DIRECTED, v));
+	            for (Node w : connected) {
+	                if (!onPath.contains(w)) enumerate(w, t);
+	            }
+	        }
+	        
+	        // done exploring from v, so remove from path
+	        path.pop();
+	        onPath.remove(v);
+	}
+	
 	
 	private void initalizeGlobals(){
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
 		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
-		
 		this.addresses = new ArrayList<InetAddress>();
 	}
 }
