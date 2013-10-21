@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+
+import org.json.JSONObject;
+
 import com.cisco.onep.cfgmgr.common.ArrayListMultimap;
 import com.cisco.onep.core.exception.OnepException;
 import com.cisco.onep.core.util.OnepConstants;
@@ -22,6 +25,7 @@ import com.cisco.onep.interfaces.NetworkInterface;
 import com.cisco.onep.topology.Edge;
 import com.cisco.onep.topology.Graph;
 import com.cisco.onep.topology.Node;
+import com.cisco.onep.topology.NodeConnector;
 import com.cisco.onep.topology.Topology;
 import com.cisco.onep.topology.Topology.TopologyType;
 
@@ -68,7 +72,7 @@ public class NetworkDiscovery {
 			/*Print out the Global graph*/
 			printNetwork();
 			
-		} catch (OnepException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -166,7 +170,7 @@ public class NetworkDiscovery {
 		
 	}
 	
-	private void printNetwork() throws OnepException{
+	private void printNetwork() throws Exception{
 		
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		System.out.println("Network Summary");
@@ -193,6 +197,9 @@ public class NetworkDiscovery {
 		//Print all possible routes
 		System.out.println("Routes from " + nodes.get(0).getName() + " to " + nodes.get(nodes.size()-1).getName());
 		enumerate(nodes.get(0), nodes.get(nodes.size()-1));
+		
+		//Generate JSON for GUI
+ 		//generateJson();
 	}
 	
 	private ArrayList<Node> getConnected(List<Edge> connectedEdges){
@@ -227,6 +234,37 @@ public class NetworkDiscovery {
 	        onPath.remove(v);
 	}
 	
+	private void generateJson() throws Exception{
+		List<Node> nodes = this.graph.getNodeList();
+		JSONObject json = new JSONObject();
+		
+		for (Node node: nodes){
+			JSONObject router = new JSONObject();
+			router.put("name", node.getName());
+			List<Edge>edges = (this.graph.getEdgeListByNode(Edge.EdgeType.DIRECTED, node));
+			for(Edge edge: edges){
+				JSONObject connection = new JSONObject();
+				JSONObject connection2 = new JSONObject();
+				
+				Node head = edge.getHeadNode();
+				Node tail = edge.getTailNode();
+				NodeConnector tailConnector = edge.getTailNodeConnector();
+				NodeConnector headConnector = edge.getHeadNodeConnector();
+				
+				if( (head.equals(node))  && (headConnector.getAddressList().size() > 0)){
+					connection.put(headConnector.getName(), headConnector.getAddressList().get(0));
+					router.accumulate("interface", connection);
+				}
+				if( !(headConnector.getAddressList().isEmpty()) && !(tailConnector.getAddressList().isEmpty()) ){
+					connection2.put(headConnector.getAddressList().get(0).toString(), tailConnector.getAddressList().get(0).toString());
+					json.accumulate("connection", connection2);
+				}
+			}
+			json.accumulate("device", router);
+		}
+		
+		System.out.println("JSON: " + json.toString(2));
+	}
 	
 	private void initalizeGlobals(){
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
