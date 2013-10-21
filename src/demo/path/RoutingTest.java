@@ -2,7 +2,9 @@ package demo.path;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.cisco.onep.core.exception.OnepConnectionException;
 import com.cisco.onep.core.exception.OnepDuplicateElementException;
@@ -12,8 +14,13 @@ import com.cisco.onep.core.exception.OnepRemoteProcedureException;
 import com.cisco.onep.element.NetworkApplication;
 import com.cisco.onep.element.NetworkElement;
 import com.cisco.onep.element.SessionHandle;
+import com.cisco.onep.interfaces.InterfaceFilter;
+import com.cisco.onep.interfaces.InterfaceStatus;
+import com.cisco.onep.interfaces.InterfaceStatus.InterfaceState;
+import com.cisco.onep.interfaces.NetworkInterface;
 import com.cisco.onep.interfaces.NetworkPrefix;
 import com.cisco.onep.routing.AppRouteTable;
+import com.cisco.onep.routing.L3UnicastNextHop;
 import com.cisco.onep.routing.L3UnicastRIBFilter;
 import com.cisco.onep.routing.L3UnicastRoute;
 import com.cisco.onep.routing.L3UnicastRouteRange;
@@ -28,6 +35,8 @@ import com.cisco.onep.routing.Routing;
 public class RoutingTest {
 
 	public NetworkApplication routingApplication = NetworkApplication.getInstance();
+	public L3UnicastScope scope = new L3UnicastScope("", AFIType.IPV4, SAFIType.UNICAST, "base");
+	public L3UnicastRIBFilter filter = new L3UnicastRIBFilter();
 
 	
 	public static void main(String[] args){
@@ -71,9 +80,9 @@ public class RoutingTest {
 			NetworkElement startNode = routingApplication.getNetworkElement(startAddress);
 			SessionHandle nodeSession = startNode.connect(username, password);
 			
-			getRouteTable(startNode);
+			getPaths(startNode, destAddress);
 			
-		} catch (OnepConnectionException | OnepRemoteProcedureException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -95,8 +104,75 @@ public class RoutingTest {
 		List <Route> routes = rib.getRouteList(aL3UnicastScope,filter, range);
 		
 		for(Route route: routes){
-			System.out.println("Route: " + route );
+			System.out.println("Route: " + route);
 		}
 		return;
 	}
+	
+	public void getPaths(NetworkElement node, InetAddress destAddress) throws Exception{
+		
+		//Print out all interfaces that are UP
+		List<NetworkInterface> interfaces = getInterfaces(node);
+
+		
+		//Look at routing table for destination node
+		Routing routing = Routing.getInstance(node);
+		
+		//Setup range for RIB table
+		NetworkPrefix prefix = new NetworkPrefix(node.getAddress(), 16);
+		L3UnicastRouteRange range = new L3UnicastRouteRange(prefix, RangeType.EQUAL_OR_LARGER, 20);
+		
+		
+		//Get Routing table
+		List <Route> routes = routing.getRib().getRouteList(this.scope, this.filter, range);
+		
+		//Print out the Routing table and next hops
+		printRouteTable(routes);
+	}
+	
+	public List <NetworkInterface> getInterfaces(NetworkElement node) throws Exception{
+		InterfaceFilter ifFilter = new InterfaceFilter();		//TODO:Find a way to filter based on up interfaces
+		
+		List<NetworkInterface> allInterfaceList = node.getInterfaceList(ifFilter);
+		List<NetworkInterface> interfaceList = new ArrayList<NetworkInterface>();
+		for (NetworkInterface netInterface: allInterfaceList){
+			InterfaceStatus status = netInterface.getStatus();
+			if(status.getLineProtoState() == InterfaceState.ONEP_IF_STATE_OPER_UP){
+				interfaceList.add(netInterface);
+			}
+		}
+		return interfaceList;
+		
+	}
+	
+	public void printRouteTable(List<Route> routes) throws Exception{
+		for(Route route: routes){
+			//Cast the route to be L3UnicastRoute so we don't have to parse it and we can use it
+			L3UnicastRoute route2 = (L3UnicastRoute) route;
+			
+			//Get NextHopList from Route
+			Set<L3UnicastNextHop> nextHopList = route2.getNextHopList();
+			
+			//Print out Route information
+			System.out.println("Network: " + route2.getPrefix().getAddress() +
+					   		   " AD: " + route2.getAdminDistance() +
+							   " Metric: " + route2.getMetric() +
+							   " Type: " + route2.getOwnerType().toString() +
+							   " NextHop: ");
+			//Print out Next Hop information
+			for(L3UnicastNextHop hop: nextHopList){
+				List<InetAddress>address = hop.getNetworkInterface().getAddressList();
+				List<NetworkPrefix> prefix = hop.getNetworkInterface().getPrefixList();
+				checkIP(address.get(0), prefix.get(0));
+				System.out.println(hop.getNetworkInterface().getName() + " IP: " + address.get(0) + " Mask: "  + prefix.get(0).getPrefixLength());
+			}
+		}
+	}
+	
+	public boolean checkIP(InetAddress nodeAddress, NetworkPrefix network){
+		
+		System.out.println("Network Address is " + network.getAddress() + " and mask is " + Integer.toString(network.getPrefixLength()));
+		return false;
+	}
+	
 }
