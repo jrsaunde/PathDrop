@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="lib/slf4j-simple-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/jfxrt.jar"/>
 	<classpathentry kind="lib" path="lib/java-json.jar"/>
+	<classpathentry kind="lib" path="lib/jgraphx.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

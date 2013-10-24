@@ -2,13 +2,20 @@ package topo;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+
+
+import java.util.TreeSet;
+
+import javax.swing.JFrame;
 
 import org.json.JSONObject;
 
@@ -34,7 +41,9 @@ public class NetworkDiscovery {
 	public Graph graph = null;
 	public List<InetAddress> addresses;
 	public NetworkApplication discoveryApplication = NetworkApplication.getInstance();
-	public SessionConfig nodeConfig;
+	public SessionConfig nodeConfig;		
+	public Collection<String> nodeNames = new TreeSet<String>(Collator.getInstance());
+	public ArrayList<String> connectionStrings = new ArrayList();
 	
 	
 	public static void main(String args[]) {
@@ -71,6 +80,8 @@ public class NetworkDiscovery {
 			
 			/*Print out the Global graph*/
 			printNetwork();
+			
+			//Thread.sleep(60000);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -179,19 +190,28 @@ public class NetworkDiscovery {
 		
 		/*Print out all of the device names*/
 		List<Node>  nodes = this.graph.getNodeList();
+		//ArrayList<String> nodeNames = new ArrayList();
+
 		for(Node device: nodes){
 			System.out.println(device.getName());
+			this.nodeNames.add(device.getName());
 		}
 		
 		/*Print out all of the connections*/
 		List<Edge> edges = this.graph.getEdgeList(Edge.EdgeType.UNDIRECTED);
-		for(Edge edge: edges){
-			System.out.println(edge.getHeadNode().getName() 
-							 + "[" + edge.getHeadNodeConnector().getName() + "] <> [" 
-							 + edge.getTailNodeConnector().getName() + "] "
-							 + edge.getTailNode().getName());
-		}
 		
+		for(Edge edge: edges){
+//			System.out.println(edge.getHeadNode().getName() 
+//							 + "[" + edge.getHeadNodeConnector().getName() + "] <> [" 
+//							 + edge.getTailNodeConnector().getName() + "] "
+//							 + edge.getTailNode().getName());
+			System.out.println(edge.getHeadNode().getName() + "<>" + edge.getTailNode().getName());
+			this.connectionStrings.add(edge.getHeadNode().getName() + "<>" + edge.getTailNode().getName());
+		}
+//		JGui frame = new JGui(nodeNames, connectionStrings);
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		frame.setSize(600, 400);
+//		frame.setVisible(true);
 		
 		
 		//Print all possible routes
