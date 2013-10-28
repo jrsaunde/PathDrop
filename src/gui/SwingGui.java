@@ -29,11 +29,14 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
+import javax.swing.text.DefaultCaret;
 
 import testFlow.TrafficTest;
 import topo.JGui;
@@ -62,14 +65,16 @@ public class SwingGui implements ActionListener{
 	private JFrame frame;
 	private InputField sourceIPInput = new InputField();
 	private InputField usernameInput = new InputField();
-	private InputField passwordInput = new InputField();
+	private JPasswordField passwordInput = new JPasswordField();
 	private JTextField consoleInput = new JTextField();
 	private InputField vtyInput = new InputField();
-	private JTextArea console = new JTextArea();
+	private JTextArea console = new JTextArea(20,100);
+	private JScrollPane consoleScroll = new JScrollPane();
 	private DefaultListModel<String> routerList = new DefaultListModel<String>();
 	private String newLine       = System.getProperty("line.separator");
-	private JPanel consolePanel;
-	private JPanel listPanel;
+	private InputPanel consolePanel;
+	private InputPanel listPanel;
+	private JGui	topoPanel;
 	
 	private JToggleButton startButton;
 	private JToggleButton startVTY; 
@@ -116,15 +121,27 @@ public class SwingGui implements ActionListener{
 		frame.getContentPane().add(inputPanel, BorderLayout.NORTH);
 		
 		
-		consolePanel = new JPanel();
-		consolePanel.add(this.console);
-		consolePanel.setPreferredSize(new Dimension(800, 200));
+		this.consolePanel = new InputPanel();
+		this.consoleScroll = new JScrollPane(this.console, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		this.consolePanel.add(this.consoleScroll);
+		this.consolePanel.setPreferredSize(new Dimension(800, 200));
 		this.console.setEditable(false);
-		this.console.setAutoscrolls(true);
+		//this.console.setAutoscrolls(true);
+		this.console.setRows(9);
 		this.console.setPreferredSize(new Dimension(800, 200));
-		frame.getContentPane().add(consolePanel, BorderLayout.SOUTH);
 		
-
+		DefaultCaret caret = (DefaultCaret)this.console.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		this.consoleScroll.setViewportView(this.console);
+		this.frame.getContentPane().add(this.consolePanel, BorderLayout.SOUTH);
+		
+		//Add List Panel
+		this.listPanel = new InputPanel();
+		this.listPanel.setLayout(new BorderLayout(0, 0));
+		InputLabel deviceListLabel = new InputLabel("Device List");
+		this.listPanel.add(deviceListLabel, BorderLayout.NORTH);
+		frame.getContentPane().add(this.listPanel, BorderLayout.WEST);
+		
 		try{
 			
 			/* Set up the layout of buttons and Labels in inputPanel */
@@ -266,7 +283,7 @@ public class SwingGui implements ActionListener{
 	 */
 	public void consolePrint(String message){
 		this.console.append(newLine + message);
-		this.console.setVisible(true);
+		//this.console.setVisible(true);
 	}
 	/**
 	 * Listen for start button pushes
@@ -277,7 +294,7 @@ public class SwingGui implements ActionListener{
 			if(ae.getSource() == startButton){
 				this.start = this.sourceIPInput.getText();
 				this.username = this.usernameInput.getText();
-				this.password = this.passwordInput.getText();	
+				this.password = new String(this.passwordInput.getPassword());	
 				
 				/*Parse input arguments*/
 				this.consolePrint("Start Node is " + this.start + " with " + this.username + "/" + this.password);
@@ -289,13 +306,13 @@ public class SwingGui implements ActionListener{
 				network = new NetworkDiscovery(startNode, this.username, this.password);
 				
 				/*Add the topology panel with graph drawn from discovered topology */
-				JGui topoPanel = new JGui(network.nodeNames,network.connectionStrings);
+				this.topoPanel = new JGui(network.nodeNames,network.connectionStrings);
 				
-				topoPanel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
-				topoPanel.setMinimumSize(new Dimension(800,800));
+				this.topoPanel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
+				this.topoPanel.setMinimumSize(new Dimension(800,800));
 				
 				/* Add this panel to the window and refresh to display it */
-				this.frame.getContentPane().add(topoPanel, BorderLayout.CENTER);
+				this.frame.getContentPane().add(this.topoPanel, BorderLayout.CENTER);
 				this.frame.setVisible(true);
 				
 				/* Add List of routers to RouterList */
@@ -303,11 +320,11 @@ public class SwingGui implements ActionListener{
 					this.routerList.addElement(router);
 				}
 				//Add DeviceList Panel
-				listPanel = new JPanel();
 				JList<String> list = new JList<String>(this.routerList);
-				listPanel.add(list);
-				listPanel.setMaximumSize(new Dimension(200, 200));
-				frame.getContentPane().add(listPanel, BorderLayout.WEST);
+				list.setMaximumSize(new Dimension( 200, (routerList.size()*20)));
+				this.listPanel.add(list, BorderLayout.CENTER);
+				//this.listPanel.setMaximumSize(new Dimension(200, 200));
+				//frame.getContentPane().add(listPanel, BorderLayout.WEST);
 				
 				String 	host = "10.192.40.140";
 				int 	port = 80;
@@ -320,6 +337,7 @@ public class SwingGui implements ActionListener{
 				if(network == null){
 					this.consolePrint("Must connect to a network before establishing a VTY session");
 				}else{
+					
 					String networkElementName = this.vtyInput.getText();
 					InetAddress vtyNodeAddress = InetAddress.getByName(networkElementName);
 			        NetworkApplication networkApplication = NetworkApplication.getInstance();
@@ -330,10 +348,15 @@ public class SwingGui implements ActionListener{
 		            
 		            int timeOut = vtyService.getTimeout();
 		            String showOnepStatusCmd = "show onep status";
-		            String cliResult = vtyService.write(showOnepStatusCmd);
+		            String command = this.consoleInput.getText();
+		            //String cliResult = vtyService.write(showOnepStatusCmd);
+		            String cliResult = vtyService.write(command);
 		            System.out.println(cliResult);
 		            System.out.println("VTY successful?");
 		            this.consolePrint(cliResult);
+		            
+		            vtyService.close();
+		            vtyService.destroy();
 				}
 			}
 			if(ae.getSource() == consoleInput){
