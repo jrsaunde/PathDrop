@@ -35,8 +35,10 @@ import topo.JGui;
 import topo.NetworkDiscovery;
 
 import com.cisco.onep.element.NetworkApplication;
+import com.cisco.onep.element.NetworkElement;
 import com.cisco.onep.element.SessionConfig;
 import com.cisco.onep.topology.Graph;
+import com.cisco.onep.vty.VtyService;
 
 public class SwingGui implements ActionListener{
 
@@ -46,7 +48,7 @@ public class SwingGui implements ActionListener{
 	public NetworkApplication discoveryApplication = NetworkApplication.getInstance();
 	public SessionConfig nodeConfig;
 	public Collection<String> nodeNames = new TreeSet<String>(Collator.getInstance());
-	public ArrayList<String> connectionStrings = new ArrayList();
+	public ArrayList<String> connectionStrings = new ArrayList<String>();
 	public NetworkDiscovery network;
 	public String start;
 	public String username;
@@ -56,7 +58,13 @@ public class SwingGui implements ActionListener{
 	private InputField sourceIPInput = new InputField();
 	private InputField usernameInput = new InputField();
 	private InputField passwordInput = new InputField();
+	private JTextField consoleInput = new JTextField();
+	private InputField vtyInput = new InputField();
 	private JTextField console = new JTextField();
+	private JPanel consolePanel; 
+	
+	private JToggleButton startButton;
+	private JToggleButton startVTY; 
 	
 	/**
 	 * Launch the application.
@@ -98,7 +106,8 @@ public class SwingGui implements ActionListener{
 		InputPanel inputPanel = new InputPanel();
 		frame.getContentPane().add(inputPanel, BorderLayout.NORTH);
 		
-		JPanel consolePanel = new JPanel();
+		
+		consolePanel = new JPanel();
 		consolePanel.add(this.console);
 		consolePanel.setPreferredSize(new Dimension(800, 200));
 		this.console.setEditable(false);
@@ -116,6 +125,14 @@ public class SwingGui implements ActionListener{
 			inputPanelLayout.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 			inputPanel.setLayout(inputPanelLayout);
 			
+			/*Panel and layout for VTY session*/
+			/*GridBagLayout inputVTYPanelLayout = new GridBagLayout();
+			inputVTYPanelLayout.columnWidths = new int[] {80, 80, 100, 55, 116, 78, 116, 67, 116, 90, 116, 0, 61, 0};
+			inputVTYPanelLayout.rowHeights = new int[]{67, 0, 0};
+			inputVTYPanelLayout.columnWeights = new double[]{1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+			inputVTYPanelLayout.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+			inputVTYPanel.setLayout(inputPanelLayout);
+			*/
 			/* Add Cisco Logo to top left corner of inputPanel */
 			BufferedImage image = ImageIO.read(SwingGui.class.getResource("/img/cisco_small.png"));
 			JLabel logo = new JLabel(new ImageIcon(image));
@@ -159,7 +176,7 @@ public class SwingGui implements ActionListener{
 			inputPanel.add(this.usernameInput, usernameInputConstraints);
 			
 			/* Add password label */
-			InputLabel passwordLabel = new InputLabel("Destination IP");
+			InputLabel passwordLabel = new InputLabel("Password");
 			
 			GridBagConstraints passwordLabelConstraints = createConstraints(7,0);
 			inputPanel.add(passwordLabel, passwordLabelConstraints);
@@ -182,12 +199,31 @@ public class SwingGui implements ActionListener{
 			inputPanel.add(protocolInput, protocolInputConstraints);
 			
 			/* Add Start button */
-			JToggleButton startButton = new JToggleButton("Start");
+			startButton = new JToggleButton("Start");
 			GridBagConstraints startButtonConstraints = createConstraints(11, 0);
 			inputPanel.add(startButton, startButtonConstraints);
 			startButton.addActionListener(this);
 			
+			/*Add VTY session button*/
+			startVTY = new JToggleButton("StartVTY");
+			GridBagConstraints startVTYButtonConstraints = createConstraints(11, -1);
+			inputPanel.add(startVTY, startVTYButtonConstraints);
+			startVTY.addActionListener(this);
 			
+			/*Add VTY Target IP Input Field*/
+			GridBagConstraints vtyInputConstraints = createConstraints(10, -1);
+			inputPanel.add(this.vtyInput, vtyInputConstraints);
+			
+			/* Add VTY label */
+			InputLabel vtyInput = new InputLabel("VTY commands");
+			
+			GridBagConstraints consoleLabelConstraints = createConstraints(8, -1);
+			inputPanel.add(vtyInput, consoleLabelConstraints);
+			
+			/*Add VTY input field*/
+			GridBagConstraints consoleInputConstraints = createConstraints(9, -1);
+			inputPanel.add(this.consoleInput, consoleInputConstraints);
+			consoleInput.addActionListener(this);
 		}catch (IOException e){
 			e.printStackTrace();
 		}
@@ -225,28 +261,59 @@ public class SwingGui implements ActionListener{
 	 * Listen for start button pushes
 	 */
 	public void actionPerformed(ActionEvent ae){
-		this.start = this.sourceIPInput.getText();
-		this.username = this.usernameInput.getText();
-		this.password = this.passwordInput.getText();
+		
 		try{
-			/*Parse input arguments*/
-			this.consolePrint("Start Node is " + this.start + " with " + this.username + "/" + this.password);
+			if(ae.getSource() == startButton){
+				this.start = this.sourceIPInput.getText();
+				this.username = this.usernameInput.getText();
+				this.password = this.passwordInput.getText();	
+				
+				/*Parse input arguments*/
+				this.consolePrint("Start Node is " + this.start + " with " + this.username + "/" + this.password);
+				
+				/* Convert startNodeIP to InetAddress */
+				InetAddress startNode = InetAddress.getByName(this.start);
+				
+				/* Run Network Discovery with input parameters */
+				network = new NetworkDiscovery(startNode, this.username, this.password);
+				
+				/*Add the topology panel with graph drawn from discovered topology */
+				JGui topoPanel = new JGui(network.nodeNames,network.connectionStrings);
+				
+				topoPanel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
+				topoPanel.setPreferredSize(new Dimension(800,800));
+				
+				/* Add this panel to the window and refresh to display it */
+				this.frame.getContentPane().add(topoPanel, BorderLayout.CENTER);
+				this.frame.setVisible(true);
+			}
+			if(ae.getSource() == startVTY){
+				System.out.println("VTY Pressed");
+				if(network == null){
+					this.consolePrint("Must connect to a network before establishing a VTY session");
+				}else{
+					String networkElementName = this.vtyInput.getText();
+					InetAddress vtyNodeAddress = InetAddress.getByName(networkElementName);
+			        NetworkApplication networkApplication = NetworkApplication.getInstance();
+					NetworkElement networkElement =	networkApplication.getNetworkElement(vtyNodeAddress);
+					
+					VtyService vtyService = new VtyService(networkElement);
+		            vtyService.open();
+		            
+		            int timeOut = vtyService.getTimeout();
+		            String showOnepStatusCmd = "show onep status";
+		            String cliResult = vtyService.write(showOnepStatusCmd);
+		            System.out.println(cliResult);
+		            System.out.println("VTY successful?");
+		            this.consolePrint(cliResult);
+				}
+			}
+			if(ae.getSource() == consoleInput){
+				String input = this.consoleInput.getText();
+	            System.out.println(input);
+	            this.consolePrint(input);
+			}
 			
-			/* Convert startNodeIP to InetAddress */
-			InetAddress startNode = InetAddress.getByName(this.start);
-			
-			/* Run Network Discovery with input parameters */
-			NetworkDiscovery network = new NetworkDiscovery(startNode, this.username, this.password);
-			
-			/*Add the topology panel with graph drawn from discovered topology */
-			JGui topoPanel = new JGui(network.nodeNames,network.connectionStrings);
-			
-			topoPanel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
-			topoPanel.setPreferredSize(new Dimension(800,800));
-			
-			/* Add this panel to the window and refresh to display it */
-			this.frame.getContentPane().add(topoPanel, BorderLayout.CENTER);
-			this.frame.setVisible(true);
 			
 		}catch (Exception e){
 			e.printStackTrace();
