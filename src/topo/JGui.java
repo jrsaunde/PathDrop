@@ -1,5 +1,6 @@
 package topo;
 
+import java.awt.Dimension;
 import java.awt.List;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,6 +11,7 @@ import javax.swing.JPanel;
 
 import com.mxgraph.canvas.mxGraphics2DCanvas;
 import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxRectangle;
 import com.mxgraph.view.mxEdgeStyle;
 import com.mxgraph.view.mxGraph;
 
@@ -27,6 +29,7 @@ public class JGui extends JPanel
 	{
 
 		mxGraph graph = new mxGraph();
+		graph.setMinimumGraphSize(new mxRectangle(0,0, 800,600));
 		mxGraphics2DCanvas.putShape("routerShape", new RouterShape() );
 		Object parent = graph.getDefaultParent();
 
@@ -39,7 +42,7 @@ public class JGui extends JPanel
 			int[] yVal = {20,120,120,220,220,220};
 			int i =0;
 			for(String node: nodes){
-				Object router = graph.insertVertex(parent,node.toString(),node.toString(), xVal[i], yVal[i], 80, 30, "shape=routerShape");
+				Object router = graph.insertVertex(parent,node.toString(),node.toString(), xVal[i], yVal[i], 160, 60, "shape=routerShape");
 				routers.put(node.toString(), router);
 				i++;
 			}
@@ -56,7 +59,9 @@ public class JGui extends JPanel
 		}
 
 		mxGraphComponent graphComponent = new mxGraphComponent(graph);
+		graphComponent.setSize(new Dimension(800, 800));
 		this.add(graphComponent);
+		this.setMinimumSize(new Dimension(800, 800));
 	}
 
 
@@ -65,7 +70,7 @@ public class JGui extends JPanel
 
 		JGui frame = new JGui(null, null);
 		//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(600, 400);
+		frame.setSize(800, 800);
 		frame.setVisible(true);
 	}
 

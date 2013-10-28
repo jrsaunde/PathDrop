@@ -11,5 +11,7 @@
 	<classpathentry kind="lib" path="lib/jfxrt.jar"/>
 	<classpathentry kind="lib" path="lib/java-json.jar"/>
 	<classpathentry kind="lib" path="lib/jgraphx.jar"/>
+	<classpathentry kind="lib" path="lib/seaglasslookandfeel-0.2-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/seaglasslookandfeel-0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

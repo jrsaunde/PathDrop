@@ -22,15 +22,20 @@ import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
+import testFlow.TrafficTest;
 import topo.JGui;
 import topo.NetworkDiscovery;
 
@@ -60,8 +65,11 @@ public class SwingGui implements ActionListener{
 	private InputField passwordInput = new InputField();
 	private JTextField consoleInput = new JTextField();
 	private InputField vtyInput = new InputField();
-	private JTextField console = new JTextField();
-	private JPanel consolePanel; 
+	private JTextArea console = new JTextArea();
+	private DefaultListModel<String> routerList = new DefaultListModel<String>();
+	private String newLine       = System.getProperty("line.separator");
+	private JPanel consolePanel;
+	private JPanel listPanel;
 	
 	private JToggleButton startButton;
 	private JToggleButton startVTY; 
@@ -74,6 +82,7 @@ public class SwingGui implements ActionListener{
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 					SwingGui window = new SwingGui();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
@@ -111,6 +120,7 @@ public class SwingGui implements ActionListener{
 		consolePanel.add(this.console);
 		consolePanel.setPreferredSize(new Dimension(800, 200));
 		this.console.setEditable(false);
+		this.console.setAutoscrolls(true);
 		this.console.setPreferredSize(new Dimension(800, 200));
 		frame.getContentPane().add(consolePanel, BorderLayout.SOUTH);
 		
@@ -255,7 +265,8 @@ public class SwingGui implements ActionListener{
 	 * Print to console
 	 */
 	public void consolePrint(String message){
-		this.console.setText(message);
+		this.console.append(newLine + message);
+		this.console.setVisible(true);
 	}
 	/**
 	 * Listen for start button pushes
@@ -281,11 +292,28 @@ public class SwingGui implements ActionListener{
 				JGui topoPanel = new JGui(network.nodeNames,network.connectionStrings);
 				
 				topoPanel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
-				topoPanel.setPreferredSize(new Dimension(800,800));
+				topoPanel.setMinimumSize(new Dimension(800,800));
 				
 				/* Add this panel to the window and refresh to display it */
 				this.frame.getContentPane().add(topoPanel, BorderLayout.CENTER);
 				this.frame.setVisible(true);
+				
+				/* Add List of routers to RouterList */
+				for(String router: network.nodeNames){
+					this.routerList.addElement(router);
+				}
+				//Add DeviceList Panel
+				listPanel = new JPanel();
+				JList<String> list = new JList<String>(this.routerList);
+				listPanel.add(list);
+				listPanel.setMaximumSize(new Dimension(200, 200));
+				frame.getContentPane().add(listPanel, BorderLayout.WEST);
+				
+				String 	host = "10.192.40.140";
+				int 	port = 80;
+				
+				TrafficTest test = new TrafficTest(host, port);
+				this.consolePrint("Testing traffic with " + host + ":" + port );
 			}
 			if(ae.getSource() == startVTY){
 				System.out.println("VTY Pressed");
