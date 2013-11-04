@@ -1,41 +1,3 @@
-<!DOCTYPE html>
-<html>
-<!--
-  Created using jsbin.com
-  Source can be edited via http://jsbin.com/aWEroNU/22/edit
--->
-<head>
-<meta name="description" content="PathDrop with Cytoscape.js" />
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-<meta charset=utf-8 />
-<title>Cytoscape.js initialisation</title>
-  <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
-
-<style id="jsbin-css">
-body { 
-  font: 14px helvetica neue, helvetica, arial, sans-serif;
-}
-
-#cy {
-  height: 100%;
-  width: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-#title {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-}
-</style>
-</head>
-<body>
-  <div id="title">Path Drop Topology</div>
-  <div id="cy"></div>
-<script>
 $('#cy').cytoscape({
   
   style: cytoscape.stylesheet()
@@ -107,6 +69,3 @@ edges: [
     });
   }
 });
-</script>
-</body>
-</html>

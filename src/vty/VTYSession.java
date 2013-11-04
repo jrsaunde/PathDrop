@@ -12,11 +12,9 @@ public class VTYSession {
 	}
 
 	public String write(String command) {
-		
-		return command+"\n"+command+"\n"+command;
-		// TODO Auto-generated method stub
-		
+		if (command.contains("multiple"))
+			return command+"\n"+command+"\n"+command;
+		else 
+			return command;
 	}
-	
-
 }

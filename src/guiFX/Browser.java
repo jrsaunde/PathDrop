@@ -5,9 +5,12 @@ import java.net.MalformedURLException;
 
 import javafx.application.Application;
 import javafx.geometry.HPos;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -20,18 +23,28 @@ class Browser extends Region {
  
     final WebView browser = new WebView();
     final WebEngine webEngine = browser.getEngine();
+    File file;
     
-    public Browser(String fileName) throws MalformedURLException {
-        File file = new File(fileName);
+    public Browser(String fileName, Image loaderImage) throws MalformedURLException {
+        file = new File(fileName);
     	
     	//apply the styles
         getStyleClass().add("browser");
-        // load the web page
         
-        webEngine.load(file.toURI().toURL().toString());
         //add the web view to the scene
         getChildren().add(browser);
- 
+        
+        // load default image
+        ImageView image = new ImageView();
+        image.setImage(loaderImage);
+        getChildren().add(image);
+        
+    }
+    
+
+	public void loadTopo() throws MalformedURLException {
+        // load the web page
+        webEngine.load(file.toURI().toURL().toString());
     }
     private Node createSpacer() {
         Region spacer = new Region();

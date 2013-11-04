@@ -9,7 +9,7 @@ package guiFX;
  */
 
 import javafx.application.Application;
-
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -22,6 +22,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -29,6 +30,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -42,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import topo.NetworkDiscovery;
+import vty.VTYSession;
 
 public class GuiFx extends Application {
 
@@ -65,6 +70,7 @@ public class GuiFx extends Application {
 	private TextField usernameField = new TextField("");
 	private TextField passwordField = new TextField("");
 	private NetworkDiscovery network;
+	private Image loaderImage = new Image("img/loader.gif", true);
 	
 	@Override public void start(Stage stage) throws Exception {
 		Group root = new Group();
@@ -80,8 +86,8 @@ public class GuiFx extends Application {
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
-		VBox labels = new VBox(21);
-		VBox fields = new VBox(16);
+		final VBox labels = new VBox(21);
+		final VBox fields = new VBox(16);
 		labels.setPadding(new Insets(168, 8, 8, 8));
 		fields.setPadding(new Insets(166, 6, 6, 6));
 		controlPane.getChildren().addAll(labels,fields);
@@ -94,18 +100,20 @@ public class GuiFx extends Application {
 		Label protocolLabel = new Label("Protocol:");
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
-		Button traceButton = new Button("Trace");
 		Button discoverButton = new Button("Discover");
+		Button consoleButton = new Button("Connect");
 		
+		final Button traceButton = new Button("Trace");
+		final Button stopButton = new Button("Stop");
 		protocolField.getSelectionModel().selectFirst();
 		
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
 				windowLabel, protocolLabel, usernameLabel, passwordLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, traceButton, discoverButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, consoleButton, traceButton);
 		
 		// topology pane
-		Browser browser = new Browser("src/web/web.html");  
+		Browser browser = new Browser("src/web/web.html", loaderImage);  
 		viewPane.getChildren().add(browser);
 		
 		// format labels
@@ -128,56 +136,82 @@ public class GuiFx extends Application {
 			}
 		}
 		
-		// Discovery Listener
+		// Trace Listener
 		traceButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-				if (srcIPField.getText().isEmpty()) {
-					System.out.println("Please provide source IP address");
-				} else {
-					if (Validator.validateIP(srcIPField.getText().trim()))
-						srcIP = srcIPField.getText().trim();
-					else
-						System.out.println("Incorrect source IP address");
-				}
+				if (Validator.validateIP(srcIPField))
+					srcIP = srcIPField.getText().trim();
+				else
+					return;
 				
-				if (dstIPField.getText().isEmpty()) {
-					System.out.println("Please provide destination IP address");
-				} else {
-					if (Validator.validateIP(dstIPField.getText().trim()))
-						srcIP = dstIPField.getText().trim();
-					else
-						System.out.println("Incorrect destination IP address");
-				}
-				// call network trace object (inputs)
+				if (Validator.validateIP(dstIPField))
+					srcIP = dstIPField.getText().trim();
+				else 
+					return;
+				
+				fields.getChildren().remove(traceButton);
+				fields.getChildren().add(stopButton);
+				stopButton.requestFocus();
+				// call  trace object (inputs)
 			}
 		});
 		
-		// Trace route listener
+		// Stop trace Listener
+		stopButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+
+				fields.getChildren().remove(stopButton);
+				fields.getChildren().add(traceButton);
+				traceButton.requestFocus();
+				// call stop trace object (inputs)
+			}
+		});
+		
+		// Discovery route listener
 		discoverButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				if (srcIPField.getText().isEmpty()) {
-					System.out.println("Please provide valid source IP address");
-				} else {
-					if (Validator.validateIP(srcIPField.getText().trim()))
-						srcIP = srcIPField.getText().trim();
-					else
-						System.out.println("Please provide valid source IP address");
-				}
-				
-				if (usernameField.getText().isEmpty())
-					System.out.println("Please provide valid username");
+				if (Validator.validateIP(srcIPField))
+					srcIP = srcIPField.getText().trim();
 				else 
-					username = usernameField.getText().trim();
-				if (passwordField.getText().isEmpty())
-					System.out.println("Please provide valid password");
-				else
-					password = passwordField.getText().trim();
+					return;
+				if (Validator.validateUsername(usernameField))
+					srcIP = srcIPField.getText().trim();
+				else 
+					return;
+				if (Validator.validatePassword(passwordField))
+					srcIP = srcIPField.getText().trim();
+				else 
+					return;
+				
 				// call network discovery object (inputs)
 			}
 
 		});
 		
+		
+		// console into a box
+		consoleButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				
+				if (Validator.validateIP(srcIPField))
+					srcIP = srcIPField.getText().trim();
+				else 
+					return;
+				if (Validator.validateUsername(usernameField))
+					srcIP = srcIPField.getText().trim();
+				else 
+					return;
+				if (Validator.validatePassword(passwordField))
+					srcIP = srcIPField.getText().trim();
+				else 
+					return;
+				
+				new Console(srcIP, username, password);
+			}
+
+		});
 		
 		// core stage
 		stage.setTitle("PathDrop - Kickass Network Visualizer & Packet Tracer");
@@ -189,8 +223,12 @@ public class GuiFx extends Application {
 	public static void main(String[] args) { 
 		launch(args); 
 	}
-
 }
+
+
+
+
+
 
 
 

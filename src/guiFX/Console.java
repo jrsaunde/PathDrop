@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
@@ -14,46 +15,28 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vty.VTYSession;
 
-public class Console extends Application implements Runnable {
+class Console {
 	String ip;
 	String username;
 	String password;
 	String command;
 	String history;
 	String output;
-	public Console(String ip, String username, String password) {
+	
+	public Console(final String ip, final String username, final String password) {
+
+		System.out.println("New thread running with IP: " + ip);
+		
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
-	}
-
-	public Console() {
-	}
-
-	private EventHandler<KeyEvent> keyListener = new EventHandler<KeyEvent>() {
-		@Override
-		public void handle(KeyEvent event) {
-
-		}
-	};
-
-	@Override
-	public void run() {
-		launch();
-		System.out.println("New thread running with IP: " + ip);
-	}
-
-	public static void main(String args[]) {
-		new Thread(new Console()).start();
-		//new Thread(new Console()).start();
-	}
-
-	@Override
-	public void start(Stage primaryStage) {
-		primaryStage.setTitle("Hello World!");
+		
+		Stage stage = new Stage();		
+        stage.setTitle("Hello World!");
 		VBox root = new VBox();
 		final TextArea textArea = new TextArea();
 		final TextField textField = new TextField();
@@ -96,7 +79,11 @@ public class Console extends Application implements Runnable {
 				if(event.getCode() == KeyCode.ENTER) {
 					VTYSession vty = new VTYSession();
 					vty.openVTY(ip, username, password);
-					output = vty.write(textField.getText().toString());
+					String command = textField.getText();
+					System.out.println(command);
+					if (command == null)
+						command = "";
+					output = vty.write(command);
 					textArea.setText(textArea.getText().concat(output+"\n"));
 					textArea.setScrollTop(Double.MAX_VALUE);
 					System.out.println(output);
@@ -105,7 +92,7 @@ public class Console extends Application implements Runnable {
 			};
 		});
 
-		primaryStage.setScene(new Scene(root, 400, 330));
-		primaryStage.show();
+		stage.setScene(new Scene(root, 400, 330));
+		stage.show();
 	}
 }
