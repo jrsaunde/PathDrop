@@ -88,10 +88,19 @@ typedef struct list{
 	time_t timestamp;
 } List;
 
-List *root;
+List *root = NULL;
 int timeout = 10; //how long we wait before declaring a packet loss
 
 void add_to_end(List *list, uint16_t _data, time_t _timestamp){
+	if(list == NULL){
+		root = (List *)malloc(sizeof(List));
+		root->data = _data;
+		root->timestamp = _timestamp;
+		root->next = NULL;
+		root->previous = NULL;
+		printf("added packet at beginnging with id %d to end at time %ld\n", _data, _timestamp);
+		return;
+	}
 	List* last = list;
 	while (1){
 		if(last->next == NULL){
@@ -109,15 +118,18 @@ void add_to_end(List *list, uint16_t _data, time_t _timestamp){
 }
 
 void print_list(List *list){
+	printf("------------------------------List-Contents--------------------------\n");
 	if(list == NULL){
 		printf("List is empty\n");
+		printf("---------------------------------------------------------------------\n");
 		return;
 	}
 	while(list->next != NULL){
-		printf("%d\n", list->data);
+		printf("ID:%d   Time Lapse:%d\n", list->data, time(NULL) - list->timestamp);
 		list = list->next;
 	}
-	printf("%d\n", list->data);
+	printf("ID:%d   Time Lapse:%d\n", list->data, time(NULL) - list->timestamp);
+	printf("---------------------------------------------------------------------\n");
 }
 
 int search_and_remove(List *list, uint16_t _data){
@@ -125,7 +137,19 @@ int search_and_remove(List *list, uint16_t _data){
 	if(list->data == _data){
 		root = list->next;
 		free(list);
+		printf("found and removed packet with id %d\n", _data);
 		return 1;
+	}else{
+		while(1){
+			if(time(NULL) - list->timestamp > timeout){
+				printf("PACKET LOSS: packet with id %d never seen\n", list->data);
+				root = list->next;
+				free(list);
+				list = root;
+			}else{
+				break;
+			}
+		}
 	}
 	while(1){
 		if(list->next == NULL){
@@ -139,12 +163,16 @@ int search_and_remove(List *list, uint16_t _data){
 		if(list->next->data == _data){
 			List *temp = list->next;
 			list->next = list->next->next;
-			//time_t travel_time = time(NULL) - temp->next->timestamp;
 			printf("found and removed packet with id %d\n", _data);
 			free(temp);
 			return 1;
 		}else{
-			if(time(NULL) - list->timestamp > timeout) printf("PACKET LOSS\n");
+			if(time(NULL) - list->next->timestamp > timeout){
+				printf("PACKETT LOSS: packet with id %d never seen\n", list->next->data);
+				List *temp = list->next;
+				list->next = list->next->next;
+				free(temp);
+			}
 			list = list->next;
 		}
 	}
@@ -372,6 +400,7 @@ void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_pa
 	    printf("\n"
 	    		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
 	    search_and_remove(root, pkt_id);
+	    print_list(root);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -441,6 +470,7 @@ void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_pak
 	    printf("\n"
 	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
 	    add_to_end(root, pkt_id, time(NULL));
+	    print_list(root);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -788,8 +818,6 @@ int main (int argc, char* argv[]) {
 	session_handle_t* sh;
 	uint64_t pak_count, last_pak_count;
 	int timeout = 120;
-	root = (List *)malloc(sizeof(List));
-
 
     memset(user, 0, ONEP_USERNAME_SIZE);
     memset(pwd,  0, ONEP_PASSWORD_SIZE);
