@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/LD_LIBRARY_PATH/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/LD_LIBRARY_PATH/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/LD_LIBRARY_PATH/value=/opt/cisco/onep/c64/sdk-c64-1.0.0.84/c/lib
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/ONEP_SDK/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/ONEP_SDK/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/ONEP_SDK/value=/opt/cisco/onep/c64/sdk-c64-1.0.0.84
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/append=true
+environment/project/cdt.managedbuild.toolchain.gnu.base.2043431614/appendContributed=true
