@@ -43,6 +43,7 @@
 #include <netinet/ip.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <time.h>
 
 #include "onep_core_services.h"
 #include "policy.h"
@@ -79,6 +80,76 @@ static onep_password       pwd;
 static onep_if_name        intf_name;
 static int proto;
 char* transporttype;
+
+typedef struct list{
+	struct list* next;
+	struct list* previous;
+	uint16_t data;//16 bit ip header identification field
+	time_t timestamp;
+} List;
+
+List *root;
+int timeout = 10; //how long we wait before declaring a packet loss
+
+void add_to_end(List *list, uint16_t _data, time_t _timestamp){
+	List* last = list;
+	while (1){
+		if(last->next == NULL){
+			break;
+		}else{
+			last = last->next;
+		}
+	}
+	last->next = malloc(sizeof(List));
+	last->next->previous = last;
+	last->next->data = _data;
+	last->next->timestamp = _timestamp;
+	last->next->next = NULL;
+	printf("added packet with id %d to end at time %ld\n", _data, _timestamp);
+}
+
+void print_list(List *list){
+	if(list == NULL){
+		printf("List is empty\n");
+		return;
+	}
+	while(list->next != NULL){
+		printf("%d\n", list->data);
+		list = list->next;
+	}
+	printf("%d\n", list->data);
+}
+
+int search_and_remove(List *list, uint16_t _data){
+	if(list == NULL)return 0;
+	if(list->data == _data){
+		root = list->next;
+		free(list);
+		return 1;
+	}
+	while(1){
+		if(list->next == NULL){
+			if(list->data == _data){
+				return 1;
+			}else{
+				if(time(NULL) - list->timestamp > timeout) printf("PACKET LOSS\n");
+				return 0;
+			}
+		}
+		if(list->next->data == _data){
+			List *temp = list->next;
+			list->next = list->next->next;
+			//time_t travel_time = time(NULL) - temp->next->timestamp;
+			printf("found and removed packet with id %d\n", _data);
+			free(temp);
+			return 1;
+		}else{
+			if(time(NULL) - list->timestamp > timeout) printf("PACKET LOSS\n");
+			list = list->next;
+		}
+	}
+}
+
 // END SNIPPET: c_variables
 
 // START SNIPPET: callback_info
@@ -291,7 +362,6 @@ void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_pa
 	    } else {
 	        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
 	    }
-
 //	    printf(
 //	        "\n"
 //	        "O| FID | Source                 |  Port | Destination     |  Port | Prot | Pkt# | State                     | Input Int          | Output Int         \n");
@@ -301,6 +371,7 @@ void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_pa
 
 	    printf("\n"
 	    		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
+	    search_and_remove(root, pkt_id);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -360,7 +431,6 @@ void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_pak
 	    } else {
 	        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
 	    }
-
 //	    printf(
 //	        "\n"
 //	        "I| FID | Source                 |  Port | Destination     |  Port | Prot | Pkt# | State                     | Input Int          | Output Int         \n");
@@ -370,6 +440,7 @@ void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_pak
 
 	    printf("\n"
 	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
+	    add_to_end(root, pkt_id, time(NULL));
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -717,6 +788,7 @@ int main (int argc, char* argv[]) {
 	session_handle_t* sh;
 	uint64_t pak_count, last_pak_count;
 	int timeout = 120;
+	root = (List *)malloc(sizeof(List));
 
 
     memset(user, 0, ONEP_USERNAME_SIZE);
@@ -828,16 +900,16 @@ int main (int argc, char* argv[]) {
         rc = onep_element_get_interface_by_name(ne, in_name, &intf_1);
         if (rc != ONEP_OK) {
             fprintf(stderr, "Error in getting interface: %s\n", onep_strerror(rc));
-        goto cleanup;
+            goto cleanup;
         }
 
         //Interface Name Output
-        onep_if_name out_name = "GigabitEthernet0/3";
+        onep_if_name out_name = "GigabitEthernet0/2";
         network_interface_t *intf_2;
 		rc = onep_element_get_interface_by_name(ne, out_name, &intf_2);
 		if (rc != ONEP_OK) {
 			fprintf(stderr, "Error in getting interface: %s\n", onep_strerror(rc));
-		goto cleanup;
+			goto cleanup;
 		}
 
         //Interface targets for int1
