@@ -32,7 +32,7 @@ class Browser extends Region {
     	//apply the styles
         getStyleClass().add("browser");
         
-        //add the web view to the sscene
+        //add the web view to the scene
         getChildren().add(browser);
         
         // load default image
