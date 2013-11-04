@@ -24,6 +24,7 @@ class Browser extends Region {
     final WebView browser = new WebView();
     final WebEngine webEngine = browser.getEngine();
     File file;
+    ImageView image;
     
     public Browser(String fileName, Image loaderImage) throws MalformedURLException {
         file = new File(fileName);
@@ -35,7 +36,7 @@ class Browser extends Region {
         getChildren().add(browser);
         
         // load default image
-        ImageView image = new ImageView();
+        image = new ImageView();
         image.setImage(loaderImage);
         getChildren().add(image);
         
@@ -44,6 +45,7 @@ class Browser extends Region {
 
 	public void loadTopo() throws MalformedURLException {
         // load the web page
+		getChildren().remove(image);
         webEngine.load(file.toURI().toURL().toString());
     }
     private Node createSpacer() {

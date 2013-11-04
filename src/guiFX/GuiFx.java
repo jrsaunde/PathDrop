@@ -42,6 +42,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Callback;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -113,7 +114,7 @@ public class GuiFx extends Application {
 				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, consoleButton, traceButton);
 		
 		// topology pane
-		Browser browser = new Browser("src/web/web.html", loaderImage);  
+		final Browser browser = new Browser("src/web/web.html", loaderImage);  
 		viewPane.getChildren().add(browser);
 		
 		// format labels
@@ -184,7 +185,11 @@ public class GuiFx extends Application {
 					srcIP = srcIPField.getText().trim();
 				else 
 					return;
-				
+				try {
+					browser.loadTopo();
+				} catch (MalformedURLException e1) {
+					e1.printStackTrace();
+				}
 				// call network discovery object (inputs)
 			}
 
