@@ -32,7 +32,7 @@ class Browser extends Region {
     	//apply the styles
         getStyleClass().add("browser");
         
-        //add the web view to the scene
+        //add the web view to the sscene
         getChildren().add(browser);
         
         // load default image
@@ -42,12 +42,12 @@ class Browser extends Region {
         
     }
     
-
 	public void loadTopo() throws MalformedURLException {
         // load the web page
 		getChildren().remove(image);
         webEngine.load(file.toURI().toURL().toString());
     }
+	
     private Node createSpacer() {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
