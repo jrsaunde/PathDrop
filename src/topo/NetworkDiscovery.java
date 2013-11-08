@@ -285,7 +285,7 @@ public class NetworkDiscovery {
 		
 		System.out.println("JSON: " + json.toString(2));
 	}
-	
+
 	private void initalizeGlobals(){
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
 		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
