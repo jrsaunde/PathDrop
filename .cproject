@@ -25,6 +25,7 @@
 								<option id="gnu.c.compiler.option.include.paths.736134478" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/opt/cisco/onep/c64/sdk-c64-1.0.0.84/c/lib/"/>
 									<listOptionValue builtIn="false" value="/opt/cisco/onep/c64/sdk-c64-1.0.0.84/c/include/"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/default-java/include/"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1941209422" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -69,5 +70,10 @@
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 		</buildTargets>
+	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/PathDrop"/>
+		</configuration>
 	</storageModule>
 </cproject>
