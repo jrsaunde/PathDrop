@@ -12,7 +12,7 @@ extern "C" {
  * Method:    ProgramNode
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_datapath_NodePuppet_ProgramNode
+JNIEXPORT jint JNICALL Java_datapath_NodePuppet_ProgramNode
   (JNIEnv *, jobject, jstring, jstring, jstring, jstring);
 
 #ifdef __cplusplus

@@ -8,6 +8,7 @@ public class NodePuppet {
 	
 	public int number = 88;
 	public String message= "Hello from Java";
+	private String errBuf = "";
 	
 	public native void ProgramNode(String address, String user, String pass, String protocol);
 	
