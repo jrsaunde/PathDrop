@@ -23,7 +23,7 @@ public class GuiConnection {
 		return( "{ data: { source: '" +
 						  this.sourceNode + "', target: '" +
 						  this.destNode + "', label: '" +
-						  this.sourceInterface + " " + 
+						  this.sourceInterface + "					" + 
 						  this.destInterface + "', faveColor: '" +
 						  getHue(this.packetLoss) + "', strength: " +
 						  this.packetLoss +" } }");
