@@ -1,5 +1,9 @@
 package guiFX;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -19,21 +23,20 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vty.VTYSession;
 
-class Console {
+class Console implements Runnable{
 	String ip;
 	String username;
 	String password;
-	String command;
-	String history;
-	String output;
+	ArrayList<String> cmds;
+	ListIterator itr;
 	
 	public Console(final String ip, final String username, final String password) {
-
 		System.out.println("New thread running with IP: " + ip);
 		
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
+		cmds = new ArrayList<String>();
 		
 		Stage stage = new Stage();		
         stage.setTitle("Hello World!");
@@ -76,23 +79,43 @@ class Console {
 		textField.addEventHandler(KeyEvent.KEY_PRESSED, 
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
+				
 				if(event.getCode() == KeyCode.ENTER) {
 					VTYSession vty = new VTYSession();
 					vty.openVTY(ip, username, password);
-					String command = textField.getText();
-					System.out.println(command);
-					if (command == null)
-						command = "";
-					output = vty.write(command);
-					textArea.setText(textArea.getText().concat(output+"\n"));
-					textArea.setScrollTop(Double.MAX_VALUE);
-					System.out.println(output);
+					String cmd = textField.getText();
+					cmds.add(0, cmd);
+					if (cmd == null)
+						cmd = "";
+					String output = vty.write(cmd); // return a string with one or more lines
+					textArea.appendText(output+"\n");
+					textArea.positionCaret(textArea.getLength());
 					textField.setText(null);
+					itr = cmds.listIterator();
+				} 
+				
+				if(event.getCode() == KeyCode.UP) {
+					VTYSession vty = new VTYSession();
+					vty.openVTY(ip, username, password);
+					if(itr.hasNext())
+						textField.setText((String) itr.next());
+				} 
+				
+				if(event.getCode() == KeyCode.DOWN) {
+					VTYSession vty = new VTYSession();
+					vty.openVTY(ip, username, password);
+					if(itr.hasPrevious())
+						textField.setText((String) itr.previous());
 				} 
 			};
 		});
 
 		stage.setScene(new Scene(root, 400, 330));
 		stage.show();
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Hello from thread");
 	}
 }
