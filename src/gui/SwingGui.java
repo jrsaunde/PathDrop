@@ -39,6 +39,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.text.DefaultCaret;
 
 import testFlow.TrafficTest;
+import topo.GuiNode;
 import topo.JGui;
 import topo.NetworkDiscovery;
 
@@ -111,7 +112,7 @@ public class SwingGui implements ActionListener{
 	
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setIconImage(Toolkit.getDefaultToolkit().getImage(SwingGui.class.getResource("/img/cisco_small.png")));
+		frame.setIconImage(Toolkit.getDefaultToolkit().getImage(SwingGui.class.getResource("/img/cisco_white.png")));
 		frame.setTitle("Pinpoint PacketLoss");
 		frame.setBounds(100, 100, 1400, 1000);
 		frame.setMinimumSize(new Dimension(800, 800));
@@ -161,7 +162,7 @@ public class SwingGui implements ActionListener{
 			inputVTYPanel.setLayout(inputPanelLayout);
 			*/
 			/* Add Cisco Logo to top left corner of inputPanel */
-			BufferedImage image = ImageIO.read(SwingGui.class.getResource("/img/cisco_small.png"));
+			BufferedImage image = ImageIO.read(SwingGui.class.getResource("/img/cisco_white.png"));
 			JLabel logo = new JLabel(new ImageIcon(image));
 			GridBagConstraints logoConstraints = new GridBagConstraints();
 			logoConstraints.ipadx = 25;
@@ -318,7 +319,11 @@ public class SwingGui implements ActionListener{
 				/* Add List of routers to RouterList */
 				for(String router: network.nodeNames){
 					this.routerList.addElement(router);
+					GuiNode routerNode = new GuiNode(router, router);
 				}
+				
+				/* list of connections */
+				
 				//Add DeviceList Panel
 				JList<String> list = new JList<String>(this.routerList);
 				list.setMaximumSize(new Dimension( 200, (routerList.size()*20)));
@@ -329,7 +334,7 @@ public class SwingGui implements ActionListener{
 				String 	host = "10.192.40.140";
 				int 	port = 80;
 				
-				TrafficTest test = new TrafficTest(host, port);
+				//TrafficTest test = new TrafficTest(host, port);
 				this.consolePrint("Testing traffic with " + host + ":" + port );
 			}
 			if(ae.getSource() == startVTY){
