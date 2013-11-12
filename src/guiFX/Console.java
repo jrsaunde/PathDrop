@@ -27,6 +27,7 @@ class Console implements Runnable{
 	String ip;
 	String username;
 	String password;
+	VTYSession vty;
 	ArrayList<String> cmds;
 	ListIterator itr;
 	
@@ -36,6 +37,8 @@ class Console implements Runnable{
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
+		vty = new VTYSession();
+		vty.openVTY(ip, username, password);
 		cmds = new ArrayList<String>();
 		
 		Stage stage = new Stage();		
@@ -51,8 +54,6 @@ class Console implements Runnable{
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
 		
-//		ScrollBar scrollBarv = (ScrollBar)textArea.lookup(".scroll-bar:vertical");
-//		scrollBarv.setDisable(true);  
 
 		textField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
@@ -79,10 +80,7 @@ class Console implements Runnable{
 		textField.addEventHandler(KeyEvent.KEY_PRESSED, 
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
-				
 				if(event.getCode() == KeyCode.ENTER) {
-					VTYSession vty = new VTYSession();
-					vty.openVTY(ip, username, password);
 					String cmd = textField.getText();
 					cmds.add(0, cmd);
 					if (cmd == null)
@@ -95,18 +93,19 @@ class Console implements Runnable{
 				} 
 				
 				if(event.getCode() == KeyCode.UP) {
-					VTYSession vty = new VTYSession();
-					vty.openVTY(ip, username, password);
 					if(itr.hasNext())
 						textField.setText((String) itr.next());
 				} 
 				
 				if(event.getCode() == KeyCode.DOWN) {
-					VTYSession vty = new VTYSession();
-					vty.openVTY(ip, username, password);
 					if(itr.hasPrevious())
 						textField.setText((String) itr.previous());
 				} 
+				
+				if((event.getCode() == KeyCode.CONTROL) && (event.getCode() == KeyCode.C)) {
+					System.out.println("Control pressed");
+				} 
+				
 			};
 		});
 
