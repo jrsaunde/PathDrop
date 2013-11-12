@@ -62,14 +62,14 @@ public class GuiFx extends Application {
 	private String username;
 	private String password;
 
-	private TextField srcIPField = new TextField("");
-	private TextField dstIPField = new TextField("");
-	private TextField srcPortField = new TextField("");
-	private TextField dstPortField = new TextField("");
-	private TextField windowField = new TextField("");
+	private TextField srcIPField = new TextField("1.1.1.1");
+	private TextField dstIPField = new TextField("1.1.1.2");
+	private TextField srcPortField = new TextField("22");
+	private TextField dstPortField = new TextField("23");
+	private TextField windowField = new TextField("100");
 	private ChoiceBox protocolField = new ChoiceBox(FXCollections.observableArrayList("TCP", "UDP", "DCCP", "SCTP", "RSVP"));
-	private TextField usernameField = new TextField("");
-	private TextField passwordField = new TextField("");
+	private TextField usernameField = new TextField("username");
+	private TextField passwordField = new TextField("password");
 	private NetworkDiscovery network;
 	private Image loaderImage = new Image("img/loader.gif", true);
 	
@@ -114,7 +114,7 @@ public class GuiFx extends Application {
 				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, consoleButton, traceButton);
 		
 		// topology pane
-		final Browser browser = new Browser("src/web/web.html", loaderImage);  
+		final Browser browser = new Browser("src/web/web.html", loaderImage); 
 		viewPane.getChildren().add(browser);
 		
 		// format labels
@@ -213,7 +213,7 @@ public class GuiFx extends Application {
 				else 
 					return;
 				
-				new Console(srcIP, username, password);
+				(new Thread(new Console(srcIP, username, password))).start();
 			}
 
 		});
@@ -229,31 +229,3 @@ public class GuiFx extends Application {
 		launch(args); 
 	}
 }
-
-
-
-
-
-
-
-
-/*				
-if (!srcPortField.getText().isEmpty())
-	if (Validator.validatePort(srcPortField.getText().trim()))
-		srcPort = Integer.parseInt(srcPortField.getText().trim());
-	else
-		System.out.println("Invalid source port number");
-if (!dstPortField.getText().isEmpty())
-	if (Validator.validatePort(dstPortField.getText().trim()))
-		dstPort = Integer.parseInt(dstPortField.getText().trim());
-	else
-		System.out.println("Invalid destination port number");
-
-if (!windowField.getText().isEmpty())
-	if (Validator.validateWindow(windowField.getText().trim()))
-		window = Integer.parseInt(windowField.getText().trim());
-	else
-		System.out.println("Invalid window size");
-
-protocol = protocolField.getSelectionModel().getSelectedItem().toString();
-*/
