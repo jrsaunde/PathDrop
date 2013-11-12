@@ -38,6 +38,7 @@ class Browser extends Region {
         // load default image
         image = new ImageView();
         image.setImage(loaderImage);
+        setStyle("-fx-background-position: CENTER;");
         getChildren().add(image);
         
     }
