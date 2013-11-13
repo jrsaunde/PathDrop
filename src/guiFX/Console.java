@@ -37,6 +37,7 @@ class Console implements Runnable{
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
+		
 		vty = new VTYSession();
 		vty.openVTY(ip, username, password);
 		cmds = new ArrayList<String>();
@@ -77,6 +78,9 @@ class Console implements Runnable{
 					}
 		});
 		
+        final String keyComb1 = "_CONTROL_C";
+        final StringBuilder key = new StringBuilder();
+        
 		textField.addEventHandler(KeyEvent.KEY_PRESSED, 
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
@@ -102,12 +106,32 @@ class Console implements Runnable{
 						textField.setText((String) itr.previous());
 				} 
 				
-				if((event.getCode() == KeyCode.CONTROL) && (event.getCode() == KeyCode.C)) {
-					System.out.println("Control pressed");
-				} 
+				String codeStr = event.getCode().toString();
+                if(!key.toString().endsWith("_"+codeStr)){
+                        key.append("_"+codeStr);
+                }
 				
 			};
 		});
+		
+		textField.addEventHandler(KeyEvent.KEY_RELEASED, 
+				new EventHandler<KeyEvent>() {
+			public void handle(KeyEvent event) {
+				if(key.length()>0) {
+					if(key.toString().equals(keyComb1)){
+                        System.out.println("Key Combination 1 pressed");
+                        textField.setText("");
+        				String codeStr = event.getCode().toString();
+                        int index = key.lastIndexOf("_"+codeStr);
+                        key.delete(index, key.length());
+    					itr = cmds.listIterator();
+					} else {
+						key.setLength(0);
+					}
+				}
+			};
+		});
+
 
 		stage.setScene(new Scene(root, 400, 330));
 		stage.show();
