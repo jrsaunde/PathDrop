@@ -166,9 +166,9 @@ public class NetworkDiscovery {
 		for(Edge edge: edges){
 			pktLoss+=10;
 			GuiConnection connection = new GuiConnection(edge.getHeadNode().getName(),
-														 edge.getHeadNodeConnector().getName(),
+														 shortenName(edge.getHeadNodeConnector().getName()),
 														 edge.getTailNode().getName(),
-														 edge.getTailNodeConnector().getName(),
+														 shortenName(edge.getTailNodeConnector().getName()),
 														 pktLoss);
 			//System.out.println(connection.getConnection());
 			this.connectionStrings.add(connection.getConnection());
@@ -247,4 +247,24 @@ public class NetworkDiscovery {
 		PathDiscovery pathTrace = new PathDiscovery(this.graph, startNode, destNode);
 		pathTrace.getPaths();
 	}
+	
+	/**
+	 * Shortens the interface name from "GigabitEthernet0/0" -> "Gig0/0" etc
+	 * @param longName
+	 * @return shortened name
+	 */
+	private String shortenName(String longName){
+		
+		if(longName.startsWith("Eth")){
+			longName = "Eth"+longName.substring(7);
+		}else if(longName.startsWith("Fas")){
+			longName = "Fa"+longName.substring(11);
+		}else if(longName.startsWith("Gig")){
+			longName = "Gi"+longName.substring(14);
+		}else if(longName.startsWith("Ten")){
+			longName = "Ten"+longName.substring(17);
+		}
+		return longName;
+
+		}
 }
