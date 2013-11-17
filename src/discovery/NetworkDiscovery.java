@@ -166,9 +166,9 @@ public class NetworkDiscovery {
 		for(Edge edge: edges){
 			pktLoss+=10;
 			GuiConnection connection = new GuiConnection(edge.getHeadNode().getName(),
-														 shortenName(edge.getHeadNodeConnector().getName()),
+														 edge.getHeadNodeConnector().getName(),
 														 edge.getTailNode().getName(),
-														 shortenName(edge.getTailNodeConnector().getName()),
+														 edge.getTailNodeConnector().getName(),
 														 pktLoss);
 			//System.out.println(connection.getConnection());
 			this.connectionStrings.add(connection.getConnection());
@@ -246,12 +246,5 @@ public class NetworkDiscovery {
 		System.out.println("Routes from " + startNode.getName() + " to " + destNode.getName());
 		PathDiscovery pathTrace = new PathDiscovery(this.graph, startNode, destNode);
 		pathTrace.getPaths();
-	}
-	
-	private String shortenName(String longName){
-		
-		
-		
-		return longName;
 	}
 }

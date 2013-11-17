@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     datapath_NodePuppet
  * Method:    ProgramNode
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;ILjava/lang/String;I)I
  */
 JNIEXPORT jint JNICALL Java_datapath_NodePuppet_ProgramNode
-  (JNIEnv *, jobject, jstring, jstring, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jstring, jstring, jint, jstring, jint, jstring, jint);
 
 #ifdef __cplusplus
 }

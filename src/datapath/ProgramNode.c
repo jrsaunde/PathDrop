@@ -135,6 +135,7 @@ static int search_and_remove(List *list, uint16_t _data){
 			list = list->next;
 		}
 	}
+	return 0; //TODO:is this the right value?
 }
 
 static void dpss_tutorial_display_intf_list(onep_collection_t *intf_list, FILE *op)
@@ -157,33 +158,6 @@ static void dpss_tutorial_display_intf_list(onep_collection_t *intf_list, FILE *
             }
         }
     }
-}
-
-static onep_status_t dpss_tutorial_get_ip_version(struct onep_dpss_paktype_ *pakp,
-    char *ip_version) {
-
-    onep_status_t rc;
-    uint16_t l3_protocol;
-    char l3_prot_sym = 'U';
-
-    /* Get packet L3 protocol. */
-    rc = onep_dpss_pkt_get_l3_protocol(pakp, &l3_protocol);
-    if( rc == ONEP_OK ) {
-        if( l3_protocol == ONEP_DPSS_L3_IPV4 ) {
-            l3_prot_sym = '4';
-        } else if( l3_protocol == ONEP_DPSS_L3_IPV6 ) {
-            l3_prot_sym = '6';
-        } else if( l3_protocol == ONEP_DPSS_L3_OTHER ) {
-            l3_prot_sym = 'N';
-        } else {
-            l3_prot_sym = 'U';
-        }
-    } else {
-        fprintf(stderr, "Error getting L3 protocol. code[%d], text[%s]\n", rc, onep_strerror(rc));
-        return (rc);
-    }
-    *ip_version = l3_prot_sym;
-    return (ONEP_OK);
 }
 
 
@@ -355,183 +329,195 @@ disconnect_network_element (network_element_t **ne,
         }
     }
 }
-static onep_status_t create_in_acl( network_element_t 	*elm,
-									class_t 			**in_class,
-									int					proto,
-									int					port){
-	onep_status_t rc;
-	ace_t *our_ace;
-	acl_t *our_acl;
-	filter_t* acl_filter_in;
-	class_t* acl_class_in;
 
-	/* Create the traffic class */
+static onep_status_t create_ace (ace_t 	**our_ace,
+								 int 	ace_number,
+								 char*	source_ip,
+								 int 	source_port,
+								 int 	source_prefix,
+								 char* 	dest_ip,
+								 int 	dest_port,
+								 int 	dest_prefix,
+								 int 	protocol){
 
-	// Create ACE
-	rc = onep_acl_create_l3_ace(40, TRUE, &our_ace);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to create l3 ace: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
+	onep_status_t ace_rc;
+	ace_t *this_ace;
+	int			src_compare = ONEP_COMPARE_EQ;
+	int		 	dest_compare = ONEP_COMPARE_EQ;
+
+	if(source_port == 0){
+		src_compare = ONEP_COMPARE_ANY;
 	}
-	// Set the source prefix
-	rc = onep_acl_set_l3_ace_src_prefix(our_ace, NULL, 0);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set source prefix: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the destination prefix
-	rc = onep_acl_set_l3_ace_dst_prefix(our_ace, NULL, 0);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set dest prefix: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the protocol
-	rc = onep_acl_set_l3_ace_protocol(our_ace, proto);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set protocol: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the source port
-	rc = onep_acl_set_l3_ace_src_port(our_ace, 0, ONEP_COMPARE_ANY);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set source port: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the destination port
-	rc = onep_acl_set_l3_ace_dst_port(our_ace, port, ONEP_COMPARE_EQ);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set dest port: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	/* Now create the related ACL.  After creating the ACL we will add ace40 to it*/
-	rc = onep_acl_create_l3_acl(AF_INET, elm, &our_acl);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to create acl: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
+	if(dest_port == 0){
+		dest_compare = ONEP_COMPARE_ANY;
 	}
 
-	rc = onep_acl_add_ace(our_acl, our_ace);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to add ace to acl: %s\n", onep_strerror(rc));
+	struct sockaddr_in ip4addr_source, ip4addr_dest;
+	ip4addr_source.sin_family = AF_INET;
+	ip4addr_dest.sin_family = AF_INET;
+
+	inet_pton(AF_INET, source_ip, &ip4addr_source.sin_addr);
+	inet_pton(AF_INET, dest_ip, &ip4addr_dest.sin_addr);
+
+	struct sockaddr *sock_source = (struct sockaddr *)&ip4addr_source;
+	struct sockaddr *sock_dest = (struct sockaddr *)&ip4addr_dest;
+
+	ace_rc = onep_acl_create_l3_ace(ace_number, TRUE, &this_ace);
+		if (ace_rc != ONEP_OK) {
+			fprintf(stderr, "Unable to create l3 ace: %s\n", onep_strerror(ace_rc));
+			return ONEP_FAIL;
+		}
+	ace_rc = onep_acl_set_l3_ace_src_prefix(this_ace, sock_source, source_prefix);
+		if (ace_rc != ONEP_OK) {
+			fprintf(stderr, "Unable to set source prefix on ace_1: %s\n", onep_strerror(ace_rc));
+			return ONEP_FAIL;
+		}
+	ace_rc = onep_acl_set_l3_ace_dst_prefix(this_ace, sock_dest, dest_prefix);
+		if (ace_rc != ONEP_OK) {
+			fprintf(stderr, "Unable to set dest prefix: %s\n", onep_strerror(ace_rc));
+			return ONEP_FAIL;
+		}
+	ace_rc = onep_acl_set_l3_ace_protocol(this_ace, protocol);
+		if (ace_rc != ONEP_OK) {
+			fprintf(stderr, "Unable to set protocol: %s\n", onep_strerror(ace_rc));
+			return ONEP_FAIL;
+		}
+	ace_rc = onep_acl_set_l3_ace_src_port(this_ace, source_port, src_compare);
+		if (ace_rc != ONEP_OK) {
+			fprintf(stderr, "Unable to set source port: %s\n", onep_strerror(ace_rc));
+			return ONEP_FAIL;
+		}
+	ace_rc = onep_acl_set_l3_ace_dst_port(this_ace, dest_port, dest_compare);
+		if (ace_rc != ONEP_OK) {
+			fprintf(stderr, "Unable to set dest port: %s\n", onep_strerror(ace_rc));
+			return ONEP_FAIL;
+		}
+
+		//Return our ace
+		*our_ace = this_ace;
+		return ONEP_OK;
+}
+static onep_status_t create_acls( network_element_t *elm,
+								  class_t			**in_class,
+								  class_t			**out_class,
+								  int				proto,
+								  char*				source_address,
+								  int				source_port,
+								  int				source_len,
+								  char*				dest_address,
+								  int				dest_port,
+								  int				dest_len){
+
+	onep_status_t acl_rc;
+	ace_t 		*ace_1, *ace_2, *ace_3, *ace_4;
+	acl_t 		*in_acl, *out_acl;
+	filter_t 	*acl_filter_in, *acl_filter_out;
+	class_t		*acl_class_in, *acl_class_out;
+
+
+	/* ACE_1 src -> dest */
+	acl_rc = create_ace(&ace_1, 41, source_address, source_port, source_len, dest_address, dest_port, dest_len, proto);
+		if(acl_rc != ONEP_OK){
+			fprintf(stderr, "Problem creating ace1: %s\n", onep_strerror(acl_rc));
+		}
+	/* ACE_2 dest -> src */
+	acl_rc = create_ace(&ace_2, 42, dest_address, dest_port, dest_len, source_address, source_port, source_len, proto);
+		if(acl_rc != ONEP_OK){
+			fprintf(stderr, "Problem creating ace2: %s\n", onep_strerror(acl_rc));
+		}
+	/* ACE_3 src -> dest */
+	acl_rc = create_ace(&ace_3, 43, source_address, source_port, source_len, dest_address, dest_port, dest_len, proto);
+		if(acl_rc != ONEP_OK){
+			fprintf(stderr, "Problem creating ace3: %s\n", onep_strerror(acl_rc));
+		}
+	/* ACE_4 dest -> src */
+	acl_rc = create_ace(&ace_4, 44, dest_address, dest_port, dest_len, source_address, source_port, source_len, proto);
+		if(acl_rc != ONEP_OK){
+			fprintf(stderr, "Problem creating ace4: %s\n", onep_strerror(acl_rc));
+		}
+
+	/* Create the ACL */
+	acl_rc = onep_acl_create_l3_acl(AF_INET, elm, &in_acl);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to create acl: %s\n", onep_strerror(acl_rc));
 		return ONEP_FAIL;
 	}
-	printf("\n Added ace to acl\n");
+	acl_rc = onep_acl_create_l3_acl(AF_INET, elm, &out_acl);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to create acl: %s\n", onep_strerror(acl_rc));
+		return ONEP_FAIL;
+	}
 
-	/* Now that the ACL is created, we can create a class map with an ACL filter */
-	rc = onep_policy_create_class(elm, ONEP_CLASS_OPER_OR, &acl_class_in);
-	if (rc != ONEP_OK) {
-		 fprintf(stderr, "Unable to create class: %s\n", onep_strerror(rc));
+	/* Add ACEs to ACLs */
+	acl_rc = onep_acl_add_ace(in_acl, ace_1);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to add ace1 to in_acl: %s\n", onep_strerror(acl_rc));
+		return ONEP_FAIL;
+	}
+	printf("\n Added ace1 to in_acl\n");
+	acl_rc = onep_acl_add_ace(in_acl, ace_2);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to add ace2 to in_acl: %s\n", onep_strerror(acl_rc));
+		return ONEP_FAIL;
+	}
+
+	acl_rc = onep_acl_add_ace(out_acl, ace_3);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to add ace3 to out_acl: %s\n", onep_strerror(acl_rc));
+		return ONEP_FAIL;
+	}
+	printf("\n Added ace1 to acl2\n");
+	acl_rc = onep_acl_add_ace(out_acl, ace_4);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to add ace4 to out_acl: %s\n", onep_strerror(acl_rc));
+		return ONEP_FAIL;
+	}
+
+	/* Create Class maps */
+	acl_rc = onep_policy_create_class(elm, ONEP_CLASS_OPER_OR, &acl_class_in);
+	if (acl_rc != ONEP_OK) {
+		 fprintf(stderr, "Unable to create class: %s\n", onep_strerror(acl_rc));
+		 return ONEP_FAIL;
+	}
+	acl_rc = onep_policy_create_class(elm, ONEP_CLASS_OPER_OR, &acl_class_out);
+	if (acl_rc != ONEP_OK) {
+		 fprintf(stderr, "Unable to create class: %s\n", onep_strerror(acl_rc));
 		 return ONEP_FAIL;
 	}
 
 	/* Create an acl filter containing the acl created above*/
-	rc = onep_policy_create_acl_filter(our_acl, &acl_filter_in);
-	if (rc != ONEP_OK) {
-		   fprintf(stderr, "Unable to create acl filter: %s\n", onep_strerror(rc));
+	acl_rc = onep_policy_create_acl_filter(in_acl, &acl_filter_in);
+	if (acl_rc != ONEP_OK) {
+		   fprintf(stderr, "Unable to create acl filter: %s\n", onep_strerror(acl_rc));
+		   return ONEP_FAIL;
+	}
+	acl_rc = onep_policy_create_acl_filter(out_acl, &acl_filter_out);
+	if (acl_rc != ONEP_OK) {
+		   fprintf(stderr, "Unable to create acl filter: %s\n", onep_strerror(acl_rc));
 		   return ONEP_FAIL;
 	}
 
 	/* Now add the ACL filter to the created acl_class*/
-	rc = onep_policy_add_class_filter(acl_class_in, acl_filter_in);
-	if (rc != ONEP_OK) {
+	acl_rc = onep_policy_add_class_filter(acl_class_in, acl_filter_in);
+	if (acl_rc != ONEP_OK) {
 		fprintf(stderr, "Unable to add filter to class: %s\n",
-			onep_strerror(rc));
+			onep_strerror(acl_rc));
 		return ONEP_FAIL;
 	}
+	acl_rc = onep_policy_add_class_filter(acl_class_out, acl_filter_out);
+	if (acl_rc != ONEP_OK) {
+		fprintf(stderr, "Unable to add filter to class: %s\n",
+			onep_strerror(acl_rc));
+		return ONEP_FAIL;
+	}
+
 	/*Assuming we got this far, we want to return the class we created */
 	*in_class = acl_class_in;
-
-	return (ONEP_OK);
-}
-
-static onep_status_t create_out_acl( network_element_t 	*elm,
-									class_t 			**out_class,
-									int					proto,
-									int					port){
-	onep_status_t rc;
-	ace_t *our_ace;
-	acl_t *our_acl;
-	filter_t* acl_filter_out;
-	class_t* acl_class_out;
-
-	/* Create the traffic class */
-
-	// Create ACE
-	rc = onep_acl_create_l3_ace(50, TRUE, &our_ace);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to create l3 ace: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the source prefix
-	rc = onep_acl_set_l3_ace_src_prefix(our_ace, NULL, 0);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set source prefix: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the destination prefix
-	rc = onep_acl_set_l3_ace_dst_prefix(our_ace, NULL, 0);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set dest prefix: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the protocol
-	rc = onep_acl_set_l3_ace_protocol(our_ace, proto);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set protocol: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the source port
-	rc = onep_acl_set_l3_ace_src_port(our_ace, port, ONEP_COMPARE_EQ);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set source port: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	// Set the destination port
-	rc = onep_acl_set_l3_ace_dst_port(our_ace, 0, ONEP_COMPARE_ANY);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to set dest port: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	/* Now create the related ACL.  After creating the ACL we will add ace40 to it */
-	rc = onep_acl_create_l3_acl(AF_INET, elm, &our_acl);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to create acl: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-
-	rc = onep_acl_add_ace(our_acl, our_ace);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to add ace to acl: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	printf("\n Added ace to acl\n");
-
-	/* Now that the ACL is created, we can create a class map with an ACL filter */
-	rc = onep_policy_create_class(elm, ONEP_CLASS_OPER_OR, &acl_class_out);
-	if (rc != ONEP_OK) {
-		 fprintf(stderr, "Unable to create class: %s\n", onep_strerror(rc));
-		 return ONEP_FAIL;
-	}
-
-	/* Create an acl filter containing the acl created above */
-	rc = onep_policy_create_acl_filter(our_acl, &acl_filter_out);
-	if (rc != ONEP_OK) {
-		   fprintf(stderr, "Unable to create acl filter: %s\n", onep_strerror(rc));
-		   return ONEP_FAIL;
-	}
-
-	/* Now add the ACL filter to the created acl_class */
-	rc = onep_policy_add_class_filter(acl_class_out, acl_filter_out);
-	if (rc != ONEP_OK) {
-			fprintf(stderr, "Unable to add filter to class: %s\n",
-				onep_strerror(rc));
-			return ONEP_FAIL;
-	}
-    /* Assuming we got this far, we want to return the class we created */
 	*out_class = acl_class_out;
 
-	return (ONEP_OK);
+	return ONEP_OK;
 }
+
 
 static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_dpss_paktype_ *pak, void *client_context, bool *return_packet){
 	onep_status_t        rc;
@@ -542,14 +528,9 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     char                 *dest_ip = NULL;
     char                 l4_protocol[5];
     char                 l4_state[30];
-
-    /* TODO: MY VARS */
     uint16_t			pkt_id = 0;
-    network_interface_t* input_int;
     network_interface_t* output_int;
-    onep_if_name 		 input;
     onep_if_name 		 output;
-    /* END MY VARS */
 
     strcpy(l4_protocol,"ERR");
     strcpy(l4_state,"ERR");
@@ -559,23 +540,16 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     	dpss_tutorial_get_ip_port_info(pak, &src_ip, &dest_ip, &src_port, &dest_port, l4_protocol, '4', &pkt_id);
     	dpss_tutorial_get_flow_state(pak, fid, l4_state);
 
-        /*TODO: MY CODE */
-        //Get input and output interface of packet
-        onep_dpss_pkt_get_input_interface(pak, &input_int);
+    	//Get output interface of packet
         onep_dpss_pkt_get_output_interface(pak, &output_int);
-
-        //Get names of interfaces
-        onep_interface_get_name(input_int, input);
         onep_interface_get_name(output_int, output);
-        /* END MY CODE */
-
     } else {
         fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
     }
     printf("\n"
     		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
     search_and_remove(root, pkt_id);
-    //print_list(root);
+    print_list(root);
     free(src_ip);
     free(dest_ip);
     return;
@@ -593,16 +567,9 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	    char                 *dest_ip = NULL;
 	    char                 l4_protocol[5];
 	    char                 l4_state[30];
-
-	    /* TODO: MY VARS */
 	    uint16_t			pkt_id = 0;
 	    network_interface_t* input_int;
-	    network_interface_t* output_int;
 	    onep_if_name 		 input;
-	    onep_if_name 		 output;
-
-
-	    /* END MY VARS */
 
 	    strcpy(l4_protocol,"ERR");
 	    strcpy(l4_state,"ERR");
@@ -612,17 +579,9 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	    	dpss_tutorial_get_ip_port_info(pak, &src_ip, &dest_ip, &src_port, &dest_port, l4_protocol, '4', &pkt_id);
 	    	dpss_tutorial_get_flow_state(pak, fid, l4_state);
 
-	        /*TODO: MY CODE */
-	        //Get input and output interface of packet
+	        //Get input interface of packet
 	        onep_dpss_pkt_get_input_interface(pak, &input_int);
-	        onep_dpss_pkt_get_output_interface(pak, &output_int);
-
-	        //Get names of interfaces
 	        onep_interface_get_name(input_int, input);
-	        onep_interface_get_name(output_int, output);
-	        /* END MY CODE */
-
-
 	    } else {
 	        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
 	    }
@@ -630,33 +589,27 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	    printf("\n"
 	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
 	    add_to_end(root, pkt_id, time(NULL));
-	    //print_list(root);
+	    print_list(root);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
 }
 
 static onep_status_t register_traffic(network_element_t *ne,
-									  onep_if_name interface_name,
+									  network_interface_t *this_interface,
 									  class_t *in_acl,
 									  class_t *out_acl,
-									  onep_dpss_traffic_reg_t **in_handle,
-									  onep_dpss_traffic_reg_t **out_handle){
+									  target_t *in_target,
+									  target_t *out_target,
+									  onep_dpss_traffic_reg_t *in_handle,
+									  onep_dpss_traffic_reg_t *out_handle){
 
 	onep_status_t rc;
-	network_interface_t *this_interface;
-	target_t *in_target;
-	target_t *out_target;
-	onep_dpss_traffic_reg_t *in_handle_temp;
-	onep_dpss_traffic_reg_t *out_handle_temp;
 
-	//Get the
-    rc = onep_element_get_interface_by_name(ne, interface_name, &this_interface);
-    if (rc != ONEP_OK) {
-        fprintf(stderr, "Error in getting interface: %s\n", onep_strerror(rc));
-        return ONEP_FAIL;
-    }
+	onep_if_name name;
+	onep_interface_get_name(this_interface, name);
 
+	fprintf(stderr, "We are registering for %s\n", name);
     //Interface targets for int1
     rc = onep_policy_create_interface_target(this_interface, ONEP_TARGET_LOCATION_HARDWARE_DEFINED_INPUT, &in_target);
     if (rc != ONEP_OK) {
@@ -669,45 +622,59 @@ static onep_status_t register_traffic(network_element_t *ne,
 		return ONEP_FAIL;
 	}
 	//Register for packets
-	rc = onep_dpss_register_for_packets(in_target, in_acl, ONEP_DPSS_ACTION_COPY, in_packet_drop_callback, 0, &in_handle_temp);
+	rc = onep_dpss_register_for_packets(in_target, in_acl, ONEP_DPSS_ACTION_COPY, in_packet_drop_callback, 0, &in_handle);
 	if (rc != ONEP_OK) {
 		fprintf(stderr, "Unable to register for packets: %s\n", onep_strerror(rc));
 		return ONEP_FAIL;
 	}
-	rc = onep_dpss_register_for_packets(out_target, out_acl, ONEP_DPSS_ACTION_COPY, out_packet_drop_callback, 0, &out_handle_temp);
+	rc = onep_dpss_register_for_packets(out_target, out_acl, ONEP_DPSS_ACTION_COPY, out_packet_drop_callback, 0, &out_handle);
 	if (rc != ONEP_OK) {
 		fprintf(stderr, "Unable to register for packets: %s\n", onep_strerror(rc));
 		return ONEP_FAIL;
 	}
 
 	/* If we made it here, we registered successfully */
-	*in_handle = in_handle_temp;
-	*out_handle = out_handle_temp;
+	fprintf(stderr, "Registered!\n");
 	return ONEP_OK;
 
 }
 
-JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env, jobject thisObj, jstring j_address, jstring j_user, jstring j_pass, jstring j_protocol) {
+JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
+														   jobject thisObj,
+														   jstring j_address,
+														   jstring j_user,
+														   jstring j_pass,
+														   jint    j_protocol,
+														   jstring j_source,
+														   jint	   j_source_port,
+														   jstring j_dest,
+														   jint	   j_dest_port) {
+
+	/*Application Vars */
 	network_application_t* myapp = NULL;
-	//network_element_t*     local_ne = NULL;
 	session_handle_t*      session_handle = NULL;
 	onep_status_t          rc;
-	struct sockaddr_in     v4addr;
-	//onep_transport_mode_e  mode;
 	session_config_t*      config = NULL;
-	network_element_t *ne1;
-    char *c_address, *c_username, *c_password, *c_protocol;
 
-    	class_t* acl_class_in;
-    	class_t* acl_class_out;
-    	interface_filter_t* intf_filter = NULL;
-    	onep_collection_t*  intfs = NULL;
-		network_interface_t* intf;
-    	unsigned int        count = 0;
-    	onep_if_name        intf_name;
-    	onep_dpss_traffic_reg_t *in_handle;
-    	onep_dpss_traffic_reg_t *out_handle;
-    	uint64_t pak_count, last_pak_count;
+	/* Node Vars */
+	network_element_t *ne1;
+	struct sockaddr_in     v4addr;
+	char *c_address, *c_username, *c_password, *c_source, *c_dest;
+	int c_source_port = (int) j_source_port;
+	int c_dest_port = (int) j_dest_port;
+    int acl_number = 40;
+    int c_protocol = (int) j_protocol;
+
+    /* Policy Vars */
+    class_t* acl_class_in, *acl_class_out;
+    interface_filter_t* intf_filter = NULL;
+    onep_collection_t*  intfs = NULL;
+	network_interface_t* intf;
+
+	onep_dpss_traffic_reg_t *in_handle, *out_handle;
+    target_t *in_target = NULL;
+    target_t *out_target = NULL;
+    uint64_t pak_count, last_pak_count;
 
 
 	/*Get a reference to this object's class */
@@ -737,9 +704,10 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env, jobject 
 		c_address 	= (char *) (*env)->GetStringUTFChars(env, j_address, NULL);
 		c_username 	= (char *) (*env)->GetStringUTFChars(env, j_user, NULL);
 		c_password 	= (char *) (*env)->GetStringUTFChars(env, j_pass, NULL);
-		c_protocol 	= (char *) (*env)->GetStringUTFChars(env, j_protocol, NULL);
+		c_source	= (char *) (*env)->GetStringUTFChars(env, j_source, NULL);
+		c_dest		= (char *) (*env)->GetStringUTFChars(env, j_dest, NULL);
 
-		printf("Address: %s Username: %s Password: %s Protocol: %s\n", c_address, c_username, c_password, c_protocol);
+		printf("Address: %s Username: %s Password: %s Protocol: %d\n", c_address, c_username, c_password, c_protocol);
 
 	/* Set address of Network Element */
 		memset(&v4addr, 0, sizeof(struct sockaddr_in));
@@ -759,18 +727,10 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env, jobject 
 		}
 		printf("\n Network Element CONNECT SUCCESS \n");
 
-	/* Create incoming ACL */
-		rc = create_in_acl(ne1, &acl_class_in, 6, 80);
+	/* Create ACLs */
+		rc = create_acls(ne1, &acl_class_in, &acl_class_out, c_protocol, c_source, c_source_port, 32, c_dest, c_dest_port, 32);
 		if (rc != ONEP_OK) {
-			fprintf(stderr, "\nCannot turn on interface"
-					"code[%d], text[%s]\n", rc, onep_strerror(rc));
-			goto cleanup;
-		}
-
-	/* Create outgoing ACL */
-		rc = create_out_acl(ne1, &acl_class_out, 6, 80);
-		if (rc != ONEP_OK) {
-			fprintf(stderr, "\nCannot turn on interface"
+			fprintf(stderr, "\nCannot create ACLs"
 					"code[%d], text[%s]\n", rc, onep_strerror(rc));
 			goto cleanup;
 		}
@@ -793,6 +753,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env, jobject 
 
 			onep_collection_get_size(intfs, &intf_count);
 			if (intf_count>0) {
+									fprintf(stderr, "We have %d interfaces\n", intf_count);
 				unsigned int i;
 				/* for each interface, we will register for incoming and outgoing traffic */
 				for (i = 0; i < intf_count; i++) {
@@ -801,21 +762,14 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env, jobject 
 						rc = onep_interface_get_name(intf,name);
 						fprintf(stderr, "Registering for traffic on %s\n", name);
 
-						rc = register_traffic(ne1, name, acl_class_in, acl_class_out, &in_handle, &out_handle);
+						rc = register_traffic(ne1, intf, acl_class_in, acl_class_out, in_target, out_target, in_handle, out_handle);
+
 						if(rc != ONEP_OK){
 							fprintf(stderr, "Problem registering for interface %s\n", name);
 						}
 					} else {
 						fprintf(stderr, "Error getting interface. code[%d], text[%s]\n", rc, onep_strerror(rc));
 					}
-//					onep_dpss_traffic_reg_t *in1_handle;
-//					onep_dpss_traffic_reg_t *in2_handle;
-//					onep_dpss_traffic_reg_t *out1_handle;
-//					onep_dpss_traffic_reg_t *out2_handle;
-//				onep_if_name int1_name = "GigabitEthernet0/0";
-//				onep_if_name int2_name = "GigabitEthernet0/3";
-//				rc = register_traffic(ne1, int1_name, acl_class_in, acl_class_out, &in1_handle, &out1_handle);
-//				rc = register_traffic(ne1, int2_name, acl_class_in, acl_class_out, &in2_handle, &out2_handle);
 				}
 			} if (intf_count <= 0 ) {
 				fprintf(stderr, "\nNo interfaces available");
@@ -859,6 +813,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env, jobject 
     (*env)->ReleaseStringUTFChars(env, j_address, c_address);
     (*env)->ReleaseStringUTFChars(env, j_user, c_username);
     (*env)->ReleaseStringUTFChars(env, j_pass, c_password);
-    (*env)->ReleaseStringUTFChars(env, j_protocol, c_protocol);  // release resources
+    (*env)->ReleaseStringUTFChars(env, j_source, c_source);
+    (*env)->ReleaseStringUTFChars(env, j_dest, c_dest);
    return 1;
 }
