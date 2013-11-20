@@ -194,35 +194,34 @@ public class NetworkDiscovery {
 /**
  * Prepare topology for the JavaFX Gui
  */
-	public void convertTopology(){
+	public String convertTopology(){
 		
-		System.out.println("elements: { " + newLine +
-						   "	nodes: [");
+		String devices = "elements: { " + newLine + "	nodes: [" + newLine;
+
 		/*Prepare nodes */
 		int i =1;
 		for(String node : this.nodeNames){
 			if(i++ < this.nodeNames.size()){
-				System.out.println("		" + node + ",");
+				devices = devices + "		" + node + "," + newLine;
 			}else{
-				System.out.println("		" + node);
+				devices = devices + "		" + node + newLine;
 			}
 		}
 		
-		System.out.println("	]," + newLine +
-						   "	edges: [");
-		
+		devices = devices + "	]," + newLine + "	edges: [" + newLine;
+
 		/* Prepare connections */
 		int j = 1;
 		for(String connection: this.connectionStrings){
 			if(j++ < this.connectionStrings.size()){
-				System.out.println("		" +connection + ",");
+				devices = devices + "		" +connection + "," + newLine;
 			}else{
-				System.out.println("		" +connection);
+				devices = devices + "		" +connection + newLine;
 			}
 		}
+		devices = devices + "	]" + newLine +    "  }," + newLine;
 		
-		System.out.println("	]" + newLine + 
-						   "  },");
+		return(devices);
 	}
 	
 	/**
@@ -256,15 +255,19 @@ public class NetworkDiscovery {
 	private String shortenName(String longName){
 		
 		if(longName.startsWith("Eth")){
-			longName = "Eth"+longName.substring(7);
+			longName = "Eth"+longName.substring(8);
 		}else if(longName.startsWith("Fas")){
-			longName = "Fa"+longName.substring(11);
+			longName = "Fa"+longName.substring(12);
 		}else if(longName.startsWith("Gig")){
-			longName = "Gi"+longName.substring(14);
+			longName = "Gi"+longName.substring(15);
 		}else if(longName.startsWith("Ten")){
-			longName = "Ten"+longName.substring(17);
+			longName = "Ten"+longName.substring(18);
 		}
 		return longName;
 
 		}
+	
+	public void writeTopology(){
+		
+	}
 }
