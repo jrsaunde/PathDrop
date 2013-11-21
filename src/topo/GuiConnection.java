@@ -25,8 +25,8 @@ public class GuiConnection {
 						  this.destNode + "', label: '" +
 						  this.sourceInterface + "					" + 
 						  this.destInterface + "', faveColor: '" +
-						  getHue(this.packetLoss) + "', strength: " +
-						  this.packetLoss +" } }");
+						  getHue(this.packetLoss) + "', strength: 70 " 
+						   +" } }");
 	}
 	
 	 private String getHue(int ratio) {

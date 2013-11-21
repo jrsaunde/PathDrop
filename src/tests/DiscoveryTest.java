@@ -22,7 +22,7 @@ public class DiscoveryTest {
 			NetworkDiscovery network = new NetworkDiscovery(startNode, destNode, username, password);
 			
 			//Print out topology in JS format
-			network.convertTopology();
+			System.out.println(network.convertTopology());
 			
 		} catch (Exception e){
 			e.printStackTrace();

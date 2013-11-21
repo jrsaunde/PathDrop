@@ -10,20 +10,31 @@ public class NodePuppet {
 	public String message= "Hello from Java";
 	private String errBuf = "";
 	
-	/* Packet Loss percentage (0 - 100) */
-	public int pktLoss = 0;
-	
+	public int pktLoss;
 	
 	/**
-	 * Call the native C program to program a node to watch for traffic
-	 * @param address - Address of the node we are programming
-	 * @param user - Username for authentication
-	 * @param pass - Password for authentication
-	 * @param protocol - TCP/UDP
+	 *  Call the native C program to program a node to watch for traffic
+	 * @param address - address of the node we want to program
+	 * @param user - username to login
+	 * @param pass - password to login
+	 * @param protocol - protocol of the traffic we are looking for (TCP = 6, UDP = 17)
+	 * @param source_ip - Source IP address for traffic
+	 * @param source_port - Source port number for traffic 
+	 * @param dest_ip - Destination IP address for traffic
+	 * @param dest_port - Destination port number for traffic
+	 * @return status if ok? need to double check
 	 */
-	public native void ProgramNode(String address, String user, String pass, String protocol);
+	public native int ProgramNode(String address,
+								   String user,
+								   String pass,
+								   int protocol,
+								   String source_ip,
+								   int source_port,
+								   String dest_ip,
+								   int dest_port);
 	
 	public static void main(String[] args){
-		new NodePuppet().ProgramNode("10.192.10.110", "cisco", "cisco", "tcp");		//invoke the native method
+		new NodePuppet().ProgramNode("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80);		//invoke the native method
+		
 	}
 }

@@ -40,8 +40,8 @@ class Console implements Runnable{
 		this.username = username;
 		this.password = password;
 		
-		vty = new VTYSession();
-		vty.openVTY(ip, username, password);
+		vty = new VTYSession(ip, username, password);
+		vty.open();
 		cmds = new ArrayList<String>();
 		
 		Stage stage = new Stage();		
