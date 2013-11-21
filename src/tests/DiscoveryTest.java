@@ -17,9 +17,9 @@ public class DiscoveryTest {
 			System.out.println("Start node is " + start +
 							   " with " + username + 
 							   "/" + password);
-			InetAddress startNode 	= InetAddress.getByName(start);
-			InetAddress destNode	= InetAddress.getByName(dest);
-			NetworkDiscovery network = new NetworkDiscovery(startNode, destNode, username, password);
+			/*InetAddress startNode 	= InetAddress.getByName(start);
+			InetAddress destNode	= InetAddress.getByName(dest);*/
+			NetworkDiscovery network = new NetworkDiscovery(start, dest, username, password);
 			
 			//Print out topology in JS format
 			System.out.println(network.convertTopology());

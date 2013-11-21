@@ -1,6 +1,7 @@
 package discovery;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +12,8 @@ import topo.GuiConnection;
 import topo.GuiNode;
 
 import com.cisco.onep.core.exception.OnepException;
+import com.cisco.onep.core.exception.OnepIllegalArgumentException;
+import com.cisco.onep.core.exception.OnepInvalidSettingsException;
 import com.cisco.onep.core.util.OnepConstants;
 import com.cisco.onep.element.NetworkApplication;
 import com.cisco.onep.element.NetworkElement;
@@ -25,7 +28,7 @@ import com.cisco.onep.topology.Node;
 import com.cisco.onep.topology.Topology;
 import com.cisco.onep.topology.Topology.TopologyType;
 
-public class NetworkDiscovery {
+public class NetworkDiscovery implements Runnable {
 
 	public Graph 				graph 					= null;
 	public List<InetAddress> 	addresses;
@@ -36,6 +39,11 @@ public class NetworkDiscovery {
 	public ArrayList<String>	paths 					= new ArrayList<String>();
 	private String 				newLine 				= System.getProperty("line.separator");
 	
+	NetworkElement				node;
+	InetAddress					startAddress;
+	InetAddress					destAddress;
+	String						username;
+	String						password;
 	
 	/**
 	 * Discovers the network from the startAddress and generates a graph object
@@ -43,34 +51,20 @@ public class NetworkDiscovery {
 	 * @param startAddress 	the InetAddress of the start node
 	 * @param username		the username for all devices
 	 * @param password		the password for all devices
+	 * @throws Exception 
+	 * @throws OnepInvalidSettingsException 
+	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(InetAddress startAddress, InetAddress destAddress, String username, String password){
-		
-		//TODO: Testing code (keeping track of startTime)
-		long startTime = System.nanoTime();		
-		
-		try {
-			/*Initialize the global variables*/
-			initalizeGlobals();
-			
-			/*Set up the Start Node*/
-			NetworkElement node = discoveryApplication.getNetworkElement(startAddress);			
-			
-			/*Run recursive network discovery*/
-			getNeighbors(node, username, password);
-			
-			/*Find paths*/
-			findPaths(startAddress, destAddress);
-			/*Print out the Global graph*/
-			printNetwork();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		/*TODO: Testing code for timing the program execution time*/
-		long endTime = System.nanoTime();
-		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
+	public NetworkDiscovery(String srcIP, String dstIP, String username, String password) throws Exception{
+
+		/*Initialize globals*/
+		this.startAddress = InetAddress.getByName(srcIP);
+		this.destAddress = InetAddress.getByName(dstIP);
+		this.username = username;
+		this.password = password;
+		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
+		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
+		this.addresses = new ArrayList<InetAddress>();		
 		
 		return;	
 	}
@@ -186,9 +180,6 @@ public class NetworkDiscovery {
 	 * This will initialize the global variables for the NetworkDiscovery class
 	 */
 	private void initalizeGlobals(){
-		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
-		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
-		this.addresses = new ArrayList<InetAddress>();
 	}
 
 /**
@@ -268,6 +259,35 @@ public class NetworkDiscovery {
 		}
 	
 	public void writeTopology(){
+		
+	}
+
+	@Override
+	public void run() {
+		System.out.println("NetworkDiscovery Thread: " + Thread.currentThread().getName());
+		
+		//TODO: Testing code (keeping track of startTime)
+		long startTime = System.nanoTime();	
+
+		try {
+		/*Set up the Start Node*/
+		this.node = discoveryApplication.getNetworkElement(startAddress);
+		
+		/*Run recursive network discovery*/
+		getNeighbors(node, username, password);
+		
+		/*Find paths*/
+		findPaths(startAddress, destAddress);
+		
+		/*Print out the Global graph*/
+		printNetwork();
+		} catch (Exception e) {
+			System.out.println("Failed: " + e);
+		}
+
+		/*TODO: Testing code for timing the program execution time*/
+		long endTime = System.nanoTime();
+		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
 		
 	}
 }

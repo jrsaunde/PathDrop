@@ -75,16 +75,14 @@ class Console implements Runnable{
 
 	@Override
 	public void run() {
-		System.out.println("Current Thread: " + Thread.currentThread().getName());
+		System.out.println("Console Thread: " + Thread.currentThread().getName());
 			
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
 			new EventHandler<MouseEvent>() {
-
 				@Override
 				public void handle(MouseEvent arg0) {
 		            textField.requestFocus();
-					
 				}
 		});
 		

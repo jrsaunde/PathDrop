@@ -43,11 +43,12 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Callback;
 
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import topo.NetworkDiscovery;
+import discovery.NetworkDiscovery;
 import vty.VTYSession;
 
 public class GuiFx extends Application {
@@ -187,12 +188,16 @@ public class GuiFx extends Application {
 					srcIP = srcIPField.getText().trim();
 				else 
 					return;
+				
 				try {
+					NetworkDiscovery networkDiscovery = new NetworkDiscovery(srcIP, dstIP, username, password);
+					Thread thread = new Thread(networkDiscovery);
+					threads.add(thread);
+					thread.start();
 					browser.loadTopo();
-				} catch (MalformedURLException e1) {
+				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-				// call network discovery object (inputs)
 			}
 
 		});
@@ -216,8 +221,8 @@ public class GuiFx extends Application {
 				Console console = new Console(srcIP, username, password, threads);
 				Thread thread = new Thread(console);
 				threads.add(thread);
-				thread.start();/*
-		    	for(Thread t: threads)
+				thread.start();
+				/*for(Thread t: threads)
 		    		System.out.println(t.isAlive());*/
 			}
 		});
