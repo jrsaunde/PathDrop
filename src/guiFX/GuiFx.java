@@ -19,6 +19,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -61,6 +62,7 @@ public class GuiFx extends Application {
 	private String protocol;
 	private String username;
 	private String password;
+	private ArrayList<Thread>threads = new ArrayList<Thread>();
 
 	private TextField srcIPField = new TextField("1.1.1.1");
 	private TextField dstIPField = new TextField("1.1.1.2");
@@ -195,11 +197,9 @@ public class GuiFx extends Application {
 
 		});
 		
-		
 		// console into a box
 		consoleButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				
 				if (Validator.validateIP(srcIPField))
 					srcIP = srcIPField.getText().trim();
 				else 
@@ -213,9 +213,23 @@ public class GuiFx extends Application {
 				else 
 					return;
 				
-				(new Thread(new Console(srcIP, username, password))).start();
+				Console console = new Console(srcIP, username, password, threads);
+				Thread thread = new Thread(console);
+				threads.add(thread);
+				thread.start();/*
+		    	for(Thread t: threads)
+		    		System.out.println(t.isAlive());*/
 			}
+		});
 
+		// close operation
+		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+		    @SuppressWarnings("deprecation")
+			@Override public void handle(WindowEvent t) {
+		    	Platform.exit();
+		    	for(Thread thread: threads)
+		    		thread.stop();
+		    }
 		});
 		
 		// core stage

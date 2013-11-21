@@ -1,18 +1,21 @@
 package guiFX;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import javafx.scene.image.Image;
 import javafx.scene.web.WebView;
 
-public class Tester {
-	public Tester() {
-		
+public class Tester implements Runnable {
+	public void threadMonitor(ArrayList<Thread>threads) {
+		for(Thread thread : threads)
+    		System.out.println(thread.isAlive());
 	}
-	public static void main(String args[]) {
-		System.out.println(Validator.validateIPLogic("123.123.123.123"));
-		Image image2 = new Image("web/topology.html", 100, 150, false, false);
-		new Tester();
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
