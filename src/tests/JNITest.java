@@ -20,7 +20,7 @@ public class JNITest {
 		
 		NodePuppet puppet = new NodePuppet();
 		puppet.ProgramNode(start, username, password, protocol, sourceIP, sourcePort, destIP, destPort);
-		System.out.println("In Java, int is " + puppet.number);
+		System.out.println("In Java, we have " + puppet.totalPackets + " packets with " + puppet.packetLoss + "% loss");
 		System.exit(0);
 	}
 }

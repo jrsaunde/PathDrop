@@ -47,10 +47,14 @@ typedef struct list{
 } List;
 
 static List *root = NULL;
-static int timeout = 10; //how long we wait before declaring a packet loss
+static int timeout = 5; //how long we wait before declaring a packet loss
+static jint lostPackets = 0;
+static jlong totalPackets = 0;
 
 
 static void add_to_end(List *list, uint16_t _data, time_t _timestamp){
+
+	totalPackets++;
 	if(list == NULL){
 		root = (List *)malloc(sizeof(List));
 		root->data = _data;
@@ -101,6 +105,7 @@ static int search_and_remove(List *list, uint16_t _data){
 	}else{
 		while(1){
 			if(time(NULL) - list->timestamp > timeout){
+				lostPackets++;
 				printf("PACKET LOSS: packet with id %d never seen\n", list->data);
 				root = list->next;
 				free(list);
@@ -127,6 +132,7 @@ static int search_and_remove(List *list, uint16_t _data){
 			return 1;
 		}else{
 			if(time(NULL) - list->next->timestamp > timeout){
+				lostPackets++;
 				printf("PACKETT LOSS: packet with id %d never seen\n", list->next->data);
 				List *temp = list->next;
 				list->next = list->next->next;
@@ -549,7 +555,7 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     printf("\n"
     		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
     search_and_remove(root, pkt_id);
-    print_list(root);
+    //print_list(root);
     free(src_ip);
     free(dest_ip);
     return;
@@ -589,7 +595,7 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	    printf("\n"
 	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
 	    add_to_end(root, pkt_id, time(NULL));
-	    print_list(root);
+	    //print_list(root);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -688,6 +694,34 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	        return (ONEP_ERR_NO_DATA);
 	    }
 
+	/* PacketLoss and TotalPackets setter methods */
+	    jmethodID midCallBackPacketLoss = (*env)->GetMethodID(env, thisClass, "setPacketLoss", "(I)V");
+	    jmethodID midCallBackTotalPackets = (*env)->GetMethodID(env, thisClass, "setTotalPackets", "(J)V");
+
+	    if ( (midCallBackPacketLoss == NULL ) || (midCallBackTotalPackets == NULL))
+	    	return ONEP_FAIL;
+	/* PacketLoss and total packet number */
+	    //jfieldID totalPacketsfid = (*env)->GetFieldID(env, thisClass, "totalPackets", "J");
+	    //jfieldID packetLossfid 	= (*env)->GetFieldID(env, thisClass, "packetLoss", "I");
+	    //if( (totalPacketsfid == NULL) || (packetLossfid == NULL))
+	    //	return ONEP_FAIL;
+
+	    //totalPackets = (*env)->GetLongField(env, thisObj, totalPacketsfid);
+
+//	    //the int
+//	    	//get the Field ID of number
+//	    	jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "number","I");
+//	    	if(NULL == fidNumber) return 1;
+//
+//	    	//Get the int given the Field ID
+//	    	jint number = (*env)->GetIntField(env, thisObj, fidNumber);
+//	    	printf("In C, the int is %d\n", number);
+//
+//	    	//Change the variable
+//	    	number = 99;
+//	    	(*env)->SetIntField(env, thisObj, fidNumber, number);
+
+
 
 	/* Create Application instance. */
 		TRY(rc, onep_application_get_instance(&myapp), env, thisObj, errFid,
@@ -783,6 +817,14 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 				sleep(timeout);
 				(void) onep_dpss_packet_callback_rx_count(&pak_count);
 				fprintf(stderr, "Current Packet Count: %lu\n", pak_count);
+				//(*env)->SetIntField(env, thisObj, totalPacketsfid, totalPackets);
+				//(*env)->SetIntField(env, thisObj, packetLossfid, ((lostPackets*100) /(totalPackets)));
+
+				(*env)->CallVoidMethod(env, thisObj, midCallBackPacketLoss, ((lostPackets*100) /(totalPackets)));
+				(*env)->CallVoidMethod(env, thisObj, midCallBackTotalPackets, totalPackets);
+
+				fprintf(stderr, "In C, Current packets in: %lu\n", totalPackets);
+				fprintf(stderr, "In C, Current lost packets: %d\n ", lostPackets);
 				if (pak_count == last_pak_count) {
 				  break;
 				} else {
@@ -792,19 +834,6 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 			 printf("done\n");
 
 	/* END SNIPPET: register_packets */
-
-	//the int
-	//get the Field ID of number
-	jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "number","I");
-	if(NULL == fidNumber) return 1;
-
-	//Get the int given the Field ID
-	jint number = (*env)->GetIntField(env, thisObj, fidNumber);
-	printf("In C, the int is %d\n", number);
-
-	//Change the variable
-	number = 99;
-	(*env)->SetIntField(env, thisObj, fidNumber, number);
 
 
 	cleanup:
