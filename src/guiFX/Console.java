@@ -1,5 +1,6 @@
 package guiFX;
 
+import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -30,10 +31,11 @@ class Console implements Runnable{
 	VTYSession vty;
 	ArrayList<String> cmds;
 	ListIterator itr;
+
+	TextArea textArea;
+	TextField textField;
 	
-	public Console(final String ip, final String username, final String password) {
-		System.out.println("New thread running with IP: " + ip);
-		
+	public Console(final String ip, final String username, final String password, ArrayList<Thread>threads) {
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
@@ -43,10 +45,10 @@ class Console implements Runnable{
 		cmds = new ArrayList<String>();
 		
 		Stage stage = new Stage();		
-        stage.setTitle("Hello World!");
+        stage.setTitle(ip);
 		VBox root = new VBox();
-		final TextArea textArea = new TextArea();
-		final TextField textField = new TextField();
+		textArea = new TextArea();
+		textField = new TextField();
 		root.getChildren().addAll(textArea, textField);
 		textArea.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
@@ -66,16 +68,24 @@ class Console implements Runnable{
 	            textField.requestFocus();
 	        }
 	    });
-		
+			
+		stage.setScene(new Scene(root, 400, 330));
+		stage.show();
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Current Thread: " + Thread.currentThread().getName());
+			
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
-				new EventHandler<MouseEvent>() {
+			new EventHandler<MouseEvent>() {
 
-					@Override
-					public void handle(MouseEvent arg0) {
-			            textField.requestFocus();
-						
-					}
+				@Override
+				public void handle(MouseEvent arg0) {
+		            textField.requestFocus();
+					
+				}
 		});
 		
         final String keyComb1 = "_CONTROL_C";
@@ -85,6 +95,7 @@ class Console implements Runnable{
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
 				if(event.getCode() == KeyCode.ENTER) {
+					System.out.println("Current Thread: " + Thread.currentThread().getName());
 					String cmd = textField.getText();
 					cmds.add(0, cmd);
 					if (cmd == null)
@@ -131,14 +142,5 @@ class Console implements Runnable{
 				}
 			};
 		});
-
-
-		stage.setScene(new Scene(root, 400, 330));
-		stage.show();
-	}
-
-	@Override
-	public void run() {
-		System.out.println("Hello from thread");
 	}
 }
