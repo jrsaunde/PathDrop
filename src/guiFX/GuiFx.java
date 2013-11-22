@@ -150,7 +150,7 @@ public class GuiFx extends Application {
 					return;
 				
 				if (Validator.validateIP(dstIPField))
-					srcIP = dstIPField.getText().trim();
+					dstIP = dstIPField.getText().trim();
 				else 
 					return;
 				
@@ -181,11 +181,11 @@ public class GuiFx extends Application {
 				else 
 					return;
 				if (Validator.validateUsername(usernameField))
-					srcIP = srcIPField.getText().trim();
+					username = usernameField.getText().trim();
 				else 
 					return;
 				if (Validator.validatePassword(passwordField))
-					srcIP = srcIPField.getText().trim();
+					password = passwordField.getText().trim();
 				else 
 					return;
 				
@@ -210,11 +210,11 @@ public class GuiFx extends Application {
 				else 
 					return;
 				if (Validator.validateUsername(usernameField))
-					srcIP = srcIPField.getText().trim();
+					username = usernameField.getText().trim();
 				else 
 					return;
 				if (Validator.validatePassword(passwordField))
-					srcIP = srcIPField.getText().trim();
+					password = passwordField.getText().trim();
 				else 
 					return;
 				
