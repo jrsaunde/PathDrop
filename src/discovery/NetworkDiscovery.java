@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 
+import javafx.scene.Parent;
 import topo.GuiConnection;
 import topo.GuiNode;
 
@@ -65,7 +66,6 @@ public class NetworkDiscovery implements Runnable {
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
 		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
 		this.addresses = new ArrayList<InetAddress>();		
-		
 		return;	
 	}
 	
@@ -78,7 +78,6 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepException
 	 */
 	private Graph getNeighbors(NetworkElement node, String username, String password) throws OnepException{
-		
 		/*Connect to the node */		
 		@SuppressWarnings("unused")
 		SessionHandle nodeSession = node.connect(username, password, this.nodeConfig);
@@ -149,7 +148,7 @@ public class NetworkDiscovery implements Runnable {
 
 		for(Node device: nodes){
 			GuiNode node = new GuiNode(device.getName(), device.getName());
-			//System.out.println(node.getNode());
+			System.out.println(node.getNode());
 			this.nodeNames.add(node.getNode());
 		}
 		
@@ -164,7 +163,7 @@ public class NetworkDiscovery implements Runnable {
 														 edge.getTailNode().getName(),
 														 shortenName(edge.getTailNodeConnector().getName()),
 														 pktLoss);
-			//System.out.println(connection.getConnection());
+			System.out.println(connection.getConnection());
 			this.connectionStrings.add(connection.getConnection());
 		}
 		
@@ -186,7 +185,6 @@ public class NetworkDiscovery implements Runnable {
  * Prepare topology for the JavaFX Gui
  */
 	public String convertTopology(){
-		
 		String devices = "elements: { " + newLine + "	nodes: [" + newLine;
 
 		/*Prepare nodes */
@@ -219,12 +217,17 @@ public class NetworkDiscovery implements Runnable {
 	 * This will find all the paths from start to destination
 	 * @param start - IP address of the start node
 	 * @param dest  - IP address of the destination node
+	 * @throws Exception 
 	 */
-	private void findPaths(InetAddress start, InetAddress dest){
+	public void findPaths(String srcIP, String dstIP) throws Exception{
+
+		InetAddress start = InetAddress.getByName(srcIP);
+		InetAddress dest  = InetAddress.getByName(dstIP);
 		//Print all possible routes
 		Node startNode 	= null;
 		Node destNode 	= null;
 		List<Edge> edges = this.graph.getEdgeList(Edge.EdgeType.DIRECTED);
+		
 		for(Edge edge: edges){
 			
 			if(edge.getHeadNodeConnector().getAddressList().contains(start)){
@@ -261,6 +264,7 @@ public class NetworkDiscovery implements Runnable {
 	public void writeTopology(){
 		
 	}
+	
 
 	@Override
 	public void run() {
@@ -277,7 +281,7 @@ public class NetworkDiscovery implements Runnable {
 		getNeighbors(node, username, password);
 		
 		/*Find paths*/
-		findPaths(startAddress, destAddress);
+		//findPaths(startAddress, destAddress);
 		
 		/*Print out the Global graph*/
 		printNetwork();
@@ -289,5 +293,8 @@ public class NetworkDiscovery implements Runnable {
 		long endTime = System.nanoTime();
 		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
 		
+		/*synchronized(this){
+			notify();
+		}*/
 	}
 }

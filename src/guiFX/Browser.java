@@ -25,9 +25,11 @@ class Browser extends Region {
     final WebEngine webEngine = browser.getEngine();
     File file;
     ImageView image;
+    Image loaderImage;
     
     public Browser(String fileName, Image loaderImage) throws MalformedURLException {
         file = new File(fileName);
+    	this.loaderImage = loaderImage;
     	
     	//apply the styles
         getStyleClass().add("browser");
@@ -35,15 +37,18 @@ class Browser extends Region {
         //add the web view to the scene
         getChildren().add(browser);
         
-        // load default image
+              
+    }
+    
+    public void startLoading() {
+    	// load default image
         image = new ImageView();
-        image.setImage(loaderImage);
+        image.setImage(this.loaderImage);
   
         image.relocate((540-165)/2, (600-165)/2);
         getChildren().add(image);
-        
+  
     }
-    
 	public void loadTopo() throws MalformedURLException {
         // load the web page
 		getChildren().remove(image);
