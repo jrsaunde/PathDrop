@@ -49,9 +49,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import discovery.NetworkDiscovery;
+import discovery.PathDiscovery;
 import vty.VTYSession;
 
-public class GuiFx extends Application {
+public class GuiFx extends Application implements Runnable {
 
 	private Iterator<Node> i;
 	
@@ -64,17 +65,20 @@ public class GuiFx extends Application {
 	private String username;
 	private String password;
 	private ArrayList<Thread>threads = new ArrayList<Thread>();
+	private Thread networkThread;
 
-	private TextField srcIPField = new TextField("1.1.1.1");
+	private TextField srcIPField = new TextField("10.192.10.110");
 	private TextField dstIPField = new TextField("1.1.1.2");
 	private TextField srcPortField = new TextField("22");
 	private TextField dstPortField = new TextField("23");
 	private TextField windowField = new TextField("100");
 	private ChoiceBox protocolField = new ChoiceBox(FXCollections.observableArrayList("TCP", "UDP", "DCCP", "SCTP", "RSVP"));
-	private TextField usernameField = new TextField("username");
-	private TextField passwordField = new TextField("password");
+	private TextField usernameField = new TextField("cisco");
+	private TextField passwordField = new TextField("cisco");
 	private NetworkDiscovery network;
 	private Image loaderImage = new Image("img/loader.gif", true);
+	
+	private final Object lock = new Object();
 	
 	@Override public void start(Stage stage) throws Exception {
 		Group root = new Group();
@@ -150,14 +154,20 @@ public class GuiFx extends Application {
 					return;
 				
 				if (Validator.validateIP(dstIPField))
-					srcIP = dstIPField.getText().trim();
+					dstIP = dstIPField.getText().trim();
 				else 
 					return;
-				
 				fields.getChildren().remove(traceButton);
 				fields.getChildren().add(stopButton);
 				stopButton.requestFocus();
 				// call  trace object (inputs)
+				try {
+					network.findPaths(srcIP, dstIP);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					System.out.println("WE FAILED!!! find paths");
+					e1.printStackTrace();
+				}
 			}
 		});
 		
@@ -170,6 +180,7 @@ public class GuiFx extends Application {
 				fields.getChildren().add(traceButton);
 				traceButton.requestFocus();
 				// call stop trace object (inputs)
+				
 			}
 		});
 		
@@ -181,20 +192,29 @@ public class GuiFx extends Application {
 				else 
 					return;
 				if (Validator.validateUsername(usernameField))
-					srcIP = srcIPField.getText().trim();
+					username = usernameField.getText().trim();
 				else 
 					return;
 				if (Validator.validatePassword(passwordField))
-					srcIP = srcIPField.getText().trim();
+					password = passwordField.getText().trim();
 				else 
 					return;
 				
 				try {
-					NetworkDiscovery networkDiscovery = new NetworkDiscovery(srcIP, dstIP, username, password);
-					Thread thread = new Thread(networkDiscovery);
-					threads.add(thread);
-					thread.start();
-					browser.loadTopo();
+					network = new NetworkDiscovery(srcIP, dstIP, username, password);
+					//Thread thread = new Thread(network);
+					networkThread = new Thread(network);
+					threads.add(networkThread);
+					networkThread.start();
+					browser.startLoading();
+					(new Thread(new GuiFx())).start();
+					//System.out.println(tmpThread.isAlive());
+					//browser.loadTopo();
+					/*synchronized(thread){
+						this.wait();
+					}*/
+					//Thread.currentThread().wait(10000);
+					//browser.loadTopo();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -210,11 +230,11 @@ public class GuiFx extends Application {
 				else 
 					return;
 				if (Validator.validateUsername(usernameField))
-					srcIP = srcIPField.getText().trim();
+					username = usernameField.getText().trim();
 				else 
 					return;
 				if (Validator.validatePassword(passwordField))
-					srcIP = srcIPField.getText().trim();
+					password = passwordField.getText().trim();
 				else 
 					return;
 				
@@ -233,7 +253,8 @@ public class GuiFx extends Application {
 			@Override public void handle(WindowEvent t) {
 		    	Platform.exit();
 		    	for(Thread thread: threads)
-		    		thread.stop();
+		    		System.out.println("Thread : " + thread.getName() + " is " + thread.isAlive());
+		    		//thread.stop();
 		    }
 		});
 		
@@ -246,5 +267,16 @@ public class GuiFx extends Application {
 	
 	public static void main(String[] args) { 
 		launch(args); 
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Monitor thread started");
+		while (true) {
+			while (networkThread.isAlive()) {
+				// do nothing
+			}
+			System.out.println("network has been discovered");
+		}
 	}
 }
