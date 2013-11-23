@@ -1,6 +1,10 @@
 package discovery;
 
+import guiFX.Browser;
+
+import java.io.FileNotFoundException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -8,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import topo.GuiConnection;
 import topo.GuiNode;
@@ -39,7 +44,9 @@ public class NetworkDiscovery implements Runnable {
 	public ArrayList<String> 	connectionStrings 		= new ArrayList<String>();
 	public ArrayList<String>	paths 					= new ArrayList<String>();
 	private String 				newLine 				= System.getProperty("line.separator");
-	
+
+	Browser						browser;
+	ArrayList<String> 			discoveredIPs;
 	NetworkElement				node;
 	InetAddress					startAddress;
 	InetAddress					destAddress;
@@ -48,6 +55,8 @@ public class NetworkDiscovery implements Runnable {
 	
 	/**
 	 * Discovers the network from the startAddress and generates a graph object
+	 * @param browser 
+	 * @param nodes 
 	 * 
 	 * @param startAddress 	the InetAddress of the start node
 	 * @param username		the username for all devices
@@ -56,9 +65,11 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
+		this.browser = browser;
+		this.discoveredIPs = discoveredIPs;
 		this.startAddress = InetAddress.getByName(srcIP);
 		this.destAddress = InetAddress.getByName(dstIP);
 		this.username = username;
@@ -184,7 +195,7 @@ public class NetworkDiscovery implements Runnable {
 /**
  * Prepare topology for the JavaFX Gui
  */
-	public String convertTopology(){
+	public String getJsonTopo(){
 		String devices = "elements: { " + newLine + "	nodes: [" + newLine;
 
 		/*Prepare nodes */
@@ -208,7 +219,7 @@ public class NetworkDiscovery implements Runnable {
 				devices = devices + "		" +connection + newLine;
 			}
 		}
-		devices = devices + "	]" + newLine +    "  }," + newLine;
+		devices = devices + "	]" + newLine +    "  }" + newLine;
 		
 		return(devices);
 	}
@@ -267,34 +278,49 @@ public class NetworkDiscovery implements Runnable {
 	
 
 	@Override
-	public void run() {
+	public void run(){
 		System.out.println("NetworkDiscovery Thread: " + Thread.currentThread().getName());
 		
 		//TODO: Testing code (keeping track of startTime)
 		long startTime = System.nanoTime();	
 
 		try {
-		/*Set up the Start Node*/
-		this.node = discoveryApplication.getNetworkElement(startAddress);
-		
-		/*Run recursive network discovery*/
-		getNeighbors(node, username, password);
-		
-		/*Find paths*/
-		//findPaths(startAddress, destAddress);
-		
-		/*Print out the Global graph*/
-		printNetwork();
+			//Set up the Start Node
+			this.node = discoveryApplication.getNetworkElement(startAddress);
+			
+			//Run recursive network discovery
+			getNeighbors(node, username, password);
+			
+			//Print out the Global graph
+			printNetwork();
 		} catch (Exception e) {
-			System.out.println("Failed: " + e);
+				System.out.println("NetworkDiscovery Failed");
 		}
 
+		/*// simulating the discoverying *delay
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e1) {
+			System.out.println("Could not sleep");
+		} */
+		
 		/*TODO: Testing code for timing the program execution time*/
 		long endTime = System.nanoTime();
+		
 		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
 		
-		/*synchronized(this){
-			notify();
-		}*/
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run(){
+				try {
+					browser.loadTopo(getJsonTopo());
+					//browser.loadTopo(getJsonTopo());
+				} catch (MalformedURLException | FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+		
 	}
 }

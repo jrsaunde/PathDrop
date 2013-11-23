@@ -3,6 +3,16 @@ import javafx.scene.control.TextField;
 
 public class Validator {
 	
+	public static void setFalse(TextField textField) {
+		System.out.println("Please provide valid source IP address");
+		textField.requestFocus();
+		textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
+	}
+	
+	public static void setTrue(TextField textField) {
+		textField.setStyle("-fx-text-box-border, -fx-control-inner-background;");
+	}
+	
 	public static boolean validateIP(TextField textField) {
 		if (textField.getText().isEmpty()) {
 			System.out.println("Please provide valid source IP address");
@@ -20,7 +30,6 @@ public class Validator {
 				return true;
 			}
 		}
-		
 	}
 	
 	public static boolean validateUsername(TextField textField) {

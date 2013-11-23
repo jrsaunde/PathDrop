@@ -52,7 +52,7 @@ import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
 import vty.VTYSession;
 
-public class GuiFx extends Application implements Runnable {
+public class GuiFx extends Application {
 
 	private Iterator<Node> i;
 	
@@ -65,7 +65,7 @@ public class GuiFx extends Application implements Runnable {
 	private String username;
 	private String password;
 	private ArrayList<Thread>threads = new ArrayList<Thread>();
-	private Thread networkThread;
+	private static ArrayList<String>discoveredIPs = new ArrayList<String>();
 
 	private TextField srcIPField = new TextField("10.192.10.110");
 	private TextField dstIPField = new TextField("1.1.1.2");
@@ -76,6 +76,7 @@ public class GuiFx extends Application implements Runnable {
 	private TextField usernameField = new TextField("cisco");
 	private TextField passwordField = new TextField("cisco");
 	private NetworkDiscovery network;
+	private Browser browser;
 	private Image loaderImage = new Image("img/loader.gif", true);
 	
 	private final Object lock = new Object();
@@ -109,7 +110,7 @@ public class GuiFx extends Application implements Runnable {
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
 		Button discoverButton = new Button("Discover");
-		Button consoleButton = new Button("Connect");
+		Button connectButton = new Button("Connect");
 		
 		final Button traceButton = new Button("Trace");
 		final Button stopButton = new Button("Stop");
@@ -118,10 +119,10 @@ public class GuiFx extends Application implements Runnable {
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
 				windowLabel, protocolLabel, usernameLabel, passwordLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, consoleButton, traceButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, connectButton, traceButton);
 		
 		// topology pane
-		final Browser browser = new Browser("src/web/web.html", loaderImage); 
+		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage); 
 		viewPane.getChildren().add(browser);
 		
 		// format labels
@@ -201,20 +202,11 @@ public class GuiFx extends Application implements Runnable {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(srcIP, dstIP, username, password);
-					//Thread thread = new Thread(network);
-					networkThread = new Thread(network);
-					threads.add(networkThread);
-					networkThread.start();
-					browser.startLoading();
-					(new Thread(new GuiFx())).start();
-					//System.out.println(tmpThread.isAlive());
-					//browser.loadTopo();
-					/*synchronized(thread){
-						this.wait();
-					}*/
-					//Thread.currentThread().wait(10000);
-					//browser.loadTopo();
+					network = new NetworkDiscovery(browser, discoveredIPs, srcIP, dstIP, username, password);
+					Thread thread = new Thread(network);
+					threads.add(thread);
+					thread.start();
+					browser.loadLoader();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -223,7 +215,7 @@ public class GuiFx extends Application implements Runnable {
 		});
 		
 		// console into a box
-		consoleButton.setOnAction(new EventHandler<ActionEvent>() {
+		connectButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				if (Validator.validateIP(srcIPField))
 					srcIP = srcIPField.getText().trim();
@@ -238,12 +230,17 @@ public class GuiFx extends Application implements Runnable {
 				else 
 					return;
 				
+				for (String ip : discoveredIPs) // checks to see if node exist in disicoverey list
+					System.out.println(ip);
+				if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}
+					
 				Console console = new Console(srcIP, username, password, threads);
 				Thread thread = new Thread(console);
 				threads.add(thread);
 				thread.start();
-				/*for(Thread t: threads)
-		    		System.out.println(t.isAlive());*/
 			}
 		});
 
@@ -253,8 +250,7 @@ public class GuiFx extends Application implements Runnable {
 			@Override public void handle(WindowEvent t) {
 		    	Platform.exit();
 		    	for(Thread thread: threads)
-		    		System.out.println("Thread : " + thread.getName() + " is " + thread.isAlive());
-		    		//thread.stop();
+		    		thread.interrupt();
 		    }
 		});
 		
@@ -267,16 +263,5 @@ public class GuiFx extends Application implements Runnable {
 	
 	public static void main(String[] args) { 
 		launch(args); 
-	}
-
-	@Override
-	public void run() {
-		System.out.println("Monitor thread started");
-		while (true) {
-			while (networkThread.isAlive()) {
-				// do nothing
-			}
-			System.out.println("network has been discovered");
-		}
 	}
 }

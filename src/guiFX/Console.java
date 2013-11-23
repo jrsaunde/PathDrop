@@ -39,10 +39,8 @@ class Console implements Runnable{
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
-		
-		vty = new VTYSession(ip, username, password);
-		vty.open();
-		cmds = new ArrayList<String>();
+		this.cmds = new ArrayList<String>();
+
 		
 		Stage stage = new Stage();		
         stage.setTitle(ip);
@@ -56,7 +54,6 @@ class Console implements Runnable{
 		textArea.setPrefSize(400, 310);
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
-		
 
 		textField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
@@ -76,7 +73,10 @@ class Console implements Runnable{
 	@Override
 	public void run() {
 		System.out.println("Console Thread: " + Thread.currentThread().getName());
-			
+
+		this.vty = new VTYSession(ip, username, password);
+		this.vty.open();
+		
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
 			new EventHandler<MouseEvent>() {
