@@ -1,51 +1,16 @@
 package datapath;
 
 
-public class NodePuppet {
+public class NodePuppet implements Runnable{
 	static{
 		System.loadLibrary("ProgramNode");
 	}
 	
-	public int packetLoss 		= 0;
-	public long totalPackets 	= 0;
+	public int number = 88;
+	public String message= "Hello from Java";
+	private String errBuf = "";
 	
-	public String message		= "Hello from Java";
-	private String errBuf 		= "";
-	
-	/**
-	 * This method will be called from the ProgramNode library in C, to update the global variable
-	 * This number is calculated in C by pktLoss = (lostPackets)/(totalPackets)
-	 * @param pktLoss - percentage of packetloss (number from 0 to 100)
-	 */
-	private void setPacketLoss(int pktLoss){
-		this.packetLoss = pktLoss;
-		System.out.println("In Java, Packet loss is " + this.packetLoss);
-	}
-	/**
-	 * This method will be called from the ProgramNode library in C, to update the
-	 * total amount of packets we have seen come into the node
-	 * @param totalPkts - long number that represents packets in
-	 */
-	private void setTotalPackets(long totalPkts){
-		this.totalPackets = totalPkts;
-		System.out.println("In Java, TotalPackets is " + this.totalPackets);
-	}
-	
-	/**
-	 * This method will be called from Java to get the current packet Loss percentage for this node
-	 * @return - packetLoss integer between 0 and 100
-	 */
-	public int getPacketLoss(){
-		return this.packetLoss;
-	}
-	/**
-	 * This method will be called from Java and will return the total number of packets that this node has
-	 * seen come in 
-	 * @return - long number that represents total incoming packets
-	 */
-	public long getTotalPackets(){
-		return this.totalPackets;
-	}
+	public int pktLoss;
 	
 	/**
 	 *  Call the native C program to program a node to watch for traffic
@@ -67,9 +32,49 @@ public class NodePuppet {
 								   int source_port,
 								   String dest_ip,
 								   int dest_port);
+	private String address;
+	private String user;
+	private String pass;
+	private int protocol;
+	private String source_ip;
+	private int source_port;
+	private String dest_ip;
+	private int dest_port;
 	
+	
+	public NodePuppet(String _address,
+					   String _user,
+					   String _pass,
+					   int _protocol,
+					   String _source_ip,
+					   int _source_port,
+					   String _dest_ip,
+					   int _dest_port){
+		this.address = _address;
+		this.user = _user;
+		this.pass = _pass;
+		this.protocol = _protocol;
+		this.source_ip = _source_ip;
+		this.source_port = _source_port;
+		this.dest_ip = _dest_ip;
+		this.dest_port = _dest_port;
+	}
+	
+	   
 	public static void main(String[] args){
-		new NodePuppet().ProgramNode("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80);		//invoke the native method
-		
+		//NodePuppet puppet = new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80);		//invoke the native method
+		//new Thread(puppet).start();
+	}
+
+	@Override
+	public void run() {
+		ProgramNode(this.address,
+					this.user,
+					this.pass,
+					this.protocol,
+					this.source_ip,
+					this.source_port,
+					this.dest_ip,
+					this.dest_port);
 	}
 }

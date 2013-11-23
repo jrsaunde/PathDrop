@@ -28,7 +28,7 @@
 #include "onep_dpss_callback_framework.h"
 
 #include "datapath_NodePuppet.h"
- 
+/*
 #define TRY(_rc, _expr, _env, _jobj, _errFid, _fmt, _args...)                                 \
 if (((_rc) = (_expr)) != ONEP_OK) {                                 \
 char *_tmpErrBuf = g_strdup_printf("\n%s:%d: Error: %s(%d): " _fmt "\n",               \
@@ -38,7 +38,7 @@ g_free(_tmpErrBuf); \
 (*_env)->SetObjectField(_env, _jobj, _errFid, _errBuf); \
 return ((_rc));                                                 \
 }
-
+*/
 typedef struct list{
 	struct list* next;
 	struct list* previous;
@@ -47,14 +47,11 @@ typedef struct list{
 } List;
 
 static List *root = NULL;
-static int timeout = 5; //how long we wait before declaring a packet loss
-static jint lostPackets = 0;
-static jlong totalPackets = 0;
-
+static int PACKET_TIMEOUT = 10; //how long we wait before declaring a packet loss
+static char *DEST;
+static int CHECK_TIME_INTERVAL = 2;
 
 static void add_to_end(List *list, uint16_t _data, time_t _timestamp){
-
-	totalPackets++;
 	if(list == NULL){
 		root = (List *)malloc(sizeof(List));
 		root->data = _data;
@@ -65,12 +62,8 @@ static void add_to_end(List *list, uint16_t _data, time_t _timestamp){
 		return;
 	}
 	List* last = list;
-	while (1){
-		if(last->next == NULL){
-			break;
-		}else{
-			last = last->next;
-		}
+	while (last->next != NULL){
+		last = last->next;
 	}
 	last->next = malloc(sizeof(List));
 	last->next->previous = last;
@@ -95,8 +88,31 @@ static void print_list(List *list){
 	printf("---------------------------------------------------------------------\n");
 }
 
+static void check_timeout(List *list){
+	if(list == NULL) return;
+	while(1){
+		if(time(NULL) - list->timestamp > PACKET_TIMEOUT){
+			printf("PACKET LOSS: packet with id %d never seen\n", list->data);
+			root = list->next;
+			free(list);
+			list = root;
+		}else{
+			break;
+		}
+	}
+	while(list->next != NULL){
+		if(time(NULL) - list->timestamp > PACKET_TIMEOUT){
+				printf("PACKET LOSS: packet with id %d never seen\n", list->data);
+				List *temp = list->next;
+				free(temp);
+		}
+		list->next = list->next->next;
+	}
+}
+
+
 static int search_and_remove(List *list, uint16_t _data){
-	if(list == NULL)return 0;
+	if(list == NULL) return 0;
 	if(list->data == _data){
 		root = list->next;
 		free(list);
@@ -104,8 +120,7 @@ static int search_and_remove(List *list, uint16_t _data){
 		return 1;
 	}else{
 		while(1){
-			if(time(NULL) - list->timestamp > timeout){
-				lostPackets++;
+			if(time(NULL) - list->timestamp > PACKET_TIMEOUT){
 				printf("PACKET LOSS: packet with id %d never seen\n", list->data);
 				root = list->next;
 				free(list);
@@ -115,15 +130,7 @@ static int search_and_remove(List *list, uint16_t _data){
 			}
 		}
 	}
-	while(1){
-		if(list->next == NULL){
-			if(list->data == _data){
-				return 1;
-			}else{
-				if(time(NULL) - list->timestamp > timeout) printf("PACKET LOSS\n");
-				return 0;
-			}
-		}
+	while(list->next != NULL){
 		if(list->next->data == _data){
 			List *temp = list->next;
 			list->next = list->next->next;
@@ -131,8 +138,7 @@ static int search_and_remove(List *list, uint16_t _data){
 			free(temp);
 			return 1;
 		}else{
-			if(time(NULL) - list->next->timestamp > timeout){
-				lostPackets++;
+			if(time(NULL) - list->next->timestamp > PACKET_TIMEOUT){
 				printf("PACKETT LOSS: packet with id %d never seen\n", list->next->data);
 				List *temp = list->next;
 				list->next = list->next->next;
@@ -141,7 +147,7 @@ static int search_and_remove(List *list, uint16_t _data){
 			list = list->next;
 		}
 	}
-	return 0; //TODO:is this the right value?
+	return 0;
 }
 
 static void dpss_tutorial_display_intf_list(onep_collection_t *intf_list, FILE *op)
@@ -555,11 +561,13 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     printf("\n"
     		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
     search_and_remove(root, pkt_id);
-    //print_list(root);
+    print_list(root);
+    fflush(stdout);
     free(src_ip);
     free(dest_ip);
     return;
 }
+
 static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 							  struct onep_dpss_paktype_ *pak,
 							  void *client_context,
@@ -594,8 +602,17 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 
 	    printf("\n"
 	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
-	    add_to_end(root, pkt_id, time(NULL));
-	    //print_list(root);
+	    /*
+	     * If it is destination, assume not lost and dont add to list
+	     * strcmp - 0 if equal
+	     */
+
+
+	    //if(strcmp(DEST, dest_ip)){
+	    	add_to_end(root, pkt_id, time(NULL));
+		    print_list(root);
+	    //}
+	    fflush(stdout);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -645,6 +662,8 @@ static onep_status_t register_traffic(network_element_t *ne,
 
 }
 
+
+
 JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 														   jobject thisObj,
 														   jstring j_address,
@@ -682,7 +701,6 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
     target_t *out_target = NULL;
     uint64_t pak_count, last_pak_count;
 
-
 	/*Get a reference to this object's class */
 	jclass thisClass = (*env)->GetObjectClass(env, thisObj);
 
@@ -694,43 +712,17 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	        return (ONEP_ERR_NO_DATA);
 	    }
 
-	/* PacketLoss and TotalPackets setter methods */
-	    jmethodID midCallBackPacketLoss = (*env)->GetMethodID(env, thisClass, "setPacketLoss", "(I)V");
-	    jmethodID midCallBackTotalPackets = (*env)->GetMethodID(env, thisClass, "setTotalPackets", "(J)V");
-
-	    if ( (midCallBackPacketLoss == NULL ) || (midCallBackTotalPackets == NULL))
-	    	return ONEP_FAIL;
-	/* PacketLoss and total packet number */
-	    //jfieldID totalPacketsfid = (*env)->GetFieldID(env, thisClass, "totalPackets", "J");
-	    //jfieldID packetLossfid 	= (*env)->GetFieldID(env, thisClass, "packetLoss", "I");
-	    //if( (totalPacketsfid == NULL) || (packetLossfid == NULL))
-	    //	return ONEP_FAIL;
-
-	    //totalPackets = (*env)->GetLongField(env, thisObj, totalPacketsfid);
-
-//	    //the int
-//	    	//get the Field ID of number
-//	    	jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "number","I");
-//	    	if(NULL == fidNumber) return 1;
-//
-//	    	//Get the int given the Field ID
-//	    	jint number = (*env)->GetIntField(env, thisObj, fidNumber);
-//	    	printf("In C, the int is %d\n", number);
-//
-//	    	//Change the variable
-//	    	number = 99;
-//	    	(*env)->SetIntField(env, thisObj, fidNumber, number);
-
-
 
 	/* Create Application instance. */
-		TRY(rc, onep_application_get_instance(&myapp), env, thisObj, errFid,
-		"onep_application_get_instance");
+		//TRY(rc, onep_application_get_instance(&myapp), env, thisObj, errFid,
+		//"onep_application_get_instance");
+	    onep_application_get_instance(&myapp);
 		onep_application_set_name(myapp, "Program Node");
 
 	/* Set session parameters */
-		TRY(rc, onep_session_config_new(ONEP_SESSION_SOCKET, &config), env, thisObj, errFid,
-		"onep_session_config_new");
+		//TRY(rc, onep_session_config_new(ONEP_SESSION_SOCKET, &config), env, thisObj, errFid,
+		//"onep_session_config_new");
+		onep_session_config_new(ONEP_SESSION_SOCKET, &config);
 		onep_session_config_set_event_queue_size(config, 300);
 		onep_session_config_set_event_drop_mode(config, ONEP_SESSION_EVENT_DROP_OLD);
 
@@ -743,18 +735,20 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
 		printf("Address: %s Username: %s Password: %s Protocol: %d\n", c_address, c_username, c_password, c_protocol);
 
+		DEST = c_dest;
 	/* Set address of Network Element */
 		memset(&v4addr, 0, sizeof(struct sockaddr_in));
 		v4addr.sin_family = AF_INET;
 		inet_pton(AF_INET, c_address, &(v4addr.sin_addr));
-		TRY(rc, onep_application_get_network_element(
-		myapp, (struct sockaddr*)&v4addr, &ne1), env, thisObj, errFid,
-		"onep_application_get_network_element");
+		//TRY(rc, onep_application_get_network_element(
+		//myapp, (struct sockaddr*)&v4addr, &ne1), env, thisObj, errFid,
+		//"onep_application_get_network_element");
+		onep_application_get_network_element(myapp, (struct sockaddr*)&v4addr, &ne1);
 
 	/* Connect to Network Element */
-		TRY(rc, onep_element_connect(ne1, c_username, c_password, config, &session_handle), env, thisObj, errFid,
-		"onep_element_connect");
-
+		//TRY(rc, onep_element_connect(ne1, c_username, c_password, config, &session_handle), env, thisObj, errFid,
+		//"onep_element_connect");
+		onep_element_connect(ne1, c_username, c_password, config, &session_handle);
 		if (!session_handle) {
 			fprintf(stderr, "\n*** create_network_connection fails ***\n");
 			return ONEP_FAIL;
@@ -814,26 +808,26 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 			/* wait to query the packet loop for the number
 			 * of packets received and processed. */
 			while (1) {
-				sleep(timeout);
-				(void) onep_dpss_packet_callback_rx_count(&pak_count);
-				fprintf(stderr, "Current Packet Count: %lu\n", pak_count);
-				//(*env)->SetIntField(env, thisObj, totalPacketsfid, totalPackets);
-				//(*env)->SetIntField(env, thisObj, packetLossfid, ((lostPackets*100) /(totalPackets)));
-
-				(*env)->CallVoidMethod(env, thisObj, midCallBackPacketLoss, ((lostPackets*100) /(totalPackets)));
-				(*env)->CallVoidMethod(env, thisObj, midCallBackTotalPackets, totalPackets);
-
-				fprintf(stderr, "In C, Current packets in: %lu\n", totalPackets);
-				fprintf(stderr, "In C, Current lost packets: %d\n ", lostPackets);
-				if (pak_count == last_pak_count) {
-				  break;
-				} else {
-				  last_pak_count = pak_count;
-				}
+				sleep(CHECK_TIME_INTERVAL);
+				check_timeout(root);
+				print_list(root);
 			}
 			 printf("done\n");
 
 	/* END SNIPPET: register_packets */
+
+	//the int
+	//get the Field ID of number
+	jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "number","I");
+	if(NULL == fidNumber) return 1;
+
+	//Get the int given the Field ID
+	jint number = (*env)->GetIntField(env, thisObj, fidNumber);
+	printf("In C, the int is %d\n", number);
+
+	//Change the variable
+	number = 99;
+	(*env)->SetIntField(env, thisObj, fidNumber, number);
 
 
 	cleanup:

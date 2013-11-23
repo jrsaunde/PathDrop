@@ -1,8 +1,10 @@
 package tests;
 
+import java.util.ArrayList;
+
 import datapath.NodePuppet;
 
-public class JNITest {
+public class JNITest{
 	public static void main(String args[]){
 		String start = args[0];
 		String username = args[1];
@@ -18,9 +20,19 @@ public class JNITest {
 		String destIP = args[6];
 		int destPort = Integer.parseInt(args[7]);
 		
-		NodePuppet puppet = new NodePuppet();
-		puppet.ProgramNode(start, username, password, protocol, sourceIP, sourcePort, destIP, destPort);
-		System.out.println("In Java, we have " + puppet.totalPackets + " packets with " + puppet.packetLoss + "% loss");
-		System.exit(0);
+		ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
+
+		puppetList.add(new NodePuppet(start, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
+		puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80));
+	
+		
+		for(NodePuppet puppet: puppetList){
+			new Thread(puppet).start();
+		}
+		//puppet.ProgramNode(start, username, password, protocol, sourceIP, sourcePort, destIP, destPort);
+		//System.out.println("In Java, int is " + puppet.number);
+		//System.exit(0);
+
+		
 	}
 }
