@@ -99,7 +99,7 @@ public class NetworkDiscovery implements Runnable {
 		for(NetworkInterface inter : interfaceList){
 			if(inter.getAddressList().size() > 0 ){
 				this.addresses.add(inter.getAddressList().get(0));
-				this.discoveredIPs.add(inter.getAddressList().get(0).toString());
+				this.discoveredIPs.add(inter.getAddressList().get(0).toString().substring(1));
 			}
 		}
 		
