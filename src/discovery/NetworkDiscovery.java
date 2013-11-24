@@ -99,6 +99,7 @@ public class NetworkDiscovery implements Runnable {
 		for(NetworkInterface inter : interfaceList){
 			if(inter.getAddressList().size() > 0 ){
 				this.addresses.add(inter.getAddressList().get(0));
+				this.discoveredIPs.add(inter.getAddressList().get(0).toString());
 			}
 		}
 		
@@ -185,13 +186,6 @@ public class NetworkDiscovery implements Runnable {
  		//generateJson();
 	}
 	
-
-	/**
-	 * This will initialize the global variables for the NetworkDiscovery class
-	 */
-	private void initalizeGlobals(){
-	}
-
 /**
  * Prepare topology for the JavaFX Gui
  */
