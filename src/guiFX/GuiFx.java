@@ -66,9 +66,10 @@ public class GuiFx extends Application {
 	private String password;
 	private ArrayList<Thread>threads = new ArrayList<Thread>();
 	private static ArrayList<String>discoveredIPs = new ArrayList<String>();
+	private static ArrayList<String>nodeIPs = new ArrayList<String>();
 
 	private TextField srcIPField = new TextField("10.192.10.110");
-	private TextField dstIPField = new TextField("1.1.1.2");
+	private TextField dstIPField = new TextField("10.192.40.140");
 	private TextField srcPortField = new TextField("22");
 	private TextField dstPortField = new TextField("23");
 	private TextField windowField = new TextField("100");
@@ -202,7 +203,7 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();

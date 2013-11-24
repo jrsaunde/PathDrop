@@ -47,6 +47,7 @@ public class NetworkDiscovery implements Runnable {
 
 	Browser						browser;
 	ArrayList<String> 			discoveredIPs;
+	ArrayList<String>			nodeIPs;
 	NetworkElement				node;
 	InetAddress					startAddress;
 	InetAddress					destAddress;
@@ -65,11 +66,12 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
 		this.browser = browser;
 		this.discoveredIPs = discoveredIPs;
+		this.nodeIPs = nodeIPs;
 		this.startAddress = InetAddress.getByName(srcIP);
 		this.destAddress = InetAddress.getByName(dstIP);
 		this.username = username;
@@ -96,10 +98,15 @@ public class NetworkDiscovery implements Runnable {
 		/* Add all of the local IP addresses to our master list */
 		List <NetworkInterface> interfaceList = node.getInterfaceList(new InterfaceFilter());
 		
-		for(NetworkInterface inter : interfaceList){
+		int interfaceNumber = 0;
+		for(NetworkInterface inter : interfaceList){				
 			if(inter.getAddressList().size() > 0 ){
+				if(interfaceNumber++ == 0){
+					this.nodeIPs.add(inter.getAddressList().get(0).toString().substring(1));
+				}
 				this.addresses.add(inter.getAddressList().get(0));
 				this.discoveredIPs.add(inter.getAddressList().get(0).toString().substring(1));
+
 			}
 		}
 		
