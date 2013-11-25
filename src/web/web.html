@@ -21,7 +21,6 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  background-color: #CCFFFF;
   float: left;
 }
 
@@ -61,10 +60,10 @@ body {
   <div id="colorcode">
     <h3>Packet Loss</h3>
     <ul>
-      <li>Fucked</li>
-      <li>Screwed</li>
+      <li>Problem</li>
+      <li>Troubled</li>
       <li>Worried</li>
-      <li>Great!</li>
+      <li>Paradise</li>
     </ul>
     <img src="../img/colorcode.png">
   </div>
@@ -101,8 +100,23 @@ $('#cy').cytoscape({
         'target-arrow-color': 'data(faveColor)'
       }),elements: { 
 	nodes: [
+		{ data: { id: 'Router1', name: 'Router1', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router2', name: 'Router2', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router3', name: 'Router3', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router4', name: 'Router4', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router5', name: 'Router5', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router6', name: 'Router6', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } }
 	],
 	edges: [
+		{ data: { source: 'Router1', target: 'Router3', label: 'Gi0/2					Gi0/0', faveColor: 'hsl(162, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router3', label: 'Gi0/1					Gi0/2', faveColor: 'hsl(184, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router1', target: 'Router2', label: 'Gi0/1					Gi0/0', faveColor: 'hsl(206, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router6', label: 'Gi0/3					Gi0/1', faveColor: 'hsl(228, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router3', target: 'Router6', label: 'Gi0/3					Gi0/0', faveColor: 'hsl(250, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router2', label: 'Gi0/0					Gi0/3', faveColor: 'hsl(272, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router4', target: 'Router2', label: 'Gi0/0					Gi0/2', faveColor: 'hsl(294, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router4', label: 'Gi0/2					Gi0/1', faveColor: 'hsl(316, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router2', target: 'Router3', label: 'Gi0/1					Gi0/1', faveColor: 'hsl(338, 95%, 76%)', strength: 70  } }
 	]
   }
 ,
