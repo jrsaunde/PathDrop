@@ -50,6 +50,8 @@ import java.util.Iterator;
 
 import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
+import tests.pktLoss;
+import topo.GuiConnection;
 import vty.VTYSession;
 
 public class GuiFx extends Application {
@@ -67,7 +69,8 @@ public class GuiFx extends Application {
 	private ArrayList<Thread>threads = new ArrayList<Thread>();
 	private static ArrayList<String>discoveredIPs = new ArrayList<String>();
 	private static ArrayList<String>nodeIPs = new ArrayList<String>();
-
+	private static ArrayList<GuiConnection> connections = new ArrayList<GuiConnection>();
+	
 	private TextField srcIPField = new TextField("10.192.10.110");
 	private TextField dstIPField = new TextField("10.192.40.140");
 	private TextField srcPortField = new TextField("22");
@@ -78,6 +81,8 @@ public class GuiFx extends Application {
 	private TextField passwordField = new TextField("cisco");
 	private NetworkDiscovery network;
 	private Browser browser;
+	private pktLoss tester;
+
 	private Image loaderImage = new Image("img/loader.gif", true);
 	
 	private final Object lock = new Object();
@@ -165,6 +170,9 @@ public class GuiFx extends Application {
 				// call  trace object (inputs)
 				try {
 					network.findPaths(srcIP, dstIP);
+					tester = new pktLoss(connections, browser, network);
+					Thread testThread = new Thread(tester);
+					testThread.start();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					System.out.println("WE FAILED!!! find paths");
@@ -203,7 +211,7 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, connections, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();

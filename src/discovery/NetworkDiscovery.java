@@ -48,6 +48,7 @@ public class NetworkDiscovery implements Runnable {
 	Browser						browser;
 	ArrayList<String> 			discoveredIPs;
 	ArrayList<String>			nodeIPs;
+	ArrayList<GuiConnection>	connections;
 	NetworkElement				node;
 	InetAddress					startAddress;
 	InetAddress					destAddress;
@@ -66,12 +67,13 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, ArrayList<GuiConnection> connections, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
 		this.browser = browser;
 		this.discoveredIPs = discoveredIPs;
 		this.nodeIPs = nodeIPs;
+		this.connections = connections;
 		this.startAddress = InetAddress.getByName(srcIP);
 		this.destAddress = InetAddress.getByName(dstIP);
 		this.username = username;
@@ -183,6 +185,7 @@ public class NetworkDiscovery implements Runnable {
 														 shortenName(edge.getTailNodeConnector().getName()),
 														 pktLoss);
 			System.out.println(connection.getConnection());
+			this.connections.add(connection);
 			this.connectionStrings.add(connection.getConnection());
 		}
 		
@@ -221,6 +224,24 @@ public class NetworkDiscovery implements Runnable {
 			}
 		}
 		devices = devices + "	]" + newLine +    "  }" + newLine;
+		
+		return(devices);
+	}
+	
+	public String getNodes(){
+		String devices = "elements: { " + newLine + "	nodes: [" + newLine;
+
+		/*Prepare nodes */
+		int i =1;
+		for(String node : this.nodeNames){
+			if(i++ < this.nodeNames.size()){
+				devices = devices + "		" + node + "," + newLine;
+			}else{
+				devices = devices + "		" + node + newLine;
+			}
+		}
+		
+		devices = devices + "	]," + newLine + "	edges: [" + newLine;
 		
 		return(devices);
 	}
