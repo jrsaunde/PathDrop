@@ -24,7 +24,7 @@ public class NodePuppet implements Runnable{
 	 * @param dest_port - Destination port number for traffic
 	 * @return status if ok? need to double check
 	 */
-	public native int ProgramNode(String address,
+	public native int ProgramNode(String[] address,
 								   String user,
 								   String pass,
 								   int protocol,
@@ -32,7 +32,7 @@ public class NodePuppet implements Runnable{
 								   int source_port,
 								   String dest_ip,
 								   int dest_port);
-	private String address;
+	private String[] address;
 	private String user;
 	private String pass;
 	private int protocol;
@@ -42,7 +42,7 @@ public class NodePuppet implements Runnable{
 	private int dest_port;
 	
 	
-	public NodePuppet(String _address,
+	public NodePuppet(String[] _address,
 					   String _user,
 					   String _pass,
 					   int _protocol,

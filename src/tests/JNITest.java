@@ -21,9 +21,9 @@ public class JNITest{
 		int destPort = Integer.parseInt(args[7]);
 		
 		ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
-
-		puppetList.add(new NodePuppet(start, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
-		puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80));
+		String[] sArray = {"10.192.10.120", "10.192.40.140"};
+		puppetList.add(new NodePuppet(sArray, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
+		//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "10.192.1.1", 0, "10.192.40.140", 80));
 	
 		
 		for(NodePuppet puppet: puppetList){
