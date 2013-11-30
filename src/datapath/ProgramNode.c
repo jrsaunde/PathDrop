@@ -46,40 +46,75 @@ typedef struct list{
 	time_t timestamp;
 } List;
 
-static List *root = NULL;
+//static List *root = NULL;
 static int PACKET_TIMEOUT = 10; //how long we wait before declaring a packet loss
 static char *DEST;
 static int CHECK_TIME_INTERVAL = 2;
+static JavaVM* g_jvm;
+static JNIEnv* g_env;
+static jobject g_obj;
+static jmethodID g_meth;
+static jmethodID g_meth2;
 
-static void add_to_end(List *list, uint16_t _data, time_t _timestamp){
-	if(list == NULL){
-		root = (List *)malloc(sizeof(List));
-		root->data = _data;
-		root->timestamp = _timestamp;
-		root->next = NULL;
-		root->previous = NULL;
-		printf("added packet at beginnging with id %d to end at time %ld\n", _data, _timestamp);
+
+static jint lostPackets = 0;
+static jlong totalPackets = 0;
+
+static void add_to_java(int ID, char* name, char* c_message){
+
+	JNIEnv* thisEnv;
+	(*g_jvm)->AttachCurrentThread(g_jvm, (void**)&thisEnv, NULL);
+	jstring message = (*thisEnv)->NewStringUTF(thisEnv, c_message);
+	jstring router_name = (*thisEnv)->NewStringUTF(thisEnv, name);
+	(*thisEnv)->CallVoidMethod(thisEnv, g_obj, g_meth, ID, router_name, message);
+	//(*thisEnv)->ReleaseStringUTFChars(thisEnv, message, c_message);
+	(*g_jvm)->DetachCurrentThread(g_jvm);
+	return;
+}
+static void remove_from_java(int ID, char* name){
+	JNIEnv* thisEnv;
+	(*g_jvm)->AttachCurrentThread(g_jvm, (void**)&thisEnv, NULL);
+	jstring router_name = (*thisEnv)->NewStringUTF(thisEnv, name);
+	(*thisEnv)->CallVoidMethod(thisEnv, g_obj, g_meth2, ID, router_name);;
+	(*g_jvm)->DetachCurrentThread(g_jvm);
+	return;
+
+}
+
+static void add_to_end(List *list, uint16_t _data, time_t _timestamp, char* _name){
+	//if(_timestamp - time() < 0) return;
+	//fprintf(stderr, "add_to_end... \n");
+	totalPackets++;
+	List *last = list;
+	List *newNode = (List *)malloc(sizeof(List));
+	newNode->data = _data;
+	newNode->next = NULL;
+	newNode->timestamp = _timestamp;
+
+	if(last == NULL){
+		last->next = newNode;
+		//printf("added packet at beginning with id %d to end at time %ld\n", _data, _timestamp);
 		return;
 	}
-	List* last = list;
-	while (last->next != NULL){
+	while (last){
+		if(last->next == NULL){
+			last->next = newNode;
+			remove_from_java(_data, _name);
+			//printf("added packet with id %d to end at time %ld\n", _data, _timestamp);
+			return;
+		}
 		last = last->next;
 	}
-	last->next = malloc(sizeof(List));
-	last->next->previous = last;
-	last->next->data = _data;
-	last->next->timestamp = _timestamp;
-	last->next->next = NULL;
-	printf("added packet with id %d to end at time %ld\n", _data, _timestamp);
 }
 
 static void print_list(List *list){
-	printf("------------------------------List-Contents--------------------------\n");
 	if(list == NULL){
 		printf("List is empty\n");
 		printf("---------------------------------------------------------------------\n");
 		return;
 	}
+	printf("------------------------------List %p-Contents: --------------------------\n", list);
+	list = list->next;
 	while(list->next != NULL){
 		printf("ID:%d   Time Lapse:%d\n", list->data, (int) (time(NULL) - list->timestamp));
 		list = list->next;
@@ -88,67 +123,68 @@ static void print_list(List *list){
 	printf("---------------------------------------------------------------------\n");
 }
 
-static void check_timeout(List *list){
+static void check_timeout(List **list){
 	if(list == NULL) return;
-	while(1){
-		if(time(NULL) - list->timestamp > PACKET_TIMEOUT){
-			printf("PACKET LOSS: packet with id %d never seen\n", list->data);
-			root = list->next;
-			free(list);
-			list = root;
+	List *cur = *list;
+	if(time(NULL) - cur->timestamp > PACKET_TIMEOUT){
+		List *temp = *list;
+		fprintf(stderr, "freeing 1 \n");
+		*list = cur->next;
+		free(temp);
+		printf("1found and removed packet with id %d\n", cur->data);
+		return;
+	}
+	while(cur->next){
+		if(time(NULL) - cur->next->timestamp > PACKET_TIMEOUT){
+			List *temp = cur->next;
+			cur->next = cur->next->next;
+			printf("found and removed packet with id %d\n", cur->data);
+			fprintf(stderr, "freeing 3 \n");
+			free(temp);
+			return;
 		}else{
-			break;
+			cur = cur -> next;
 		}
 	}
-	while(list->next != NULL){
-		if(time(NULL) - list->timestamp > PACKET_TIMEOUT){
-				printf("PACKET LOSS: packet with id %d never seen\n", list->data);
-				List *temp = list->next;
-				free(temp);
-		}
-		list->next = list->next->next;
-	}
+	return;
 }
 
 
-static int search_and_remove(List *list, uint16_t _data){
+static int search_and_remove(List **list, uint16_t _data, char* sys_name, char* int_name){
 	if(list == NULL) return 0;
-	if(list->data == _data){
-		root = list->next;
-		free(list);
-		printf("found and removed packet with id %d\n", _data);
+	List *cur = *list;
+	/*if(cur->data == _data ){
+		List *temp = *list;
+		fprintf(stderr, "freeing 1 \n");
+		*list = cur->next;
+		free(temp);
+		printf("1found and removed packet with id %d\n", _data);
 		return 1;
-	}else{
-		while(1){
-			if(time(NULL) - list->timestamp > PACKET_TIMEOUT){
-				printf("PACKET LOSS: packet with id %d never seen\n", list->data);
-				root = list->next;
-				free(list);
-				list = root;
-			}else{
-				break;
-			}
-		}
-	}
-	while(list->next != NULL){
-		if(list->next->data == _data){
-			List *temp = list->next;
-			list->next = list->next->next;
-			printf("found and removed packet with id %d\n", _data);
+	}*/
+	while(cur->next){
+		if(cur->next->data == _data){
+			//fprintf(stderr, "Outgoing: %s [%s] with id: %d\n", sys_name, int_name, _data);
+			List *temp = cur->next;
+			cur->next = cur->next->next;
+			//printf("found and removed packet with id %d\n", _data);
+			add_to_java(_data, sys_name, int_name);
+			//fprintf(stderr, "freeing 3 \n");
 			free(temp);
 			return 1;
-		}else{
-			if(time(NULL) - list->next->timestamp > PACKET_TIMEOUT){
-				printf("PACKETT LOSS: packet with id %d never seen\n", list->next->data);
-				List *temp = list->next;
-				list->next = list->next->next;
+		}else if(time(NULL) - cur->next->timestamp > PACKET_TIMEOUT){
+				lostPackets++;
+				//printf("PACKETT LOSS: packet with id %d never seen\n", cur->data);
+				List *temp = cur ->next;
+				cur->next = cur->next->next;
+				//fprintf(stderr, "freeing 4 \n");
 				free(temp);
-			}
-			list = list->next;
+		}else{
+			cur = cur -> next;
 		}
 	}
 	return 0;
 }
+
 
 static void dpss_tutorial_display_intf_list(onep_collection_t *intf_list, FILE *op)
 {
@@ -544,6 +580,10 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     network_interface_t* output_int;
     onep_if_name 		 output;
 
+    network_element_t* elem;
+    element_property_t* prop;
+    char* sys_name;
+
     strcpy(l4_protocol,"ERR");
     strcpy(l4_state,"ERR");
 
@@ -555,20 +595,129 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     	//Get output interface of packet
         onep_dpss_pkt_get_output_interface(pak, &output_int);
         onep_interface_get_name(output_int, output);
+
+        //Get network element
+        onep_dpss_pkt_get_network_element(pak, &elem);
+        onep_element_get_property(elem, &prop);
+        onep_element_property_get_sys_name(prop, &sys_name);
+    } else {
+        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
+    }
+    //printf("\n"
+    //		"Out - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, output, src_ip, src_port, dest_ip, dest_port);
+    search_and_remove((List **) client_context, pkt_id, sys_name, output);
+
+
+    //print_list((List *) client_context);
+    //fflush(stdout);
+    free(sys_name);
+    free(src_ip);
+    free(dest_ip);
+    return;
+}
+
+static void out_packet_drop_callback2( onep_dpss_traffic_reg_t *reg, struct onep_dpss_paktype_ *pak, void *client_context, bool *return_packet){
+	onep_status_t        rc;
+    onep_dpss_fid_t      fid;
+    uint16_t             src_port = 0;
+    uint16_t             dest_port = 0;
+    char                 *src_ip = NULL;
+    char                 *dest_ip = NULL;
+    char                 l4_protocol[5];
+    char                 l4_state[30];
+    uint16_t			pkt_id = 0;
+    network_interface_t* output_int;
+    onep_if_name 		 output;
+
+    strcpy(l4_protocol,"ERR");
+    strcpy(l4_state,"ERR");
+
+    rc = onep_dpss_pkt_get_flow(pak, &fid);
+    if( rc == ONEP_OK ) {
+    	dpss_tutorial_get_ip_port_info(pak, &src_ip, &dest_ip, &src_port, &dest_port, l4_protocol, '4', &pkt_id);
+    	dpss_tutorial_get_flow_state(pak, fid, l4_state);
+
+    	//Get output interface of packet
+        onep_dpss_pkt_get_output_interface(pak, &output_int);
+        onep_interface_get_name(output_int, output);
+
+
     } else {
         fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
     }
     printf("\n"
-    		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
-    search_and_remove(root, pkt_id);
-    print_list(root);
-    fflush(stdout);
+    		"Out2 - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
+    search_and_remove((List **) client_context, pkt_id, "", output);
+    //print_list((List *) client_context);
+    //fflush(stdout);
     free(src_ip);
     free(dest_ip);
     return;
 }
 
 static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
+							  struct onep_dpss_paktype_ *pak,
+							  void *client_context,
+							  bool *return_packet){
+
+		onep_status_t        rc;
+	    onep_dpss_fid_t      fid;
+	    uint16_t             src_port = 0;
+	    uint16_t             dest_port = 0;
+	    char                 *src_ip = NULL;
+	    char                 *dest_ip = NULL;
+	    char                 l4_protocol[5];
+	    char                 l4_state[30];
+	    uint16_t			pkt_id = 0;
+	    network_interface_t* input_int;
+	    onep_if_name 		 input;
+
+
+        network_element_t* elem;
+        element_property_t* prop;
+        char* sys_name;
+
+	    strcpy(l4_protocol,"ERR");
+	    strcpy(l4_state,"ERR");
+
+	    rc = onep_dpss_pkt_get_flow(pak, &fid);
+	    if( rc == ONEP_OK ) {
+	    	dpss_tutorial_get_ip_port_info(pak, &src_ip, &dest_ip, &src_port, &dest_port, l4_protocol, '4', &pkt_id);
+	    	dpss_tutorial_get_flow_state(pak, fid, l4_state);
+
+	        //Get input interface of packet
+	        onep_dpss_pkt_get_input_interface(pak, &input_int);
+	        onep_interface_get_name(input_int, input);
+
+	        //Get network element
+	        onep_dpss_pkt_get_network_element(pak, &elem);
+	        onep_element_get_property(elem, &prop);
+	        onep_element_property_get_sys_name(prop, &sys_name);
+
+	    } else {
+	        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
+	    }
+
+	   // printf("\n"
+	   // 		"In  - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, input, src_ip, src_port, dest_ip, dest_port);
+	    /*
+	     * If it is destination, assume not lost and dont add to list
+	     * strcmp - 0 if equal
+	     */
+
+	    //if(strcmp(DEST, dest_ip)){
+	    //printf("client_context %p\n", client_context);
+	    	add_to_end((List *) client_context, pkt_id, time(NULL), sys_name);
+		    //print_list((List *) client_context);
+	    //}
+		fflush(stdout);
+		free(sys_name);
+	    free(src_ip);
+	    free(dest_ip);
+	    return;
+}
+
+static void in_packet_drop_callback2( onep_dpss_traffic_reg_t *reg,
 							  struct onep_dpss_paktype_ *pak,
 							  void *client_context,
 							  bool *return_packet){
@@ -601,18 +750,18 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	    }
 
 	    printf("\n"
-	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
+	    		"In2  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
 	    /*
 	     * If it is destination, assume not lost and dont add to list
 	     * strcmp - 0 if equal
 	     */
 
-
 	    //if(strcmp(DEST, dest_ip)){
-	    	add_to_end(root, pkt_id, time(NULL));
-		    print_list(root);
+	    printf("client_context %p\n", client_context);
+	    	add_to_end((List *) client_context, pkt_id, time(NULL), "");
+		    print_list((List *) client_context);
 	    //}
-	    fflush(stdout);
+		fflush(stdout);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -622,42 +771,52 @@ static onep_status_t register_traffic(network_element_t *ne,
 									  network_interface_t *this_interface,
 									  class_t *in_acl,
 									  class_t *out_acl,
-									  target_t *in_target,
-									  target_t *out_target,
-									  onep_dpss_traffic_reg_t *in_handle,
-									  onep_dpss_traffic_reg_t *out_handle){
+									  target_t **in_target,
+									  target_t **out_target,
+									  onep_dpss_traffic_reg_t **in_handle,
+									  onep_dpss_traffic_reg_t **out_handle,
+									  List *root,
+									  List **root_addr){
 
 	onep_status_t rc;
 
 	onep_if_name name;
+	element_property_t* prop;
+	char * sys_name;
 	onep_interface_get_name(this_interface, name);
+    onep_element_get_property(ne, &prop);
+    onep_element_property_get_sys_name(prop, &sys_name);
 
-	fprintf(stderr, "We are registering for %s\n", name);
+	//fprintf(stderr, "We are registering for %s\n", name);
     //Interface targets for int1
-    rc = onep_policy_create_interface_target(this_interface, ONEP_TARGET_LOCATION_HARDWARE_DEFINED_INPUT, &in_target);
+    rc = onep_policy_create_interface_target(this_interface, ONEP_TARGET_LOCATION_HARDWARE_DEFINED_INPUT, in_target);
     if (rc != ONEP_OK) {
         fprintf(stderr, "Error creating target interface: %s\n", onep_strerror(rc));
         return ONEP_FAIL;
     }
-    rc = onep_policy_create_interface_target(this_interface, ONEP_TARGET_LOCATION_HARDWARE_DEFINED_OUTPUT, &out_target);
+    rc = onep_policy_create_interface_target(this_interface, ONEP_TARGET_LOCATION_HARDWARE_DEFINED_OUTPUT, out_target);
 	if (rc != ONEP_OK) {
 		fprintf(stderr, "Error creating target interface: %s\n", onep_strerror(rc));
 		return ONEP_FAIL;
 	}
+    //fprintf(stderr, "created targets\n");
+
 	//Register for packets
-	rc = onep_dpss_register_for_packets(in_target, in_acl, ONEP_DPSS_ACTION_COPY, in_packet_drop_callback, 0, &in_handle);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to register for packets: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
-	rc = onep_dpss_register_for_packets(out_target, out_acl, ONEP_DPSS_ACTION_COPY, out_packet_drop_callback, 0, &out_handle);
-	if (rc != ONEP_OK) {
-		fprintf(stderr, "Unable to register for packets: %s\n", onep_strerror(rc));
-		return ONEP_FAIL;
-	}
+		rc = onep_dpss_register_for_packets(*in_target, in_acl, ONEP_DPSS_ACTION_COPY, in_packet_drop_callback, root, in_handle);
+		if (rc != ONEP_OK) {
+			fprintf(stderr, "Unable to register for packets: %s\n", onep_strerror(rc));
+			return ONEP_FAIL;
+		}
+		rc = onep_dpss_register_for_packets(*out_target, out_acl, ONEP_DPSS_ACTION_COPY, out_packet_drop_callback, root_addr, out_handle);
+		if (rc != ONEP_OK) {
+			fprintf(stderr, "Unable to register for packets: %s\n", onep_strerror(rc));
+			return ONEP_FAIL;
+		}
+
 
 	/* If we made it here, we registered successfully */
-	fprintf(stderr, "Registered!\n");
+	fprintf(stderr, "Registered for %s on %s!\n", name, sys_name);
+	free(sys_name);
 	return ONEP_OK;
 
 }
@@ -678,6 +837,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	/*Application Vars */
 	network_application_t* myapp = NULL;
 	session_handle_t*      session_handle = NULL;
+	//session_handle_t*      session_handle2 = NULL;
 	onep_status_t          rc;
 	session_config_t*      config = NULL;
 
@@ -692,87 +852,142 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
     /* Policy Vars */
     class_t* acl_class_in, *acl_class_out;
+    class_t* acl_class_in2, *acl_class_out2;
+
     interface_filter_t* intf_filter = NULL;
     onep_collection_t*  intfs = NULL;
 	network_interface_t* intf;
 
-	onep_dpss_traffic_reg_t *in_handle, *out_handle;
+	onep_dpss_traffic_reg_t *in_handle, *out_handle, *in_handle2, *out_handle2;
     target_t *in_target = NULL;
     target_t *out_target = NULL;
+    target_t *in_target2 = NULL;
+     target_t *out_target2 = NULL;
     uint64_t pak_count, last_pak_count;
 
 	/*Get a reference to this object's class */
 	jclass thisClass = (*env)->GetObjectClass(env, thisObj);
+	(*env)->GetJavaVM(env, &g_jvm);
+
+	g_obj = (*env)->NewGlobalRef(env, thisObj);
+	jclass g_class = (*env)->GetObjectClass(env, g_obj);
+	g_meth = (*env)->GetMethodID(env, g_class, "sendOutgoing", "(ILjava/lang/String;Ljava/lang/String;)V");
+	g_meth2 = (*env)->GetMethodID(env, g_class, "removeIncoming", "(ILjava/lang/String;)V");
+	//add_to_java(10, "This is it");
+//	callBackOut = (*env)->GetMethodID(env, thisClass, "sendOutgoing", "(ILjava/lang/String;)V");
+//	masterEnv = env;
+//	masterObj = thisObj;
+
+	//char* c_message = "Router2";
+	//jstring message = (*env)->NewStringUTF(env, c_message);
+	//(*env)->CallVoidMethod(env, thisObj, callBackOut, 254, message);
+	//(*env)->ReleaseStringUTFChars(env, message, c_message);
+
+	//make lists for each address
+//	int stringCount = (*env)->GetArrayLength(env, j_address);
+//	char **rawString = (char **) malloc(stringCount*sizeof(char *));
+//	List **masterList = (List **) malloc(stringCount*sizeof(List*));
+//	int i, t;
+//	for (i=0; i<stringCount; i++) {
+//	        jstring string = (jstring) (*env)->GetObjectArrayElement(env, j_address, i);
+//	        rawString[i] =  (*env)->GetStringUTFChars(env, string, 0);
+//	        List *root = (List *)malloc(sizeof(List));
+//	        root->data = 0;
+//	        root->timestamp = time(NULL);
+//	        masterList[i] = root;
+//	}
+//	for (i=0; i<stringCount; i++) {
+//		       printf("address: %s\n", rawString[i]);
+//	}
 
 
-	jfieldID errFid;
-	errFid = (*env)->GetFieldID(env, thisClass, "errBuf", "Ljava/lang/String;");
-	    if (errFid == NULL) {
-	        fprintf(stderr, "Failed to find field errBuf!\n");
-	        return (ONEP_ERR_NO_DATA);
-	    }
+	/* Get arguments */
+			c_username 	= (char *) (*env)->GetStringUTFChars(env, j_user, NULL);
+			c_password 	= (char *) (*env)->GetStringUTFChars(env, j_pass, NULL);
+			c_source	= (char *) (*env)->GetStringUTFChars(env, j_source, NULL);
+			c_dest		= (char *) (*env)->GetStringUTFChars(env, j_dest, NULL);
+			c_address 	= (char *) (*env)->GetStringUTFChars(env, j_address, NULL);
 
+			List *root = (List *)malloc(sizeof(List));
+			root->data = 0;
+			root->timestamp = time(NULL);
 
+			List *outgoing = (List *)malloc(sizeof(List));
+			outgoing->data = 0;
+			outgoing->timestamp = time(NULL);
+	//for (t=0; t<stringCount; t++) {
 	/* Create Application instance. */
 		//TRY(rc, onep_application_get_instance(&myapp), env, thisObj, errFid,
 		//"onep_application_get_instance");
+
+
+		//c_address 	= rawString[t];
+		//fprintf(stderr, c_address);
 	    onep_application_get_instance(&myapp);
-		onep_application_set_name(myapp, "Program Node");
+		onep_application_set_name(myapp, c_address);
 
 	/* Set session parameters */
 		//TRY(rc, onep_session_config_new(ONEP_SESSION_SOCKET, &config), env, thisObj, errFid,
 		//"onep_session_config_new");
 		onep_session_config_new(ONEP_SESSION_SOCKET, &config);
 		onep_session_config_set_event_queue_size(config, 300);
+		onep_session_config_set_event_thread_pool(config, 1);
 		onep_session_config_set_event_drop_mode(config, ONEP_SESSION_EVENT_DROP_OLD);
 
-	/* Get arguments */
-		c_address 	= (char *) (*env)->GetStringUTFChars(env, j_address, NULL);
-		c_username 	= (char *) (*env)->GetStringUTFChars(env, j_user, NULL);
-		c_password 	= (char *) (*env)->GetStringUTFChars(env, j_pass, NULL);
-		c_source	= (char *) (*env)->GetStringUTFChars(env, j_source, NULL);
-		c_dest		= (char *) (*env)->GetStringUTFChars(env, j_dest, NULL);
 
 		printf("Address: %s Username: %s Password: %s Protocol: %d\n", c_address, c_username, c_password, c_protocol);
 
 		DEST = c_dest;
-	/* Set address of Network Element */
-		memset(&v4addr, 0, sizeof(struct sockaddr_in));
-		v4addr.sin_family = AF_INET;
-		inet_pton(AF_INET, c_address, &(v4addr.sin_addr));
-		//TRY(rc, onep_application_get_network_element(
-		//myapp, (struct sockaddr*)&v4addr, &ne1), env, thisObj, errFid,
-		//"onep_application_get_network_element");
-		onep_application_get_network_element(myapp, (struct sockaddr*)&v4addr, &ne1);
+		//set address and connect for each address in array
+			/* Set address of Network Element */
+				memset(&v4addr, 0, sizeof(struct sockaddr_in));
+				v4addr.sin_family = AF_INET;
+				inet_pton(AF_INET, c_address, &(v4addr.sin_addr));
 
-	/* Connect to Network Element */
-		//TRY(rc, onep_element_connect(ne1, c_username, c_password, config, &session_handle), env, thisObj, errFid,
-		//"onep_element_connect");
-		onep_element_connect(ne1, c_username, c_password, config, &session_handle);
-		if (!session_handle) {
-			fprintf(stderr, "\n*** create_network_connection fails ***\n");
-			return ONEP_FAIL;
-		}
-		printf("\n Network Element CONNECT SUCCESS \n");
 
-	/* Create ACLs */
-		rc = create_acls(ne1, &acl_class_in, &acl_class_out, c_protocol, c_source, c_source_port, 32, c_dest, c_dest_port, 32);
-		if (rc != ONEP_OK) {
-			fprintf(stderr, "\nCannot create ACLs"
-					"code[%d], text[%s]\n", rc, onep_strerror(rc));
-			goto cleanup;
-		}
+				//TRY(rc, onep_application_get_network_element(
+				//myapp, (struct sockaddr*)&v4addr, &ne1), env, thisObj, errFid,
+				//"onep_application_get_network_element");
+				onep_application_get_network_element(myapp, (struct sockaddr*)&v4addr, &ne1);
 
-	/* Get list of interfaces on device, then find the interface we want */
-		onep_interface_filter_new(&intf_filter);
-		onep_interface_filter_set_type(intf_filter, ONEP_IF_TYPE_ETHERNET);
-		rc = onep_element_get_interface_list(ne1, intf_filter, &intfs);
-			if (rc != ONEP_OK) {
-				fprintf(stderr, "\nError getting interface. code[%d], text[%s]\n", rc, onep_strerror(rc));
-				goto cleanup;
-			}
+
+				fprintf(stderr, "%s\n", c_address);
+
+			/* Connect to Network Element */
+				//TRY(rc, onep_element_connect(ne1, c_username, c_password, config, &session_handle), env, thisObj, errFid,
+				//"onep_element_connect");
+				onep_element_connect(ne1, c_username, c_password, config, &session_handle);
+
+
+				if (!session_handle) {
+					fprintf(stderr, "\n*** create_network_connection fails ***\n");
+					return ONEP_FAIL;
+				}
+				printf("\n Network Element CONNECT SUCCESS \n");
+
+
+			/* Create ACLs */
+				rc = create_acls(ne1, &acl_class_in, &acl_class_out, c_protocol, c_source, c_source_port, 32, c_dest, c_dest_port, 32);
+
+
+				if (rc != ONEP_OK) {
+					fprintf(stderr, "\nCannot create ACLs"
+							"code[%d], text[%s]\n", rc, onep_strerror(rc));
+					goto cleanup;
+				}
+
+			/* Get list of interfaces on device, then find the interface we want */
+				onep_interface_filter_new(&intf_filter);
+				onep_interface_filter_set_type(intf_filter, ONEP_IF_TYPE_ETHERNET);
+				rc = onep_element_get_interface_list(ne1, intf_filter, &intfs);
+
+
+				if (rc != ONEP_OK) {
+						fprintf(stderr, "\nError getting interface. code[%d], text[%s]\n", rc, onep_strerror(rc));
+						goto cleanup;
+					}
 	/* Display the interfaces we retrieved */
-		dpss_tutorial_display_intf_list(intfs,stderr);
+		//dpss_tutorial_display_intf_list(intfs,stderr);
 		uint32_t intf_count;
 
 
@@ -785,12 +1000,11 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 				unsigned int i;
 				/* for each interface, we will register for incoming and outgoing traffic */
 				for (i = 0; i < intf_count; i++) {
-					rc = onep_collection_get_by_index(intfs, i, (void *)&intf);
+					rc = onep_collection_get_by_index(intfs, i, (void **)&intf);
 					if (rc==ONEP_OK) {
 						rc = onep_interface_get_name(intf,name);
-						fprintf(stderr, "Registering for traffic on %s\n", name);
-
-						rc = register_traffic(ne1, intf, acl_class_in, acl_class_out, in_target, out_target, in_handle, out_handle);
+						//fprintf(stderr, "Registering for traffic on %s\n", name);
+						rc = register_traffic(ne1, intf, acl_class_in, acl_class_out, &in_target, &out_target, &in_handle, &out_handle, root, &root);
 
 						if(rc != ONEP_OK){
 							fprintf(stderr, "Problem registering for interface %s\n", name);
@@ -800,17 +1014,16 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 					}
 				}
 			} if (intf_count <= 0 ) {
-				fprintf(stderr, "\nNo interfaces available");
+				fprintf(stderr, "\nNo interfaces available\n");
 				goto cleanup;
 			}
 
-			last_pak_count = 0;
-			/* wait to query the packet loop for the number
-			 * of packets received and processed. */
+	//}
+			//fprintf(stderr, "done registering..\n");
 			while (1) {
 				sleep(CHECK_TIME_INTERVAL);
-				check_timeout(root);
-				print_list(root);
+				//check_timeout(&root);
+				//print_list(root);
 			}
 			 printf("done\n");
 
@@ -833,6 +1046,10 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	cleanup:
 			disconnect_network_element(&ne1, &session_handle);
 	//At the end release the resources
+//	for(i = 0; i < stringCount; i++){
+//		(*env)->ReleaseStringUTFChars(env, j_address, rawString[i]);
+//	}
+//	free(rawString);
     (*env)->ReleaseStringUTFChars(env, j_address, c_address);
     (*env)->ReleaseStringUTFChars(env, j_user, c_username);
     (*env)->ReleaseStringUTFChars(env, j_pass, c_password);

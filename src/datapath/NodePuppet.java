@@ -1,5 +1,9 @@
 package datapath;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 public class NodePuppet implements Runnable{
 	static{
@@ -9,6 +13,8 @@ public class NodePuppet implements Runnable{
 	public int number = 88;
 	public String message= "Hello from Java";
 	private String errBuf = "";
+	public int[] loss = {0,0,0,0,0,0,0,0,0,0};
+	private String 				newLine 				= System.getProperty("line.separator");
 	
 	public int pktLoss;
 	
@@ -41,6 +47,8 @@ public class NodePuppet implements Runnable{
 	private String dest_ip;
 	private int dest_port;
 	
+	Map<Integer, List<String>> buffer;
+	
 	
 	public NodePuppet(String _address,
 					   String _user,
@@ -49,7 +57,8 @@ public class NodePuppet implements Runnable{
 					   String _source_ip,
 					   int _source_port,
 					   String _dest_ip,
-					   int _dest_port){
+					   int _dest_port,
+					   Map buffer){
 		this.address = _address;
 		this.user = _user;
 		this.pass = _pass;
@@ -58,6 +67,8 @@ public class NodePuppet implements Runnable{
 		this.source_port = _source_port;
 		this.dest_ip = _dest_ip;
 		this.dest_port = _dest_port;
+		this.buffer = buffer;
+		
 	}
 	
 	   
@@ -76,5 +87,37 @@ public class NodePuppet implements Runnable{
 					this.source_port,
 					this.dest_ip,
 					this.dest_port);
+	}
+	
+	public void setLoss(int index){
+		this.loss[index] += 1;
+		return;
+	}
+	
+	public int getLoss(int index){
+		return this.loss[index];
+	}
+	
+	public void removeIncoming(int ID, String name){
+		if(this.buffer.containsKey(ID)){
+			this.buffer.remove(ID);
+			System.out.println("Removed " + ID + " from " + name + newLine);
+		}
+	}
+	
+	public void sendOutgoing(int ID, String name, String intf){
+		if(this.buffer.containsKey(ID)){
+			
+		}else if((name.equals("Router1")) && (intf.equals("GigabitEthernet0/0"))){
+			System.out.println("packet: " + ID + " is leaving the network from " + name + "[" + intf + "]"+ newLine);
+		}else{
+			System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
+			List<String> info = new ArrayList<String>();
+			info.add(name);
+			info.add(intf);
+			this.buffer.put(ID, info);
+		}
+		return;
+
 	}
 }
