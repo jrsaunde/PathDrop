@@ -24,7 +24,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vty.VTYSession;
 
-class Console implements Runnable{
+public class Console implements Runnable{
 	String ip;
 	String username;
 	String password;
@@ -35,7 +35,7 @@ class Console implements Runnable{
 	TextArea textArea;
 	TextField textField;
 	
-	public Console(final String ip, final String username, final String password, ArrayList<Thread>threads) {
+	public Console(final String ip, final String username, final String password) {
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
@@ -43,6 +43,7 @@ class Console implements Runnable{
 
 		
 		Stage stage = new Stage();		
+		stage.setResizable(false);
         stage.setTitle(ip);
 		VBox root = new VBox();
 		textArea = new TextArea();
@@ -51,7 +52,7 @@ class Console implements Runnable{
 		textArea.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		textArea.setPrefSize(400, 310);
+		textArea.setPrefSize(400, 316);
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
 
@@ -99,6 +100,7 @@ class Console implements Runnable{
 					if (cmd == null)
 						cmd = "";
 					String output = vty.write(cmd); // return a string with one or more lines
+					//String output = cmd+"\n"+cmd;
 					textArea.appendText(output+"\n");
 					textArea.positionCaret(textArea.getLength());
 					textField.setText(null);
