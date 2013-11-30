@@ -1,5 +1,7 @@
 package tests;
 
+import guiFX.FlowBuffer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,29 +27,34 @@ public class JNITest{
 		int destPort = Integer.parseInt(args[7]);
 		
 		ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
-		Map<Integer, List<String>> map = new HashMap<Integer, List<String>>();
-		
+		//Map<Integer, List<String>> map = new HashMap<Integer, List<String>>();
+		FlowBuffer buffer = new FlowBuffer();
 		String[] sArray = {"10.192.10.120", "10.192.40.140"};
 		//puppetList.add(new NodePuppet(sArray, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
 		//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "10.192.1.1", 0, "10.192.40.140", 80));
-		puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, map));
-		puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, map));
-		puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, map));		
+		puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+		puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+		puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));		
 		
 		for(NodePuppet puppet: puppetList){
 			new Thread(puppet).start();
 		}
+		int last_size = 0;
 		while(true){
 			try{
 				Thread.sleep(3000);
-				Iterator it = map.keySet().iterator();
-				while(it.hasNext()){
-					int key = (int) it.next();
-					String value = map.get(key).toString();
-					System.out.println(key + " " +value);
-					
+				if(FlowBuffer.getSize() != last_size){
+					FlowBuffer.printBuffer();
 				}
-				System.out.println("");
+				//System.out.println(buffer.getSize());
+//				Iterator it = map.keySet().iterator();
+//				while(it.hasNext()){
+//					int key = (int) it.next();
+//					String value = map.get(key).toString();
+//					System.out.println(key + " " +value);
+//					
+//				}
+//				System.out.println("");
 				//System.out.println(map);
 			}catch (Exception e){
 				e.printStackTrace();

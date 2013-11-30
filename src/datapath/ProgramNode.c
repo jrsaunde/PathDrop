@@ -514,7 +514,7 @@ static onep_status_t create_acls( network_element_t *elm,
 		fprintf(stderr, "Unable to add ace3 to out_acl: %s\n", onep_strerror(acl_rc));
 		return ONEP_FAIL;
 	}
-	printf("\n Added ace1 to acl2\n");
+	fprintf(stderr,"\n Added ace1 to acl2\n");
 	acl_rc = onep_acl_add_ace(out_acl, ace_4);
 	if (acl_rc != ONEP_OK) {
 		fprintf(stderr, "Unable to add ace4 to out_acl: %s\n", onep_strerror(acl_rc));
@@ -603,7 +603,7 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     } else {
         fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
     }
-    //printf("\n"
+    //fprintf(stderr, ("\n"
     //		"Out - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, output, src_ip, src_port, dest_ip, dest_port);
     search_and_remove((List **) client_context, pkt_id, sys_name, output);
 
@@ -935,7 +935,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 		onep_session_config_set_event_drop_mode(config, ONEP_SESSION_EVENT_DROP_OLD);
 
 
-		printf("Address: %s Username: %s Password: %s Protocol: %d\n", c_address, c_username, c_password, c_protocol);
+		fprintf(stderr, "Address: %s Username: %s Password: %s Protocol: %d\n", c_address, c_username, c_password, c_protocol);
 
 		DEST = c_dest;
 		//set address and connect for each address in array
@@ -963,7 +963,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 					fprintf(stderr, "\n*** create_network_connection fails ***\n");
 					return ONEP_FAIL;
 				}
-				printf("\n Network Element CONNECT SUCCESS \n");
+				fprintf(stderr, "\n Network Element CONNECT SUCCESS \n");
 
 
 			/* Create ACLs */

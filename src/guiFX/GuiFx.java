@@ -46,8 +46,13 @@ import javafx.util.Callback;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
+import datapath.NodePuppet;
 import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
 import tests.pktLoss;
@@ -82,6 +87,11 @@ public class GuiFx extends Application {
 	private NetworkDiscovery network;
 	private Browser browser;
 	private pktLoss tester;
+
+	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
+	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
+	FlowBuffer buffer = new FlowBuffer();
+	//private FlowBuffer map = new FlowBuffer();
 
 	private Image loaderImage = new Image("img/loader.gif", true);
 	
@@ -170,9 +180,19 @@ public class GuiFx extends Application {
 				// call  trace object (inputs)
 				try {
 					network.findPaths(srcIP, dstIP);
-					tester = new pktLoss(connections, browser, network);
-					Thread testThread = new Thread(tester);
-					testThread.start();
+//					for(String node : nodeIPs){
+//						puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, map));
+//					}
+					puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					for(NodePuppet puppet: puppetList){
+						new Thread(puppet).start();
+						Thread.sleep(2000);
+					}
+//					tester = new pktLoss(connections, browser, network);
+//					Thread testThread = new Thread(tester);
+//					testThread.start();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					System.out.println("WE FAILED!!! find paths");

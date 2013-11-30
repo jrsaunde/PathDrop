@@ -1,5 +1,7 @@
 package datapath;
 
+import guiFX.FlowBuffer;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,7 @@ public class NodePuppet implements Runnable{
 	private String dest_ip;
 	private int dest_port;
 	
-	Map<Integer, List<String>> buffer;
+	FlowBuffer buffer;
 	
 	
 	public NodePuppet(String _address,
@@ -58,7 +60,7 @@ public class NodePuppet implements Runnable{
 					   int _source_port,
 					   String _dest_ip,
 					   int _dest_port,
-					   Map buffer){
+					   FlowBuffer buffer){
 		this.address = _address;
 		this.user = _user;
 		this.pass = _pass;
@@ -99,24 +101,29 @@ public class NodePuppet implements Runnable{
 	}
 	
 	public void removeIncoming(int ID, String name){
-		if(this.buffer.containsKey(ID)){
-			this.buffer.remove(ID);
-			System.out.println("Removed " + ID + " from " + name + newLine);
-		}
+		//if(this.buffer.containsKey(ID)){
+			//this.buffer.remove(ID);
+			//System.out.println("Removed " + ID + " from " + name + newLine);
+			FlowBuffer.removeFrombuffer(ID, name);
+		//}
 	}
 	
 	public void sendOutgoing(int ID, String name, String intf){
-		if(this.buffer.containsKey(ID)){
+		
+	
+		//if(this.buffer.containsKey(ID)){
 			
-		}else if((name.equals("Router1")) && (intf.equals("GigabitEthernet0/0"))){
-			System.out.println("packet: " + ID + " is leaving the network from " + name + "[" + intf + "]"+ newLine);
-		}else{
-			System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
+		//}else if((name.equals("Router1")) && (intf.equals("GigabitEthernet0/0"))){
+		//	System.out.println("packet: " + ID + " is leaving the network from " + name + "[" + intf + "]"+ newLine);
+		//}else{
+		//	System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
 			List<String> info = new ArrayList<String>();
 			info.add(name);
 			info.add(intf);
-			this.buffer.put(ID, info);
-		}
+			//this.buffer.put(ID, info);
+		//}
+		
+		FlowBuffer.addToBuffer(ID, info);
 		return;
 
 	}
