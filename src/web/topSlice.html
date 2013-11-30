@@ -26,21 +26,25 @@ body {
 
 #colorcode {
   position: absolute;
-  left: 4px;
-  top: -10px;
-  float: right;
+  bottom: 20px;
+  width: 500px;
+  bottom: 20px;
+  left: 50%;
+  margin-left: -250px;
 }
 
 #colorcode ul {
   list-style-type: none;
   padding: 0px;
-  margin: 0px;
-  float: left;
+  margin: 0 0 0 -113px;
+  font-size: 10px
 }
 
 #colorcode ul li {
-  margin-bottom: 31px;
+  float: left;
+  margin-left: 113px;
 }
+
 
 #colorcode img {
   float: right;
@@ -55,18 +59,8 @@ body {
 </style>
 </head>
 <body>
-  <div id="title"></div>
+  <div id="title">Network Topology</div>
   <div id="cy"></div>
-  <div id="colorcode">
-    <h3>Packet Loss</h3>
-    <ul>
-      <li>Problem</li>
-      <li>Troubled</li>
-      <li>Worried</li>
-      <li>Paradise</li>
-    </ul>
-    <img src="../img/colorcode.png">
-  </div>
   <script>
 $('#cy').cytoscape({
   layout: {
