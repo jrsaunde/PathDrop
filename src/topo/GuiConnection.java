@@ -29,11 +29,24 @@ public class GuiConnection {
 						   +" } }");
 	}
 	
-	 private String getHue(int ratio) {
+	 public static String getHue(int loss) {
 		 int max = 360;
 		 int min = 140;
-		 double percent = (double) ratio/100;
-		 double hue = (max-min)*percent + min;
+		 
+		 // logorithm scale
+		 double scale = Math.log10(loss+1)/2;
+				 
+		 // linear scale
+		 // double scale = (double) ratio/100;
+		 
+		 int hue = (int) Math.round((max-min)*scale) + min;
+		 
+		 // boundary check
+		 if (hue>max)
+			 hue = max;
+		 if (hue<min)
+			 hue = min;
+		 System.out.print("Ratio: " + loss + "; Hue: " + hue);
 		 return "hsl("+ (int) hue+", 95%, 76%)";
-		 }
+	 }
 }
