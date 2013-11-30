@@ -288,6 +288,7 @@ public class GuiFx extends Application {
 		stage.setScene(scene);
 		stage.getIcons().add(new Image("img/cisco_blue.png"));
 		stage.show();
+		stage.setResizable(false);
 	}
 	
 	public static void main(String[] args) { 
