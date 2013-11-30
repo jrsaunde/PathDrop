@@ -50,6 +50,7 @@ public class Browser extends Region {
         image = new ImageView();
         image.setImage(this.loaderImage);
         image.relocate((540-165)/2, (600-165)/2);
+		webEngine.load("");
         getChildren().add(image);
     }
     
@@ -68,10 +69,13 @@ public class Browser extends Region {
 		botSliceScn.close();
 
 		String web = topSlice + midSlice + botSlice;
+		try {
 		PrintWriter out = new PrintWriter("src/web/web.html");
 		out.write(web);
 		out.close();
-		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		// hard coded data for testing purposes
 		File file = (new File("src/web/web.html"));
 		
