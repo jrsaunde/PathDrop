@@ -50,13 +50,40 @@ typedef struct list{
 static int PACKET_TIMEOUT = 10; //how long we wait before declaring a packet loss
 static char *DEST;
 static int CHECK_TIME_INTERVAL = 2;
+static JavaVM* g_jvm;
+static JNIEnv* g_env;
+static jobject g_obj;
+static jmethodID g_meth;
+static jmethodID g_meth2;
+
 
 static jint lostPackets = 0;
 static jlong totalPackets = 0;
 
-static void add_to_end(List *list, uint16_t _data, time_t _timestamp){
+static void add_to_java(int ID, char* name, char* c_message){
+
+	JNIEnv* thisEnv;
+	(*g_jvm)->AttachCurrentThread(g_jvm, (void**)&thisEnv, NULL);
+	jstring message = (*thisEnv)->NewStringUTF(thisEnv, c_message);
+	jstring router_name = (*thisEnv)->NewStringUTF(thisEnv, name);
+	(*thisEnv)->CallVoidMethod(thisEnv, g_obj, g_meth, ID, router_name, message);
+	//(*thisEnv)->ReleaseStringUTFChars(thisEnv, message, c_message);
+	(*g_jvm)->DetachCurrentThread(g_jvm);
+	return;
+}
+static void remove_from_java(int ID, char* name){
+	JNIEnv* thisEnv;
+	(*g_jvm)->AttachCurrentThread(g_jvm, (void**)&thisEnv, NULL);
+	jstring router_name = (*thisEnv)->NewStringUTF(thisEnv, name);
+	(*thisEnv)->CallVoidMethod(thisEnv, g_obj, g_meth2, ID, router_name);;
+	(*g_jvm)->DetachCurrentThread(g_jvm);
+	return;
+
+}
+
+static void add_to_end(List *list, uint16_t _data, time_t _timestamp, char* _name){
 	//if(_timestamp - time() < 0) return;
-	fprintf(stderr, "add_to_end... \n");
+	//fprintf(stderr, "add_to_end... \n");
 	totalPackets++;
 	List *last = list;
 	List *newNode = (List *)malloc(sizeof(List));
@@ -66,13 +93,14 @@ static void add_to_end(List *list, uint16_t _data, time_t _timestamp){
 
 	if(last == NULL){
 		last->next = newNode;
-		printf("added packet at beginning with id %d to end at time %ld\n", _data, _timestamp);
+		//printf("added packet at beginning with id %d to end at time %ld\n", _data, _timestamp);
 		return;
 	}
 	while (last){
 		if(last->next == NULL){
 			last->next = newNode;
-			printf("added packet with id %d to end at time %ld\n", _data, _timestamp);
+			remove_from_java(_data, _name);
+			//printf("added packet with id %d to end at time %ld\n", _data, _timestamp);
 			return;
 		}
 		last = last->next;
@@ -122,7 +150,7 @@ static void check_timeout(List **list){
 }
 
 
-static int search_and_remove(List **list, uint16_t _data){
+static int search_and_remove(List **list, uint16_t _data, char* sys_name, char* int_name){
 	if(list == NULL) return 0;
 	List *cur = *list;
 	/*if(cur->data == _data ){
@@ -135,18 +163,20 @@ static int search_and_remove(List **list, uint16_t _data){
 	}*/
 	while(cur->next){
 		if(cur->next->data == _data){
+			//fprintf(stderr, "Outgoing: %s [%s] with id: %d\n", sys_name, int_name, _data);
 			List *temp = cur->next;
 			cur->next = cur->next->next;
-			printf("found and removed packet with id %d\n", _data);
-			fprintf(stderr, "freeing 3 \n");
+			//printf("found and removed packet with id %d\n", _data);
+			add_to_java(_data, sys_name, int_name);
+			//fprintf(stderr, "freeing 3 \n");
 			free(temp);
 			return 1;
 		}else if(time(NULL) - cur->next->timestamp > PACKET_TIMEOUT){
 				lostPackets++;
-				printf("PACKETT LOSS: packet with id %d never seen\n", cur->data);
+				//printf("PACKETT LOSS: packet with id %d never seen\n", cur->data);
 				List *temp = cur ->next;
 				cur->next = cur->next->next;
-				fprintf(stderr, "freeing 4 \n");
+				//fprintf(stderr, "freeing 4 \n");
 				free(temp);
 		}else{
 			cur = cur -> next;
@@ -154,6 +184,7 @@ static int search_and_remove(List **list, uint16_t _data){
 	}
 	return 0;
 }
+
 
 static void dpss_tutorial_display_intf_list(onep_collection_t *intf_list, FILE *op)
 {
@@ -549,6 +580,10 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     network_interface_t* output_int;
     onep_if_name 		 output;
 
+    network_element_t* elem;
+    element_property_t* prop;
+    char* sys_name;
+
     strcpy(l4_protocol,"ERR");
     strcpy(l4_state,"ERR");
 
@@ -560,14 +595,22 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     	//Get output interface of packet
         onep_dpss_pkt_get_output_interface(pak, &output_int);
         onep_interface_get_name(output_int, output);
+
+        //Get network element
+        onep_dpss_pkt_get_network_element(pak, &elem);
+        onep_element_get_property(elem, &prop);
+        onep_element_property_get_sys_name(prop, &sys_name);
     } else {
         fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
     }
-    printf("\n"
-    		"Out - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
-    search_and_remove((List **) client_context, pkt_id);
+    //printf("\n"
+    //		"Out - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, output, src_ip, src_port, dest_ip, dest_port);
+    search_and_remove((List **) client_context, pkt_id, sys_name, output);
+
+
     //print_list((List *) client_context);
     //fflush(stdout);
+    free(sys_name);
     free(src_ip);
     free(dest_ip);
     return;
@@ -597,12 +640,14 @@ static void out_packet_drop_callback2( onep_dpss_traffic_reg_t *reg, struct onep
     	//Get output interface of packet
         onep_dpss_pkt_get_output_interface(pak, &output_int);
         onep_interface_get_name(output_int, output);
+
+
     } else {
         fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
     }
     printf("\n"
     		"Out2 - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, output, src_ip, src_port, dest_ip, dest_port);
-    search_and_remove((List **) client_context, pkt_id);
+    search_and_remove((List **) client_context, pkt_id, "", output);
     //print_list((List *) client_context);
     //fflush(stdout);
     free(src_ip);
@@ -627,6 +672,11 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	    network_interface_t* input_int;
 	    onep_if_name 		 input;
 
+
+        network_element_t* elem;
+        element_property_t* prop;
+        char* sys_name;
+
 	    strcpy(l4_protocol,"ERR");
 	    strcpy(l4_state,"ERR");
 
@@ -638,23 +688,30 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	        //Get input interface of packet
 	        onep_dpss_pkt_get_input_interface(pak, &input_int);
 	        onep_interface_get_name(input_int, input);
+
+	        //Get network element
+	        onep_dpss_pkt_get_network_element(pak, &elem);
+	        onep_element_get_property(elem, &prop);
+	        onep_element_property_get_sys_name(prop, &sys_name);
+
 	    } else {
 	        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
 	    }
 
-	    printf("\n"
-	    		"In  - %-4d | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, input, src_ip, src_port, dest_ip, dest_port);
+	   // printf("\n"
+	   // 		"In  - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, input, src_ip, src_port, dest_ip, dest_port);
 	    /*
 	     * If it is destination, assume not lost and dont add to list
 	     * strcmp - 0 if equal
 	     */
 
 	    //if(strcmp(DEST, dest_ip)){
-	    printf("client_context %p\n", client_context);
-	    	add_to_end((List *) client_context, pkt_id, time(NULL));
-		    print_list((List *) client_context);
+	    //printf("client_context %p\n", client_context);
+	    	add_to_end((List *) client_context, pkt_id, time(NULL), sys_name);
+		    //print_list((List *) client_context);
 	    //}
 		fflush(stdout);
+		free(sys_name);
 	    free(src_ip);
 	    free(dest_ip);
 	    return;
@@ -701,7 +758,7 @@ static void in_packet_drop_callback2( onep_dpss_traffic_reg_t *reg,
 
 	    //if(strcmp(DEST, dest_ip)){
 	    printf("client_context %p\n", client_context);
-	    	add_to_end((List *) client_context, pkt_id, time(NULL));
+	    	add_to_end((List *) client_context, pkt_id, time(NULL), "");
 		    print_list((List *) client_context);
 	    //}
 		fflush(stdout);
@@ -709,10 +766,6 @@ static void in_packet_drop_callback2( onep_dpss_traffic_reg_t *reg,
 	    free(dest_ip);
 	    return;
 }
-
-
-
-
 
 static onep_status_t register_traffic(network_element_t *ne,
 									  network_interface_t *this_interface,
@@ -723,15 +776,18 @@ static onep_status_t register_traffic(network_element_t *ne,
 									  onep_dpss_traffic_reg_t **in_handle,
 									  onep_dpss_traffic_reg_t **out_handle,
 									  List *root,
-									  List **root_addr,
-									  int t){
+									  List **root_addr){
 
 	onep_status_t rc;
 
 	onep_if_name name;
+	element_property_t* prop;
+	char * sys_name;
 	onep_interface_get_name(this_interface, name);
+    onep_element_get_property(ne, &prop);
+    onep_element_property_get_sys_name(prop, &sys_name);
 
-	fprintf(stderr, "We are registering for %s\n", name);
+	//fprintf(stderr, "We are registering for %s\n", name);
     //Interface targets for int1
     rc = onep_policy_create_interface_target(this_interface, ONEP_TARGET_LOCATION_HARDWARE_DEFINED_INPUT, in_target);
     if (rc != ONEP_OK) {
@@ -743,7 +799,7 @@ static onep_status_t register_traffic(network_element_t *ne,
 		fprintf(stderr, "Error creating target interface: %s\n", onep_strerror(rc));
 		return ONEP_FAIL;
 	}
-    fprintf(stderr, "created targets\n");
+    //fprintf(stderr, "created targets\n");
 
 	//Register for packets
 		rc = onep_dpss_register_for_packets(*in_target, in_acl, ONEP_DPSS_ACTION_COPY, in_packet_drop_callback, root, in_handle);
@@ -759,7 +815,8 @@ static onep_status_t register_traffic(network_element_t *ne,
 
 
 	/* If we made it here, we registered successfully */
-	fprintf(stderr, "Registered!\n");
+	fprintf(stderr, "Registered for %s on %s!\n", name, sys_name);
+	free(sys_name);
 	return ONEP_OK;
 
 }
@@ -768,7 +825,7 @@ static onep_status_t register_traffic(network_element_t *ne,
 
 JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 														   jobject thisObj,
-														   jobjectArray j_address,
+														   jstring j_address,
 														   jstring j_user,
 														   jstring j_pass,
 														   jint    j_protocol,
@@ -785,7 +842,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	session_config_t*      config = NULL;
 
 	/* Node Vars */
-	network_element_t *ne1, *ne2;
+	network_element_t *ne1;
 	struct sockaddr_in     v4addr;
 	char *c_address, *c_username, *c_password, *c_source, *c_dest;
 	int c_source_port = (int) j_source_port;
@@ -810,23 +867,38 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
 	/*Get a reference to this object's class */
 	jclass thisClass = (*env)->GetObjectClass(env, thisObj);
+	(*env)->GetJavaVM(env, &g_jvm);
+
+	g_obj = (*env)->NewGlobalRef(env, thisObj);
+	jclass g_class = (*env)->GetObjectClass(env, g_obj);
+	g_meth = (*env)->GetMethodID(env, g_class, "sendOutgoing", "(ILjava/lang/String;Ljava/lang/String;)V");
+	g_meth2 = (*env)->GetMethodID(env, g_class, "removeIncoming", "(ILjava/lang/String;)V");
+	//add_to_java(10, "This is it");
+//	callBackOut = (*env)->GetMethodID(env, thisClass, "sendOutgoing", "(ILjava/lang/String;)V");
+//	masterEnv = env;
+//	masterObj = thisObj;
+
+	//char* c_message = "Router2";
+	//jstring message = (*env)->NewStringUTF(env, c_message);
+	//(*env)->CallVoidMethod(env, thisObj, callBackOut, 254, message);
+	//(*env)->ReleaseStringUTFChars(env, message, c_message);
 
 	//make lists for each address
-	int stringCount = (*env)->GetArrayLength(env, j_address);
-	char **rawString = (char **) malloc(stringCount*sizeof(char *));
-	List **masterList = (List **) malloc(stringCount*sizeof(List*));
-	int i, t;
-	for (i=0; i<stringCount; i++) {
-	        jstring string = (jstring) (*env)->GetObjectArrayElement(env, j_address, i);
-	        rawString[i] =  (*env)->GetStringUTFChars(env, string, 0);
-	        List *root = (List *)malloc(sizeof(List));
-	        root->data = 0;
-	        root->timestamp = time(NULL);
-	        masterList[i] = root;
-	}
-	for (i=0; i<stringCount; i++) {
-		       printf("address: %s\n", rawString[i]);
-	}
+//	int stringCount = (*env)->GetArrayLength(env, j_address);
+//	char **rawString = (char **) malloc(stringCount*sizeof(char *));
+//	List **masterList = (List **) malloc(stringCount*sizeof(List*));
+//	int i, t;
+//	for (i=0; i<stringCount; i++) {
+//	        jstring string = (jstring) (*env)->GetObjectArrayElement(env, j_address, i);
+//	        rawString[i] =  (*env)->GetStringUTFChars(env, string, 0);
+//	        List *root = (List *)malloc(sizeof(List));
+//	        root->data = 0;
+//	        root->timestamp = time(NULL);
+//	        masterList[i] = root;
+//	}
+//	for (i=0; i<stringCount; i++) {
+//		       printf("address: %s\n", rawString[i]);
+//	}
 
 
 	/* Get arguments */
@@ -834,15 +906,23 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 			c_password 	= (char *) (*env)->GetStringUTFChars(env, j_pass, NULL);
 			c_source	= (char *) (*env)->GetStringUTFChars(env, j_source, NULL);
 			c_dest		= (char *) (*env)->GetStringUTFChars(env, j_dest, NULL);
+			c_address 	= (char *) (*env)->GetStringUTFChars(env, j_address, NULL);
 
-	for (t=0; t<stringCount; t++) {
+			List *root = (List *)malloc(sizeof(List));
+			root->data = 0;
+			root->timestamp = time(NULL);
+
+			List *outgoing = (List *)malloc(sizeof(List));
+			outgoing->data = 0;
+			outgoing->timestamp = time(NULL);
+	//for (t=0; t<stringCount; t++) {
 	/* Create Application instance. */
 		//TRY(rc, onep_application_get_instance(&myapp), env, thisObj, errFid,
 		//"onep_application_get_instance");
 
 
-		c_address 	= rawString[t];
-		fprintf(stderr, c_address);
+		//c_address 	= rawString[t];
+		//fprintf(stderr, c_address);
 	    onep_application_get_instance(&myapp);
 		onep_application_set_name(myapp, c_address);
 
@@ -851,6 +931,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 		//"onep_session_config_new");
 		onep_session_config_new(ONEP_SESSION_SOCKET, &config);
 		onep_session_config_set_event_queue_size(config, 300);
+		onep_session_config_set_event_thread_pool(config, 1);
 		onep_session_config_set_event_drop_mode(config, ONEP_SESSION_EVENT_DROP_OLD);
 
 
@@ -870,7 +951,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 				onep_application_get_network_element(myapp, (struct sockaddr*)&v4addr, &ne1);
 
 
-				fprintf(stderr, c_address);
+				fprintf(stderr, "%s\n", c_address);
 
 			/* Connect to Network Element */
 				//TRY(rc, onep_element_connect(ne1, c_username, c_password, config, &session_handle), env, thisObj, errFid,
@@ -906,7 +987,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 						goto cleanup;
 					}
 	/* Display the interfaces we retrieved */
-		dpss_tutorial_display_intf_list(intfs,stderr);
+		//dpss_tutorial_display_intf_list(intfs,stderr);
 		uint32_t intf_count;
 
 
@@ -919,11 +1000,11 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 				unsigned int i;
 				/* for each interface, we will register for incoming and outgoing traffic */
 				for (i = 0; i < intf_count; i++) {
-					rc = onep_collection_get_by_index(intfs, i, (void *)&intf);
+					rc = onep_collection_get_by_index(intfs, i, (void **)&intf);
 					if (rc==ONEP_OK) {
 						rc = onep_interface_get_name(intf,name);
-						fprintf(stderr, "Registering for traffic on %s\n", name);
-						rc = register_traffic(ne1, intf, acl_class_in, acl_class_out, &in_target, &out_target, &in_handle, &out_handle, masterList[t], &masterList[t], t);
+						//fprintf(stderr, "Registering for traffic on %s\n", name);
+						rc = register_traffic(ne1, intf, acl_class_in, acl_class_out, &in_target, &out_target, &in_handle, &out_handle, root, &root);
 
 						if(rc != ONEP_OK){
 							fprintf(stderr, "Problem registering for interface %s\n", name);
@@ -933,11 +1014,11 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 					}
 				}
 			} if (intf_count <= 0 ) {
-				fprintf(stderr, "\nNo interfaces available");
+				fprintf(stderr, "\nNo interfaces available\n");
 				goto cleanup;
 			}
 
-	}
+	//}
 			//fprintf(stderr, "done registering..\n");
 			while (1) {
 				sleep(CHECK_TIME_INTERVAL);
@@ -965,11 +1046,10 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	cleanup:
 			disconnect_network_element(&ne1, &session_handle);
 	//At the end release the resources
-	for(i = 0; i < stringCount; i++){
-		(*env)->ReleaseStringUTFChars(env, j_address, rawString[i]);
-	}
-	free(rawString);
-    (*env)->ReleaseStringUTFChars(env, j_address, c_address);
+//	for(i = 0; i < stringCount; i++){
+//		(*env)->ReleaseStringUTFChars(env, j_address, rawString[i]);
+//	}
+//	free(rawString);
     (*env)->ReleaseStringUTFChars(env, j_address, c_address);
     (*env)->ReleaseStringUTFChars(env, j_user, c_username);
     (*env)->ReleaseStringUTFChars(env, j_pass, c_password);
