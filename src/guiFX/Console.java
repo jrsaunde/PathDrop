@@ -52,7 +52,7 @@ public class Console implements Runnable{
 		textArea.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		textArea.setPrefSize(400, 316);
+		textArea.setPrefSize(500, 416);
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
 
@@ -67,7 +67,7 @@ public class Console implements Runnable{
 	        }
 	    });
 			
-		stage.setScene(new Scene(root, 400, 330));
+		stage.setScene(new Scene(root, 500, 430));
 		stage.show();
 	}
 
