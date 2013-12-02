@@ -68,6 +68,7 @@ public class GuiFx extends Application {
 	
 	private String srcIP;
 	private String dstIP;
+	private String targetIP;
 	private int srcPort;
 	private int dstPort;
 	private int window;
@@ -89,6 +90,7 @@ public class GuiFx extends Application {
 	private ChoiceBox<String> protocolField = new ChoiceBox<String>(FXCollections.observableArrayList("TCP", "UDP", "ICMP", "EGP", "RSVP", "IGRP", "GRE", "ESP", "AH", "ALL"));
 	private TextField usernameField = new TextField("cisco");
 	private TextField passwordField = new TextField("cisco");
+	private TextField targetIPField = new TextField("1.1.1.1");
 	private NetworkDiscovery network;
 	private TrafficWatch traffic;
 	private Browser browser;
@@ -131,6 +133,7 @@ public class GuiFx extends Application {
 		Label protocolLabel = new Label("Protocol:");
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
+		Label targetIPLabel = new Label("Target IP:");
 		Button discoverButton = new Button("Discover");
 		Button connectButton = new Button("Connect");
 		
@@ -139,9 +142,9 @@ public class GuiFx extends Application {
 		protocolField.getSelectionModel().selectFirst();
 		
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
-				windowLabel, protocolLabel, usernameLabel, passwordLabel);
+				windowLabel, protocolLabel, usernameLabel, passwordLabel, targetIPLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, connectButton, traceButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, targetIPField, discoverButton, connectButton, traceButton);
 		
 		// topology pane
 		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage); 
@@ -167,65 +170,7 @@ public class GuiFx extends Application {
 			}
 		}
 		
-		// Trace Listener
-		traceButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-				if (Validator.validateIP(srcIPField))
-					srcIP = srcIPField.getText().trim();
-				else
-					return;
-				
-				if (Validator.validateIP(dstIPField))
-					dstIP = dstIPField.getText().trim();
-				else 
-					return;
-				
-				if (Validator.validatePort(dstPortField))
-					dstPort = Integer.parseInt(dstPortField.getText().trim());
-				else 
-					return;
-				
-				if (Validator.validatePort(srcPortField))
-					srcPort = Integer.parseInt(srcPortField.getText().trim());
-				else 
-					return;
-				
-				fields.getChildren().remove(traceButton);
-				fields.getChildren().add(stopButton);
-				stopButton.requestFocus();
-				// call  trace object (inputs)
-				try {
-					//network.findPaths(srcIP, dstIP);
-					
-					traffic = new TrafficWatch(guiNodes, guiConnections, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
-					Thread trafficThread = new Thread(traffic);
-					threads.add(trafficThread);
-					trafficThread.start();
-					//for(String node : nodeIPs){
-					//	puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					//}
-					//puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					//puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					//for(NodePuppet puppet: puppetList){
-					//	new Thread(puppet).start();
-					//	Thread.sleep(2000);
-					//}
-					//Thread.sleep(10000);
-					//buffer.printBuffer();
-					
-//					tester = new pktLoss(connections, browser, network);
-//					Thread testThread = new Thread(tester);
-//					testThread.start();
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					System.out.println("WE FAILED!!! find paths");
-					e1.printStackTrace();
-				}
-			}
-		});
-		
+
 		// Stop trace Listener
 		stopButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -271,8 +216,8 @@ public class GuiFx extends Application {
 		// console into a box
 		connectButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				if (Validator.validateIP(srcIPField))
-					srcIP = srcIPField.getText().trim();
+				if (Validator.validateIP(targetIPField))
+					targetIP = targetIPField.getText().trim();
 				else 
 					return;
 				if (Validator.validateUsername(usernameField))
@@ -284,20 +229,100 @@ public class GuiFx extends Application {
 				else 
 					return;
 				
-				for (String ip : discoveredIPs) // checks to see if node exist in disicoverey list
-					System.out.println(ip);
-				if (!discoveredIPs.contains(srcIP)) {
-					Validator.setFalse(srcIPField);
+				/*for (String ip : discoveredIPs) // checks to see if node exist in disicoverey list
+					System.out.println(ip);*/
+				if (!discoveredIPs.contains(targetIP)) {
+					Validator.setFalse(targetIPField);
 					return;
 				}
 					
-				Console console = new Console(srcIP, username, password);
+				Console console = new Console(targetIP, username, password);
 				Thread thread = new Thread(console);
 				threads.add(thread);
 				thread.start();
 			}
 		});
-
+		
+		// Trace Listener
+		traceButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				if (Validator.validateIP(srcIPField))
+					srcIP = srcIPField.getText().trim();
+				else
+					return;
+				
+				if (Validator.validateIP(dstIPField))
+					dstIP = dstIPField.getText().trim();
+				else 
+					return;
+				
+				if (Validator.validatePort(dstPortField))
+					dstPort = Integer.parseInt(dstPortField.getText().trim());
+				else 
+					return;
+				
+				if (Validator.validatePort(srcPortField))
+					srcPort = Integer.parseInt(srcPortField.getText().trim());
+				else 
+					return;
+				
+				if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}
+				
+				if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}
+				
+				fields.getChildren().remove(traceButton);
+				fields.getChildren().add(stopButton);
+				stopButton.requestFocus();
+				
+				if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}
+				
+				if (!discoveredIPs.contains(dstIP)) {
+					Validator.setFalse(dstIPField);
+					return;
+				}
+				
+				// call  trace object (inputs)
+				try {
+					//network.findPaths(srcIP, dstIP);
+					
+					traffic = new TrafficWatch(guiNodes, guiConnections, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
+					Thread trafficThread = new Thread(traffic);
+					threads.add(trafficThread);
+					trafficThread.start();
+					//for(String node : nodeIPs){
+					//	puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//}
+					//puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//for(NodePuppet puppet: puppetList){
+					//	new Thread(puppet).start();
+					//	Thread.sleep(2000);
+					//}
+					//Thread.sleep(10000);
+					//buffer.printBuffer();
+					
+//					tester = new pktLoss(connections, browser, network);
+//					Thread testThread = new Thread(tester);
+//					testThread.start();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					System.out.println("WE FAILED!!! find paths");
+					e1.printStackTrace();
+				}
+			}
+		});
+		
 		// close operation
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 		    @SuppressWarnings("deprecation")
