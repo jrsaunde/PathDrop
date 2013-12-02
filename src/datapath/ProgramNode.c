@@ -71,11 +71,12 @@ static void add_to_java(int ID, char* name, char* c_message){
 	(*g_jvm)->DetachCurrentThread(g_jvm);
 	return;
 }
-static void remove_from_java(int ID, char* name){
+static void remove_from_java(int ID, char* name, char* c_message){
 	JNIEnv* thisEnv;
 	(*g_jvm)->AttachCurrentThread(g_jvm, (void**)&thisEnv, NULL);
+	jstring message = (*thisEnv)->NewStringUTF(thisEnv, c_message);
 	jstring router_name = (*thisEnv)->NewStringUTF(thisEnv, name);
-	(*thisEnv)->CallVoidMethod(thisEnv, g_obj, g_meth2, ID, router_name);;
+	(*thisEnv)->CallVoidMethod(thisEnv, g_obj, g_meth2, ID, router_name, message);;
 	(*g_jvm)->DetachCurrentThread(g_jvm);
 	return;
 
@@ -99,7 +100,7 @@ static void add_to_end(List *list, uint16_t _data, time_t _timestamp, char* _nam
 	while (last){
 		if(last->next == NULL){
 			last->next = newNode;
-			remove_from_java(_data, _name);
+			//remove_from_java(_data, _name);
 			//printf("added packet with id %d to end at time %ld\n", _data, _timestamp);
 			return;
 		}
@@ -167,8 +168,8 @@ static int search_and_remove(List **list, uint16_t _data, char* sys_name, char* 
 			List *temp = cur->next;
 			cur->next = cur->next->next;
 			//printf("found and removed packet with id %d\n", _data);
-			add_to_java(_data, sys_name, int_name);
-			//fprintf(stderr, "freeing 3 \n");
+			//add_to_java(_data, sys_name, int_name);
+			fprintf(stderr, "freeing 3 \n");
 			free(temp);
 			return 1;
 		}else if(time(NULL) - cur->next->timestamp > PACKET_TIMEOUT){
@@ -176,7 +177,7 @@ static int search_and_remove(List **list, uint16_t _data, char* sys_name, char* 
 				//printf("PACKETT LOSS: packet with id %d never seen\n", cur->data);
 				List *temp = cur ->next;
 				cur->next = cur->next->next;
-				//fprintf(stderr, "freeing 4 \n");
+				fprintf(stderr, "freeing 4 \n");
 				free(temp);
 		}else{
 			cur = cur -> next;
@@ -502,7 +503,7 @@ static onep_status_t create_acls( network_element_t *elm,
 		fprintf(stderr, "Unable to add ace1 to in_acl: %s\n", onep_strerror(acl_rc));
 		return ONEP_FAIL;
 	}
-	printf("\n Added ace1 to in_acl\n");
+	//printf("\n Added ace1 to in_acl\n");
 	acl_rc = onep_acl_add_ace(in_acl, ace_2);
 	if (acl_rc != ONEP_OK) {
 		fprintf(stderr, "Unable to add ace2 to in_acl: %s\n", onep_strerror(acl_rc));
@@ -514,7 +515,7 @@ static onep_status_t create_acls( network_element_t *elm,
 		fprintf(stderr, "Unable to add ace3 to out_acl: %s\n", onep_strerror(acl_rc));
 		return ONEP_FAIL;
 	}
-	fprintf(stderr,"\n Added ace1 to acl2\n");
+	//fprintf(stderr,"\n Added ace1 to acl2\n");
 	acl_rc = onep_acl_add_ace(out_acl, ace_4);
 	if (acl_rc != ONEP_OK) {
 		fprintf(stderr, "Unable to add ace4 to out_acl: %s\n", onep_strerror(acl_rc));
@@ -603,10 +604,10 @@ static void out_packet_drop_callback( onep_dpss_traffic_reg_t *reg, struct onep_
     } else {
         fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
     }
-    //fprintf(stderr, ("\n"
-    //		"Out - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, output, src_ip, src_port, dest_ip, dest_port);
-    search_and_remove((List **) client_context, pkt_id, sys_name, output);
-
+    //fprintf(stderr, "\n"
+    // 		"Out - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, output, src_ip, src_port, dest_ip, dest_port);
+    //search_and_remove((List **) client_context, pkt_id, sys_name, output);
+    add_to_java(pkt_id, sys_name, output);
 
     //print_list((List *) client_context);
     //fflush(stdout);
@@ -698,8 +699,8 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 	        fprintf(stderr, "Error getting flow ID. code[%d], text[%s]\n", rc, onep_strerror(rc));
 	    }
 
-	   // printf("\n"
-	   // 		"In  - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, input, src_ip, src_port, dest_ip, dest_port);
+	    //fprintf(stderr,"\n"
+	    //		"In  - %-4d | %-18s | %-18s | %-15s (%-5d) --> %-15s (%-5d)\n", pkt_id, sys_name, input, src_ip, src_port, dest_ip, dest_port);
 	    /*
 	     * If it is destination, assume not lost and dont add to list
 	     * strcmp - 0 if equal
@@ -707,13 +708,14 @@ static void in_packet_drop_callback( onep_dpss_traffic_reg_t *reg,
 
 	    //if(strcmp(DEST, dest_ip)){
 	    //printf("client_context %p\n", client_context);
-	    	add_to_end((List *) client_context, pkt_id, time(NULL), sys_name);
-		    //print_list((List *) client_context);
+	    	//add_to_end((List *) client_context, pkt_id, time(NULL), sys_name);
+		    remove_from_java(pkt_id, sys_name, input);
+	    	//print_list((List *) client_context);
 	    //}
 		fflush(stdout);
-		free(sys_name);
 	    free(src_ip);
 	    free(dest_ip);
+		free(sys_name);
 	    return;
 }
 
@@ -815,7 +817,7 @@ static onep_status_t register_traffic(network_element_t *ne,
 
 
 	/* If we made it here, we registered successfully */
-	fprintf(stderr, "Registered for %s on %s!\n", name, sys_name);
+	//fprintf(stderr, "Registered for %s on %s!\n", name, sys_name);
 	free(sys_name);
 	return ONEP_OK;
 
@@ -872,7 +874,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 	g_obj = (*env)->NewGlobalRef(env, thisObj);
 	jclass g_class = (*env)->GetObjectClass(env, g_obj);
 	g_meth = (*env)->GetMethodID(env, g_class, "sendOutgoing", "(ILjava/lang/String;Ljava/lang/String;)V");
-	g_meth2 = (*env)->GetMethodID(env, g_class, "removeIncoming", "(ILjava/lang/String;)V");
+	g_meth2 = (*env)->GetMethodID(env, g_class, "removeIncoming", "(ILjava/lang/String;Ljava/lang/String;)V");
 	//add_to_java(10, "This is it");
 //	callBackOut = (*env)->GetMethodID(env, thisClass, "sendOutgoing", "(ILjava/lang/String;)V");
 //	masterEnv = env;
@@ -1019,7 +1021,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 			}
 
 	//}
-			//fprintf(stderr, "done registering..\n");
+			fprintf(stderr, "done registering..\n");
 			while (1) {
 				sleep(CHECK_TIME_INTERVAL);
 				//check_timeout(&root);

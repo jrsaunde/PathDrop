@@ -100,11 +100,13 @@ public class NodePuppet implements Runnable{
 		return this.loss[index];
 	}
 	
-	public void removeIncoming(int ID, String name){
-		//if(this.buffer.containsKey(ID)){
+	public void removeIncoming(int ID, String name, String intf){
 			//this.buffer.remove(ID);
 			//System.out.println("Removed " + ID + " from " + name + newLine);
-			FlowBuffer.removeFrombuffer(ID, name);
+			List<String> info = new ArrayList<String>();
+			info.add(name);
+			info.add(intf);
+			FlowBuffer.removeFrombuffer(ID, info);
 		//}
 	}
 	
@@ -116,7 +118,7 @@ public class NodePuppet implements Runnable{
 		//}else if((name.equals("Router1")) && (intf.equals("GigabitEthernet0/0"))){
 		//	System.out.println("packet: " + ID + " is leaving the network from " + name + "[" + intf + "]"+ newLine);
 		//}else{
-		//	System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
+			//System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
 			List<String> info = new ArrayList<String>();
 			info.add(name);
 			info.add(intf);
