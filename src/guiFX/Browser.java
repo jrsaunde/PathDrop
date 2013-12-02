@@ -49,7 +49,7 @@ public class Browser extends Region {
     	// load default image
         image = new ImageView();
         image.setImage(this.loaderImage);
-        image.relocate((540-165)/2, (600-165)/2);
+        image.relocate((740-165)/2, (800-165)/2);
 		webEngine.load("");
         getChildren().add(image);
     }

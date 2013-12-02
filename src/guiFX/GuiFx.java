@@ -105,22 +105,22 @@ public class GuiFx extends Application {
 	
 	@Override public void start(Stage stage) throws Exception {
 		Group root = new Group();
-		Scene scene = new Scene(root, 800, 600);
+		Scene scene = new Scene(root, 1000, 800);
 		HBox body = new HBox();
 		root.getChildren().add(body);
 		HBox controlPane = new HBox();
 		controlPane.setStyle("-fx-background-image: url('img/left_banner.png');");
-		controlPane.setPrefSize(260, 600);
+		controlPane.setPrefSize(260, 800);
 		controlPane.setPadding(new Insets(10));
 		VBox viewPane = new VBox();
-		viewPane.setPrefSize(540, 600);
+		viewPane.setPrefSize(740,800);
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
-		final VBox labels = new VBox(21);
-		final VBox fields = new VBox(16);
-		labels.setPadding(new Insets(168, 8, 8, 8));
-		fields.setPadding(new Insets(166, 6, 6, 6));
+		final VBox labels = new VBox(31);
+		final VBox fields = new VBox(26);
+		labels.setPadding(new Insets(188, 8, 8, 8));
+		fields.setPadding(new Insets(186, 6, 6, 6));
 		controlPane.getChildren().addAll(labels,fields);
 		
 		Label srcIPLabel = new Label("Source IP:");
