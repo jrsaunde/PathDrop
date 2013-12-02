@@ -25,7 +25,7 @@ public class FlowBuffer {
 			if(synchronizedMap.containsKey(ID)){
 				//Do we care?
 			}else if((value.get(0).equals("Router1")) && (value.get(1).equals("GigabitEthernet0/0")) ){
-				System.out.println("packet: " + ID + " is leaving the network from " + value.get(0) + "[" + value.get(1) + "]");
+				//System.out.println("packet: " + ID + " is leaving the network from " + value.get(0) + "[" + value.get(1) + "]");
 			}else{
 			//System.out.println("Added " + ID + " from " + value.get(0) + "[" + value.get(1) + "]");
 			synchronizedMap.put(ID, value);

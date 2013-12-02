@@ -267,7 +267,7 @@ public class GuiFx extends Application {
 				else 
 					return;
 				
-				if (!discoveredIPs.contains(srcIP)) {
+				/*if (!discoveredIPs.contains(srcIP)) {
 					Validator.setFalse(srcIPField);
 					return;
 				}
@@ -275,16 +275,16 @@ public class GuiFx extends Application {
 				if (!discoveredIPs.contains(srcIP)) {
 					Validator.setFalse(srcIPField);
 					return;
-				}
+				}*/
 				
 				fields.getChildren().remove(traceButton);
 				fields.getChildren().add(stopButton);
 				stopButton.requestFocus();
 				
-				if (!discoveredIPs.contains(srcIP)) {
+				/*if (!discoveredIPs.contains(srcIP)) {
 					Validator.setFalse(srcIPField);
 					return;
-				}
+				}*/
 				
 				if (!discoveredIPs.contains(dstIP)) {
 					Validator.setFalse(dstIPField);
