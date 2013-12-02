@@ -53,10 +53,13 @@ import java.util.List;
 import java.util.Map;
 
 import datapath.NodePuppet;
+import datapath.TrafficWatch;
 import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
 import tests.pktLoss;
+import topo.ConnectionList;
 import topo.GuiConnection;
+import topo.NodeList;
 import vty.VTYSession;
 
 public class GuiFx extends Application {
@@ -75,13 +78,15 @@ public class GuiFx extends Application {
 	private static ArrayList<String>discoveredIPs = new ArrayList<String>();
 	private static ArrayList<String>nodeIPs = new ArrayList<String>();
 	private static ArrayList<GuiConnection> connections = new ArrayList<GuiConnection>();
+	private static NodeList guiNodes = new NodeList();
+	private static ConnectionList guiConnections = new ConnectionList();
 	
 	private TextField srcIPField = new TextField("10.192.10.110");
 	private TextField dstIPField = new TextField("10.192.40.140");
-	private TextField srcPortField = new TextField("22");
-	private TextField dstPortField = new TextField("23");
+	private TextField srcPortField = new TextField("0");
+	private TextField dstPortField = new TextField("80");
 	private TextField windowField = new TextField("100");
-	private ChoiceBox protocolField = new ChoiceBox(FXCollections.observableArrayList("TCP", "UDP", "DCCP", "SCTP", "RSVP"));
+	private ChoiceBox<String> protocolField = new ChoiceBox<String>(FXCollections.observableArrayList("TCP", "UDP", "ICMP", "EGP", "RSVP", "IGRP", "GRE", "ESP", "AH", "ALL"));
 	private TextField usernameField = new TextField("cisco");
 	private TextField passwordField = new TextField("cisco");
 	private NetworkDiscovery network;
@@ -90,7 +95,7 @@ public class GuiFx extends Application {
 
 	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
-	FlowBuffer buffer = new FlowBuffer();
+	//FlowBuffer buffer = new FlowBuffer();
 	//private FlowBuffer map = new FlowBuffer();
 
 	private Image loaderImage = new Image("img/loader.gif", true);
@@ -174,22 +179,41 @@ public class GuiFx extends Application {
 					dstIP = dstIPField.getText().trim();
 				else 
 					return;
+				
+				if (Validator.validatePort(dstPortField))
+					dstPort = Integer.parseInt(dstPortField.getText().trim());
+				else 
+					return;
+				
+				if (Validator.validatePort(srcPortField))
+					srcPort = Integer.parseInt(srcPortField.getText().trim());
+				else 
+					return;
+				
 				fields.getChildren().remove(traceButton);
 				fields.getChildren().add(stopButton);
 				stopButton.requestFocus();
 				// call  trace object (inputs)
 				try {
-					network.findPaths(srcIP, dstIP);
-//					for(String node : nodeIPs){
-//						puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, map));
-//					}
-					puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					for(NodePuppet puppet: puppetList){
-						new Thread(puppet).start();
-						Thread.sleep(2000);
-					}
+					//network.findPaths(srcIP, dstIP);
+					
+					TrafficWatch traffic = new TrafficWatch(guiNodes, guiConnections, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
+					Thread trafficThread = new Thread(traffic);
+					threads.add(trafficThread);
+					trafficThread.start();
+					//for(String node : nodeIPs){
+					//	puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//}
+					//puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//for(NodePuppet puppet: puppetList){
+					//	new Thread(puppet).start();
+					//	Thread.sleep(2000);
+					//}
+					//Thread.sleep(10000);
+					//buffer.printBuffer();
+					
 //					tester = new pktLoss(connections, browser, network);
 //					Thread testThread = new Thread(tester);
 //					testThread.start();
@@ -231,7 +255,7 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, connections, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
@@ -266,7 +290,7 @@ public class GuiFx extends Application {
 					return;
 				}
 					
-				Console console = new Console(srcIP, username, password, threads);
+				Console console = new Console(srcIP, username, password);
 				Thread thread = new Thread(console);
 				threads.add(thread);
 				thread.start();
