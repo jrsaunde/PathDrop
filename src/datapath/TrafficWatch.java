@@ -121,6 +121,7 @@ public class TrafficWatch implements Runnable{
 						public void run(){
 							try {
 								browser.loadTopo(nodes.printNodes() + newLine + connections.printConnections());
+								System.out.println(connections.printConnections());
 								//browser.loadTopo(getJsonTopo());
 							} catch (MalformedURLException | FileNotFoundException e) {
 								// TODO Auto-generated catch block

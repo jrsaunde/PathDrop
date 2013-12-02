@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import topo.ConnectionList;
 import datapath.NodePuppet;
 
 public class JNITest{
@@ -25,10 +26,10 @@ public class JNITest{
 		int sourcePort = Integer.parseInt(args[5]);
 		String destIP = args[6];
 		int destPort = Integer.parseInt(args[7]);
-		
+		ConnectionList list = new ConnectionList();
 		ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 		//Map<Integer, List<String>> map = new HashMap<Integer, List<String>>();
-		FlowBuffer buffer = new FlowBuffer();
+		FlowBuffer buffer = new FlowBuffer(list);
 		String[] sArray = {"10.192.10.120", "10.192.40.140"};
 		//puppetList.add(new NodePuppet(sArray, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
 		//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "10.192.1.1", 0, "10.192.40.140", 80));
