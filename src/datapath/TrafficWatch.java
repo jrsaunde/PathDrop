@@ -114,6 +114,7 @@ public class TrafficWatch implements Runnable{
 					}*/
 					//System.out.println(nodes.printNodes() + newLine + connections.printConnections());
 					//System.out.println(connections.printConnections());
+					System.out.println("~~~~~~~~~~~~~Current Loss~~~~~~~~~~~~~");
 					connections.printLoss();
 					//browser.loadTopo(nodes.printNodes() + newLine + connections.printConnections());
 					Platform.runLater(new Runnable(){
@@ -121,7 +122,8 @@ public class TrafficWatch implements Runnable{
 						public void run(){
 							try {
 								browser.loadTopo(nodes.printNodes() + newLine + connections.printConnections());
-								System.out.println(connections.printConnections());
+							
+								//System.out.println(connections.printConnections());
 								//browser.loadTopo(getJsonTopo());
 							} catch (MalformedURLException | FileNotFoundException e) {
 								// TODO Auto-generated catch block
