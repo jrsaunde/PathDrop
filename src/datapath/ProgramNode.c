@@ -1022,7 +1022,7 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
 	//}
 			fprintf(stderr, "done registering..\n");
-			while (1) {
+			while (1) {	//TODO:Add here a check to TrafficWatch.run for true/false
 				sleep(CHECK_TIME_INTERVAL);
 				//check_timeout(&root);
 				//print_list(root);

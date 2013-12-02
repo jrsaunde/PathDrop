@@ -90,6 +90,7 @@ public class GuiFx extends Application {
 	private TextField usernameField = new TextField("cisco");
 	private TextField passwordField = new TextField("cisco");
 	private NetworkDiscovery network;
+	private TrafficWatch traffic;
 	private Browser browser;
 	private pktLoss tester;
 
@@ -197,7 +198,7 @@ public class GuiFx extends Application {
 				try {
 					//network.findPaths(srcIP, dstIP);
 					
-					TrafficWatch traffic = new TrafficWatch(guiNodes, guiConnections, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
+					traffic = new TrafficWatch(guiNodes, guiConnections, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
 					Thread trafficThread = new Thread(traffic);
 					threads.add(trafficThread);
 					trafficThread.start();
@@ -234,7 +235,7 @@ public class GuiFx extends Application {
 				fields.getChildren().add(traceButton);
 				traceButton.requestFocus();
 				// call stop trace object (inputs)
-				
+				traffic.run = false;
 			}
 		});
 		

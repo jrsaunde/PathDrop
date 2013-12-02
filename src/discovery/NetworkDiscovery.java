@@ -237,7 +237,7 @@ public class NetworkDiscovery implements Runnable {
 				devices = devices + "		" +connection + newLine;
 			}
 		}*/
-		devices = devices + "	]" + newLine +    "  }" + newLine;
+		//devices = devices + "	]" + newLine +    "  }" + newLine;
 		
 		return(devices);
 	}
