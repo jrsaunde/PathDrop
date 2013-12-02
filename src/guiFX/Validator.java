@@ -67,7 +67,27 @@ public class Validator {
 		return true;
 	}
 
-	public static boolean validatePortLogic(String str) {
+	public static boolean validatePort(TextField textField) {
+		if (textField.getText().isEmpty()) {
+			System.out.println("Please provide valid Port");
+			textField.requestFocus();
+			textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
+			return false;
+		} else {
+			if (!Validator.validatePortLogic(textField.getText().trim())) {
+				System.out.println("Please provide valid port");
+				textField.requestFocus();
+				textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
+				return false;
+			} else {
+				textField.setStyle("-fx-text-box-border, -fx-control-inner-background;");
+				return true;
+			}
+		}
+	}
+	
+	public static boolean validatePortLogic(String str){
+		
 		try {
 			int num = Integer.parseInt(str);
 			if (num>65535)
