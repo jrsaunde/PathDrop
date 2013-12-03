@@ -57,7 +57,7 @@ import datapath.NodePuppet;
 import datapath.TrafficWatch;
 import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
-import tests.pktLoss;
+//import tests.pktLoss;
 import topo.ConnectionList;
 import topo.GuiConnection;
 import topo.NodeList;
@@ -95,7 +95,7 @@ public class GuiFx extends Application {
 	private NetworkDiscovery network;
 	private TrafficWatch traffic;
 	private Browser browser;
-	private pktLoss tester;
+	//private pktLoss tester;
 
 	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
@@ -113,10 +113,10 @@ public class GuiFx extends Application {
 		root.getChildren().add(body);
 		HBox controlPane = new HBox();
 		controlPane.setStyle("-fx-background-image: url('img/left_banner.png');");
-		controlPane.setPrefSize(260, 800);
+		controlPane.setPrefSize(260, 810);
 		controlPane.setPadding(new Insets(10));
 		VBox viewPane = new VBox();
-		viewPane.setPrefSize(740,800);
+		viewPane.setPrefSize(740, 800);
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
@@ -135,11 +135,12 @@ public class GuiFx extends Application {
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
 		Label targetIPLabel = new Label("Target IP:");
-		Button discoverButton = new Button("Discover");
-		Button connectButton = new Button("Connect");
-		
+		final Button discoverButton = new Button("Discover");
+		final Button connectButton = new Button("Connect");
 		final Button traceButton = new Button("Trace");
 		final Button stopButton = new Button("Stop");
+		final Button [] buttons = {discoverButton, connectButton, traceButton};
+		
 		protocolField.getSelectionModel().selectFirst();
 		
 		/*Add Tooltips for input fields*/
@@ -188,7 +189,6 @@ public class GuiFx extends Application {
 		stopButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-
 				fields.getChildren().remove(stopButton);
 				fields.getChildren().add(traceButton);
 				traceButton.requestFocus();
@@ -214,12 +214,14 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, buttons, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
 
 					browser.loadLoader();
+					for (Button button: buttons)
+						button.setDisable(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -348,7 +350,7 @@ public class GuiFx extends Application {
 		});
 		
 		// core stage
-		stage.setTitle("PathDrop - Kickass Network Visualizer & Packet Tracer");
+		stage.setTitle("PathDrop - Network Visualizer & Packet Tracer");
 		stage.setScene(scene);
 		stage.getIcons().add(new Image("img/cisco_blue.png"));
 		stage.show();
