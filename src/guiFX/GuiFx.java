@@ -56,7 +56,7 @@ import datapath.NodePuppet;
 import datapath.TrafficWatch;
 import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
-import tests.pktLoss;
+//import tests.pktLoss;
 import topo.ConnectionList;
 import topo.GuiConnection;
 import topo.NodeList;
@@ -94,7 +94,7 @@ public class GuiFx extends Application {
 	private NetworkDiscovery network;
 	private TrafficWatch traffic;
 	private Browser browser;
-	private pktLoss tester;
+	//private pktLoss tester;
 
 	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
@@ -107,15 +107,15 @@ public class GuiFx extends Application {
 	
 	@Override public void start(Stage stage) throws Exception {
 		Group root = new Group();
-		Scene scene = new Scene(root, 1000, 800);
+		Scene scene = new Scene(root, 1000, 900);
 		HBox body = new HBox();
 		root.getChildren().add(body);
 		HBox controlPane = new HBox();
 		controlPane.setStyle("-fx-background-image: url('img/left_banner.png');");
-		controlPane.setPrefSize(260, 800);
+		controlPane.setPrefSize(260, 900);
 		controlPane.setPadding(new Insets(10));
 		VBox viewPane = new VBox();
-		viewPane.setPrefSize(740,800);
+		viewPane.setPrefSize(740,900);
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
@@ -134,9 +134,8 @@ public class GuiFx extends Application {
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
 		Label targetIPLabel = new Label("Target IP:");
-		Button discoverButton = new Button("Discover");
-		Button connectButton = new Button("Connect");
-		
+		final Button discoverButton = new Button("Discover");
+		final Button connectButton = new Button("Connect");
 		final Button traceButton = new Button("Trace");
 		final Button stopButton = new Button("Stop");
 		protocolField.getSelectionModel().selectFirst();
@@ -175,7 +174,6 @@ public class GuiFx extends Application {
 		stopButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-
 				fields.getChildren().remove(stopButton);
 				fields.getChildren().add(traceButton);
 				traceButton.requestFocus();
@@ -201,11 +199,13 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, connectButton, traceButton, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
 					browser.loadLoader();
+					connectButton.setDisable(true);
+					traceButton.setDisable(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}

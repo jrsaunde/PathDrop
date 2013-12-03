@@ -14,6 +14,7 @@ import java.util.TreeSet;
 
 import javafx.application.Platform;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import topo.ConnectionList;
 import topo.GuiConnection;
 import topo.GuiNode;
@@ -59,10 +60,15 @@ public class NetworkDiscovery implements Runnable {
 	String						username;
 	String						password;
 	
+	Button traceButton;
+	Button connectButton;
+	
 	/**
 	 * Discovers the network from the startAddress and generates a graph object
 	 * @param browser 
 	 * @param nodes 
+	 * @param traceButton 
+	 * @param connectButton 
 	 * 
 	 * @param startAddress 	the InetAddress of the start node
 	 * @param username		the username for all devices
@@ -71,7 +77,7 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, Button connectButton, Button traceButton, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
 		this.browser = browser;
@@ -82,11 +88,14 @@ public class NetworkDiscovery implements Runnable {
 		this.guiNodes = nodes;
 		this.startAddress = InetAddress.getByName(srcIP);
 		this.destAddress = InetAddress.getByName(dstIP);
+		this.connectButton = connectButton;
+		this.traceButton = traceButton;
 		this.username = username;
 		this.password = password;
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
 		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
 		this.addresses = new ArrayList<InetAddress>();		
+		
 		return;	
 	}
 	
@@ -330,8 +339,10 @@ public class NetworkDiscovery implements Runnable {
 			//Print out the Global graph
 			printNetwork();
 		} catch (Exception e) {
-				System.out.println("NetworkDiscovery Failed");
-				e.printStackTrace();
+			System.out.println("NetworkDiscovery Failed");
+			e.printStackTrace();
+			connectButton.setDisable(false);
+			traceButton.setDisable(false);
 		}
 
 		/*// simulating the discoverying *delay
@@ -351,6 +362,8 @@ public class NetworkDiscovery implements Runnable {
 			public void run(){
 				try {
 					browser.loadTopo(getJsonTopo());
+					connectButton.setDisable(false);
+					traceButton.setDisable(false);
 					//browser.loadTopo(getJsonTopo());
 				} catch (MalformedURLException | FileNotFoundException e) {
 					// TODO Auto-generated catch block
