@@ -334,7 +334,7 @@ public class GuiFx extends Application {
 		});
 		
 		// core stage
-		stage.setTitle("PathDrop - Kickass Network Visualizer & Packet Tracer");
+		stage.setTitle("PathDrop - Network Visualizer & Packet Tracer");
 		stage.setScene(scene);
 		stage.getIcons().add(new Image("img/cisco_blue.png"));
 		stage.show();
