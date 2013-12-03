@@ -25,6 +25,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -141,13 +142,25 @@ public class GuiFx extends Application {
 		final Button stopButton = new Button("Stop");
 		protocolField.getSelectionModel().selectFirst();
 		
+		/*Add Tooltips for input fields*/
+		
+		srcIPField.setTooltip(new Tooltip("Source IP address of traffic flow"));
+		dstIPField.setTooltip(new Tooltip("Destination IP address of traffic flow"));
+		srcPortField.setTooltip(new Tooltip("Source port number of traffic flow (0 for any port)"));
+		dstPortField.setTooltip(new Tooltip("Destination port number of traffic flow (0 for any port)"));
+		windowField.setTooltip(new Tooltip("How long to look for this traffic flow"));
+		usernameField.setTooltip(new Tooltip("Username for all devices in the network"));
+		passwordField.setTooltip(new Tooltip("Password for all devices in the network"));
+		targetIPField.setTooltip(new Tooltip("IP address to open a VTY session to"));
+		
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
 				windowLabel, protocolLabel, usernameLabel, passwordLabel, targetIPLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
 				this.windowField, this.protocolField, this.usernameField, this.passwordField, targetIPField, discoverButton, connectButton, traceButton);
 		
 		// topology pane
-		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage); 
+		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage);
+		browser.setPrefSize(740, 665);
 		viewPane.getChildren().add(browser);
 		
 		// format labels
@@ -205,6 +218,7 @@ public class GuiFx extends Application {
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
+
 					browser.loadLoader();
 				} catch (Exception e1) {
 					e1.printStackTrace();

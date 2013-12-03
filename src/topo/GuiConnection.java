@@ -33,6 +33,14 @@ public class GuiConnection {
 		}
 	}
 	
+	public boolean isActive(){
+		if((this.packetsIn > 0) || (this.packetsOut > 0)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
 	public void increaseLoss(){
 		this.packetLoss +=1;
 	}
@@ -46,13 +54,30 @@ public class GuiConnection {
 		this.packetsOut++;
 	}
 	public String getConnection(){
+		String connection = "''";
+		String color = "";
+
+		if(this.isActive()){
+			color = getHue(this.getLoss());
+			if(this.getLoss() > 0){
+				connection ="'"+ this.getLoss() + "%'";
+			}
+		}
+		else{
+			color= grayedOut();
+		}
+		
+				
+				
 		return( "{ data: { source: '" +
 						  this.sourceNode + "', target: '" +
-						  this.destNode + "', label: '" +
-						  this.sourceInterface + "					" + 
-						  this.destInterface + "', faveColor: '" +
-						  getHue(this.getLoss()) + "', strength: 70 " 
+						  this.destNode + "', label: " +
+						  connection +
+						  ", faveColor: " +
+						  color + ", strength: 70 " 
 						   +" } }");
+		
+		
 	}
 	
 	public String getInfo(){
@@ -78,6 +103,10 @@ public class GuiConnection {
 		 if (hue<min)
 			 hue = min;
 		 //System.out.print("Ratio: " + loss + "; Hue: " + hue);
-		 return "hsl("+ (int) hue+", 95%, 76%)";
+		 return "'hsl("+ (int) hue+", 95%, 76%)'";
+	 }
+	 
+	 public static String grayedOut(){
+		 return "'hsl(360, 0%, 50%)', active: 0.25";
 	 }
 }
