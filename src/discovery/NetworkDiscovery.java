@@ -60,8 +60,7 @@ public class NetworkDiscovery implements Runnable {
 	String						username;
 	String						password;
 	
-	Button traceButton;
-	Button connectButton;
+	Button [] buttons;
 	
 	/**
 	 * Discovers the network from the startAddress and generates a graph object
@@ -77,7 +76,7 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, Button connectButton, Button traceButton, String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, Button [] buttons, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
 		this.browser = browser;
@@ -88,8 +87,7 @@ public class NetworkDiscovery implements Runnable {
 		this.guiNodes = nodes;
 		this.startAddress = InetAddress.getByName(srcIP);
 		this.destAddress = InetAddress.getByName(dstIP);
-		this.connectButton = connectButton;
-		this.traceButton = traceButton;
+		this.buttons = buttons;
 		this.username = username;
 		this.password = password;
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
@@ -341,8 +339,9 @@ public class NetworkDiscovery implements Runnable {
 		} catch (Exception e) {
 			System.out.println("NetworkDiscovery Failed");
 			e.printStackTrace();
-			connectButton.setDisable(false);
-			traceButton.setDisable(false);
+			
+			for (Button button: buttons)
+				button.setDisable(false);
 		}
 
 		/*// simulating the discoverying *delay
@@ -362,8 +361,8 @@ public class NetworkDiscovery implements Runnable {
 			public void run(){
 				try {
 					browser.loadTopo(getJsonTopo());
-					connectButton.setDisable(false);
-					traceButton.setDisable(false);
+					for (Button button: buttons)
+						button.setDisable(false);
 					//browser.loadTopo(getJsonTopo());
 				} catch (MalformedURLException | FileNotFoundException e) {
 					// TODO Auto-generated catch block

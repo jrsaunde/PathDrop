@@ -107,15 +107,15 @@ public class GuiFx extends Application {
 	
 	@Override public void start(Stage stage) throws Exception {
 		Group root = new Group();
-		Scene scene = new Scene(root, 1000, 900);
+		Scene scene = new Scene(root, 1000, 800);
 		HBox body = new HBox();
 		root.getChildren().add(body);
 		HBox controlPane = new HBox();
 		controlPane.setStyle("-fx-background-image: url('img/left_banner.png');");
-		controlPane.setPrefSize(260, 900);
+		controlPane.setPrefSize(260, 810);
 		controlPane.setPadding(new Insets(10));
 		VBox viewPane = new VBox();
-		viewPane.setPrefSize(740,900);
+		viewPane.setPrefSize(740, 800);
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
@@ -138,6 +138,8 @@ public class GuiFx extends Application {
 		final Button connectButton = new Button("Connect");
 		final Button traceButton = new Button("Trace");
 		final Button stopButton = new Button("Stop");
+		final Button [] buttons = {discoverButton, connectButton, traceButton};
+		
 		protocolField.getSelectionModel().selectFirst();
 		
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
@@ -199,13 +201,13 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, connectButton, traceButton, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, buttons, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
 					browser.loadLoader();
-					connectButton.setDisable(true);
-					traceButton.setDisable(true);
+					for (Button button: buttons)
+						button.setDisable(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
