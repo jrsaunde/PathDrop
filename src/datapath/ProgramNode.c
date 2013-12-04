@@ -1022,15 +1022,15 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
 	//}
 			fprintf(stderr, "done registering..\n");
-			jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "runTime", "Z");
-			bool runTime = (*env)->GetBooleanField(env, thisObj, fidNumber);
+			//jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "runTime", "Z");
+			//bool runTime = (*env)->GetBooleanField(env, thisObj, fidNumber);
 
-			while (runTime) {	//TODO:Add here a check to TrafficWatch.run for true/false
+			while (1) {	//TODO:Add here a check to TrafficWatch.run for true/false
 				sleep(CHECK_TIME_INTERVAL);
 				//check_timeout(&root);
 				//print_list(root);
-				bool runTime2 = (*env)->GetBooleanField(env, thisObj, fidNumber);
-				fprintf(stderr, "Checking for runtime %d\n", runTime2);
+				//bool runTime2 = (*env)->GetBooleanField(env, thisObj, fidNumber);
+				//fprintf(stderr, "Checking for runtime %d\n", runTime2);
 			}
 			 printf("done\n");
 

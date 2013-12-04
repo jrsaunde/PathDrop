@@ -161,7 +161,7 @@ public class GuiFx extends Application {
 		
 		// topology pane
 		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage);
-		browser.setPrefSize(740, 665);
+		browser.setPrefSize(740, 800);
 		viewPane.getChildren().add(browser);
 		
 		// format labels

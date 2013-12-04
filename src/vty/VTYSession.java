@@ -34,37 +34,45 @@ public class VTYSession {
 		}       
         	}
 
-	public void open() {
+	public String open() {
 		// TODO Auto-generated method stub
 		NetworkApplication networkApplication = NetworkApplication.getInstance();
 		NetworkElement networkElement;
+		String prompt = "";
 		try {
 			networkElement = networkApplication.getNetworkElement(this.address);
 			networkElement.connect(this.username, this.password);
 			this.vtyService = new VtyService(networkElement);
 	        this.vtyService.open();
+		
+	        //Get inital prompt
+			this.write("whoami");
+			prompt = this.vtyService.getParserState().getPrompt();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+		return prompt;
 
 	}
 
-	public String write(String command) {
+	public String[] write(String command) {
 //		if (command.contains("multiple"))
 //			return command+"\n"+command+"\n"+command;
 //		else 
 //			return command;
 		String result="";
+		String prompt="";
 		try {
 			result = this.vtyService.write(command);
+			prompt = this.vtyService.getParserState().getPrompt();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return result;
+		return new String[]{prompt,result};
 		
 	}
 	
