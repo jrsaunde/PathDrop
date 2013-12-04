@@ -21,14 +21,12 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  float: left;
 }
 
 #colorcode {
   position: absolute;
-  bottom: 20px;
   width: 500px;
-  bottom: 20px;
+  bottom: 6px;
   left: 50%;
   margin-left: -250px;
 }
@@ -36,26 +34,25 @@ body {
 #colorcode ul {
   list-style-type: none;
   padding: 0px;
-  margin: 0 0 0 -113px;
+  margin: 0 0 0 -116px;
   font-size: 10px
 }
 
 #colorcode ul li {
   float: left;
-  margin-left: 113px;
+  margin-left: 114px;
 }
-
 
 #colorcode img {
   float: right;
 }
 
 #title {
-  margin-top: 20px;
   text-align: center;
   font-size: 20px;
   font-weight: bold;
 }
+
 </style>
 </head>
 <body>
@@ -90,6 +87,8 @@ $('#cy').cytoscape({
         'target-arrow-shape': 'triangle',
         'source-arrow-shape': 'triangle',
         'line-color': 'data(faveColor)',
+        'content': 'data(label)',
+        'opacity': 'data(active)',
         'source-arrow-color': 'data(faveColor)',
         'target-arrow-color': 'data(faveColor)'
       }),elements: { 
@@ -103,15 +102,15 @@ $('#cy').cytoscape({
 	],
 	edges: [
 
-		{ data: { source: 'Router1', target: 'Router3', label: 'GigabitEthernet0/2					GigabitEthernet0/0', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router5', target: 'Router3', label: 'GigabitEthernet0/1					GigabitEthernet0/2', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router1', target: 'Router2', label: 'GigabitEthernet0/1					GigabitEthernet0/0', faveColor: 'hsl(296, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router5', target: 'Router6', label: 'GigabitEthernet0/3					GigabitEthernet0/1', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router3', target: 'Router6', label: 'GigabitEthernet0/3					GigabitEthernet0/0', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router5', target: 'Router2', label: 'GigabitEthernet0/0					GigabitEthernet0/3', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router4', target: 'Router2', label: 'GigabitEthernet0/0					GigabitEthernet0/2', faveColor: 'hsl(347, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router5', target: 'Router4', label: 'GigabitEthernet0/2					GigabitEthernet0/1', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } },
-		{ data: { source: 'Router2', target: 'Router3', label: 'GigabitEthernet0/1					GigabitEthernet0/1', faveColor: 'hsl(140, 95%, 76%)', strength: 70  } }
+		{ data: { source: 'Router1', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router1', target: 'Router2', label: '19%', faveColor: 'hsl(283, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router6', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router3', target: 'Router6', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router2', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router4', target: 'Router2', label: '65%', faveColor: 'hsl(340, 95%, 76%)', strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router4', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router2', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } }
 	]
   }
 ,

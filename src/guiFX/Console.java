@@ -44,7 +44,7 @@ public class Console implements Runnable{
 		
 		Stage stage = new Stage();		
 		stage.setResizable(false);
-        stage.setTitle(ip);
+        stage.setTitle("VTY Session: "+ username + "@" + ip);
 		VBox root = new VBox();
 		textArea = new TextArea();
 		textField = new TextField();

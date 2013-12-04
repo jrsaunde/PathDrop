@@ -1022,10 +1022,15 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
 	//}
 			fprintf(stderr, "done registering..\n");
-			while (1) {	//TODO:Add here a check to TrafficWatch.run for true/false
+			jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "runTime", "Z");
+			bool runTime = (*env)->GetBooleanField(env, thisObj, fidNumber);
+
+			while (runTime) {	//TODO:Add here a check to TrafficWatch.run for true/false
 				sleep(CHECK_TIME_INTERVAL);
 				//check_timeout(&root);
 				//print_list(root);
+				bool runTime2 = (*env)->GetBooleanField(env, thisObj, fidNumber);
+				fprintf(stderr, "Checking for runtime %d\n", runTime2);
 			}
 			 printf("done\n");
 
@@ -1033,19 +1038,20 @@ JNIEXPORT int JNICALL Java_datapath_NodePuppet_ProgramNode(JNIEnv *env,
 
 	//the int
 	//get the Field ID of number
-	jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "number","I");
-	if(NULL == fidNumber) return 1;
-
-	//Get the int given the Field ID
-	jint number = (*env)->GetIntField(env, thisObj, fidNumber);
-	printf("In C, the int is %d\n", number);
-
-	//Change the variable
-	number = 99;
-	(*env)->SetIntField(env, thisObj, fidNumber, number);
+//	jfieldID fidNumber = (*env)->GetFieldID(env, thisClass, "number","I");
+//	if(NULL == fidNumber) return 1;
+//
+//	//Get the int given the Field ID
+//	jint number = (*env)->GetIntField(env, thisObj, fidNumber);
+//	printf("In C, the int is %d\n", number);
+//
+//	//Change the variable
+//	number = 99;
+//	(*env)->SetIntField(env, thisObj, fidNumber, number);
 
 
 	cleanup:
+			fprintf(stderr, "Cleaning up node\n");
 			disconnect_network_element(&ne1, &session_handle);
 	//At the end release the resources
 //	for(i = 0; i < stringCount; i++){
