@@ -19,3 +19,10 @@ public class ConsoleTest extends Application {
 		launch(args); 
 	}
 }
+
+
+/*AffineTransform affinetransform = new AffineTransform();     
+FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
+Font font = new Font("Tahoma", Font.PLAIN, 12);
+int textwidth = (int)(font.getStringBounds(text, frc).getWidth());
+int textheight = (int)(font.getStringBounds(text, frc).getHeight());*/
