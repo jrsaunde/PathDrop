@@ -18,6 +18,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -33,37 +34,50 @@ public class Console implements Runnable{
 	ListIterator itr;
 
 	TextArea textArea;
-	TextField textField;
-	
+	TextField promptField;
+	TextField commandField;
+	String prompt = "R1>";
+	String banner = "Cisco Banner";
 	public Console(final String ip, final String username, final String password) {
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
 		this.cmds = new ArrayList<String>();
 
-		
 		Stage stage = new Stage();		
 		stage.setResizable(false);
         stage.setTitle("VTY Session: "+ username + "@" + ip);
 		VBox root = new VBox();
+		HBox textFieldBox = new HBox();
 		textArea = new TextArea();
-		textField = new TextField();
-		root.getChildren().addAll(textArea, textField);
+		promptField = new TextField(prompt);
+		commandField = new TextField();
+		textFieldBox.getChildren().addAll(promptField, commandField);
+		root.getChildren().addAll(textArea, textFieldBox);
+		
 		textArea.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
-				+ "-fx-font-size: 14pt;");
+				+ "-fx-font-size: 14pt;"
+				+ "-fx-border-radius: 0 0 0 0;");
 		textArea.setPrefSize(500, 416);
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
-
-		textField.setStyle("-fx-background-color: DARKGRAY;"
+		
+		promptField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		textField.setEditable(true);
+		promptField.setPrefWidth(prompt.length()*12);
+		commandField.setEditable(false);
+		
+		commandField.setStyle("-fx-background-color: DARKGRAY;"
+				+ "-fx-text-fill: BLACK;"
+				+ "-fx-font-size: 14pt;");
+		commandField.setPrefWidth(510-prompt.length()*12);
+		commandField.setEditable(true);
 		Platform.runLater(new Runnable() {
 	        @Override
 	        public void run() {
-	            textField.requestFocus();
+	            commandField.requestFocus();
 	        }
 	    });
 			
@@ -83,19 +97,19 @@ public class Console implements Runnable{
 			new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent arg0) {
-		            textField.requestFocus();
+		            commandField.requestFocus();
 				}
 		});
 		
         final String keyComb1 = "_CONTROL_C";
         final StringBuilder key = new StringBuilder();
         
-		textField.addEventHandler(KeyEvent.KEY_PRESSED, 
+		commandField.addEventHandler(KeyEvent.KEY_PRESSED, 
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
 				if(event.getCode() == KeyCode.ENTER) {
 					System.out.println("Current Thread: " + Thread.currentThread().getName());
-					String cmd = textField.getText();
+					String cmd = commandField.getText();
 					cmds.add(0, cmd);
 					if (cmd == null)
 						cmd = "";
@@ -103,18 +117,18 @@ public class Console implements Runnable{
 					//String output = cmd+"\n"+cmd;
 					textArea.appendText(output+"\n");
 					textArea.positionCaret(textArea.getLength());
-					textField.setText(null);
+					commandField.setText(null);
 					itr = cmds.listIterator();
 				} 
 				
 				if(event.getCode() == KeyCode.UP) {
 					if(itr.hasNext())
-						textField.setText((String) itr.next());
+						commandField.setText((String) itr.next());
 				} 
 				
 				if(event.getCode() == KeyCode.DOWN) {
 					if(itr.hasPrevious())
-						textField.setText((String) itr.previous());
+						commandField.setText((String) itr.previous());
 				} 
 				
 				String codeStr = event.getCode().toString();
@@ -125,13 +139,13 @@ public class Console implements Runnable{
 			};
 		});
 		
-		textField.addEventHandler(KeyEvent.KEY_RELEASED, 
+		commandField.addEventHandler(KeyEvent.KEY_RELEASED, 
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
 				if(key.length()>0) {
 					if(key.toString().equals(keyComb1)){
                         System.out.println("Key Combination 1 pressed");
-                        textField.setText("");
+                        commandField.setText("");
         				String codeStr = event.getCode().toString();
                         int index = key.lastIndexOf("_"+codeStr);
                         key.delete(index, key.length());
