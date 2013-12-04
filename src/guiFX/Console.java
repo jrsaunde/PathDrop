@@ -38,6 +38,7 @@ public class Console implements Runnable{
 	TextField commandField;
 	String prompt = "R1>";
 	String banner = "Cisco Banner";
+	int lineSpace = 10;
 	public Console(final String ip, final String username, final String password) {
 		this.ip = ip;
 		this.username = username;
@@ -50,7 +51,7 @@ public class Console implements Runnable{
 		VBox root = new VBox();
 		HBox textFieldBox = new HBox();
 		textArea = new TextArea();
-		promptField = new TextField(prompt);
+		promptField = new TextField();
 		commandField = new TextField();
 		textFieldBox.getChildren().addAll(promptField, commandField);
 		root.getChildren().addAll(textArea, textFieldBox);
@@ -66,13 +67,11 @@ public class Console implements Runnable{
 		promptField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		promptField.setPrefWidth(prompt.length()*12);
 		commandField.setEditable(false);
 		
 		commandField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		commandField.setPrefWidth(510-prompt.length()*12);
 		commandField.setEditable(true);
 		Platform.runLater(new Runnable() {
 	        @Override
@@ -90,7 +89,11 @@ public class Console implements Runnable{
 		System.out.println("Console Thread: " + Thread.currentThread().getName());
 
 		this.vty = new VTYSession(ip, username, password);
-		this.vty.open();
+		prompt = this.vty.open();
+		
+		promptField.setText(prompt);
+		promptField.setPrefWidth(prompt.length()*lineSpace);
+		commandField.setPrefWidth(510-prompt.length()*lineSpace);
 		
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
@@ -113,9 +116,15 @@ public class Console implements Runnable{
 					cmds.add(0, cmd);
 					if (cmd == null)
 						cmd = "";
-					String output = vty.write(cmd); // return a string with one or more lines
+					String[] results = vty.write(cmd); // return a string with one or more lines
 					//String output = cmd+"\n"+cmd;
-					textArea.appendText(output+"\n");
+					prompt = results[0];
+
+					promptField.setText(prompt);
+					promptField.setPrefWidth(prompt.length()*lineSpace);
+					commandField.setPrefWidth(510-prompt.length()*lineSpace);
+					
+					textArea.appendText(results[1]+"\n");
 					textArea.positionCaret(textArea.getLength());
 					commandField.setText(null);
 					itr = cmds.listIterator();
