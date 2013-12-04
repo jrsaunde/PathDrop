@@ -80,7 +80,7 @@ public class TrafficWatch implements Runnable{
 
 		for(String node : devices){
 			System.out.println("Adding " + node);
-			puppetList.add(new NodePuppet(node, "cisco", "cisco", protocol, sourceIP, sourcePort, destIP, destPort, buffer));
+			puppetList.add(new NodePuppet(node, "cisco", "cisco", protocol, sourceIP, sourcePort, destIP, destPort, buffer,run ));
 		}
 		
 
@@ -138,7 +138,10 @@ public class TrafficWatch implements Runnable{
 				}
 
 			}
-		
+		for(NodePuppet puppet : puppetList){
+			puppet.stop();
+		}
+		System.out.println("Finished with Traffic watch");
 	}
 
 }

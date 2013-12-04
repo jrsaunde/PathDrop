@@ -17,6 +17,7 @@ public class NodePuppet implements Runnable{
 	private String errBuf = "";
 	public int[] loss = {0,0,0,0,0,0,0,0,0,0};
 	private String 				newLine 				= System.getProperty("line.separator");
+
 	
 	public int pktLoss;
 	
@@ -50,7 +51,7 @@ public class NodePuppet implements Runnable{
 	private int dest_port;
 	
 	FlowBuffer buffer;
-	
+	private Boolean runTime;
 	
 	public NodePuppet(String _address,
 					   String _user,
@@ -60,7 +61,8 @@ public class NodePuppet implements Runnable{
 					   int _source_port,
 					   String _dest_ip,
 					   int _dest_port,
-					   FlowBuffer buffer){
+					   FlowBuffer buffer,
+					   boolean _runTime){
 		this.address = _address;
 		this.user = _user;
 		this.pass = _pass;
@@ -70,6 +72,7 @@ public class NodePuppet implements Runnable{
 		this.dest_ip = _dest_ip;
 		this.dest_port = _dest_port;
 		this.buffer = buffer;
+		this.runTime = _runTime;
 		
 	}
 	
@@ -89,6 +92,8 @@ public class NodePuppet implements Runnable{
 					this.source_port,
 					this.dest_ip,
 					this.dest_port);
+		
+		System.out.println("Finished with ProgramNode");
 	}
 	
 	public void setLoss(int index){
@@ -96,6 +101,10 @@ public class NodePuppet implements Runnable{
 		return;
 	}
 	
+	public void stop(){
+		this.runTime = false;
+		System.out.println("Stopping Node: " +this.runTime);
+	}
 	public int getLoss(int index){
 		return this.loss[index];
 	}
