@@ -66,13 +66,11 @@ public class Console implements Runnable{
 		promptField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		promptField.setPrefWidth(prompt.length()*12);
 		commandField.setEditable(false);
 		
 		commandField.setStyle("-fx-background-color: DARKGRAY;"
 				+ "-fx-text-fill: BLACK;"
 				+ "-fx-font-size: 14pt;");
-		commandField.setPrefWidth(510-prompt.length()*12);
 		commandField.setEditable(true);
 		Platform.runLater(new Runnable() {
 	        @Override
@@ -90,7 +88,9 @@ public class Console implements Runnable{
 		System.out.println("Console Thread: " + Thread.currentThread().getName());
 
 		this.vty = new VTYSession(ip, username, password);
-		this.vty.open();
+		prompt = this.vty.open();
+		promptField.setPrefWidth(prompt.length()*12);
+		commandField.setPrefWidth(510-prompt.length()*12);
 		
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
