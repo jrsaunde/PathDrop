@@ -14,6 +14,6 @@
 	<classpathentry kind="lib" path="lib/seaglasslookandfeel-0.2.jar"/>
 	<classpathentry kind="lib" path="lib/javadoc_net.sourceforge.jpcap-0.01.16.jar"/>
 	<classpathentry kind="lib" path="lib/net.sourceforge.jpcap-0.01.16.jar"/>
-	<classpathentry kind="lib" path="/opt/java/64/jre1.7.0_45/lib/jfxrt.jar"/>
+	<classpathentry kind="lib" path="lib/jfxrt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

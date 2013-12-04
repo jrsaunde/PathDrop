@@ -96,6 +96,10 @@ public class GuiFx extends Application {
 	private TrafficWatch traffic;
 	private Browser browser;
 	//private pktLoss tester;
+	
+	// Log Box
+	LogBox logBox;
+	Thread logBoxThread;
 
 	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
@@ -106,7 +110,7 @@ public class GuiFx extends Application {
 	
 	private final Object lock = new Object();
 	
-	@Override public void start(Stage stage) throws Exception {
+	@Override public void start(final Stage stage) throws Exception {
 		Group root = new Group();
 		Scene scene = new Scene(root, 1000, 800);
 		HBox body = new HBox();
@@ -120,8 +124,8 @@ public class GuiFx extends Application {
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
-		final VBox labels = new VBox(31);
-		final VBox fields = new VBox(26);
+		final VBox labels = new VBox(26);
+		final VBox fields = new VBox(21);
 		labels.setPadding(new Insets(188, 8, 8, 8));
 		fields.setPadding(new Insets(186, 6, 6, 6));
 		controlPane.getChildren().addAll(labels,fields);
@@ -135,11 +139,12 @@ public class GuiFx extends Application {
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
 		Label targetIPLabel = new Label("Target IP:");
+		final Button logBoxButton = new Button("Log Box");
 		final Button discoverButton = new Button("Discover");
 		final Button connectButton = new Button("Connect");
 		final Button monitorButton = new Button("Monitor");
 		final Button stopButton = new Button("Stop");
-		final Button [] buttons = {discoverButton, connectButton, monitorButton};
+		final Button [] ctrlButtons = {discoverButton, connectButton, monitorButton};
 		
 		protocolField.getSelectionModel().selectFirst();
 		
@@ -157,7 +162,7 @@ public class GuiFx extends Application {
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
 				windowLabel, protocolLabel, usernameLabel, passwordLabel, targetIPLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, targetIPField, discoverButton, connectButton, monitorButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, this.targetIPField, logBoxButton, discoverButton, connectButton, monitorButton);
 		
 		// topology pane
 		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage);
@@ -183,17 +188,15 @@ public class GuiFx extends Application {
 				field.setMaxWidth(100);
 			}
 		}
-		
-
 		// Stop monitor Listener
-		stopButton.setOnAction(new EventHandler<ActionEvent>() {
+		logBoxButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-				fields.getChildren().remove(stopButton);
-				fields.getChildren().add(monitorButton);
-				monitorButton.requestFocus();
-				// call stop trace object (inputs)
-				traffic.run = false;
+				logBox = new LogBox(stage,logBoxButton);
+				Thread thread = new Thread(logBox);
+				threads.add(thread);
+				thread.start();
+				logBoxButton.setDisable(true);
 			}
 		});
 		
@@ -214,13 +217,13 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, buttons, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, ctrlButtons, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
 					
 					browser.loadLoader();
-					for (Button button: buttons)
+					for (Button button: ctrlButtons)
 						button.setDisable(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
@@ -336,6 +339,18 @@ public class GuiFx extends Application {
 					System.out.println("WE FAILED!!! find paths");
 					e1.printStackTrace();
 				}
+			}
+		});
+		
+		// Stop monitor Listener
+		stopButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				fields.getChildren().remove(stopButton);
+				fields.getChildren().add(monitorButton);
+				monitorButton.requestFocus();
+				// call stop trace object (inputs)
+				traffic.run = false;
 			}
 		});
 		
