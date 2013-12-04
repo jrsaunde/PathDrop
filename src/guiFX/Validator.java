@@ -21,7 +21,7 @@ public class Validator {
 			return false;
 		} else {
 			if (!Validator.validateIPLogic(textField.getText().trim())) {
-				System.out.println("Please provide valid source IP address");
+				LogBox.println("Please provide valid source IP address");
 				textField.requestFocus();
 				textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
 				return false;

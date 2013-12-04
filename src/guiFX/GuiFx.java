@@ -217,7 +217,7 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, ctrlButtons, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, logBox, ctrlButtons, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
@@ -314,7 +314,7 @@ public class GuiFx extends Application {
 				try {
 					//network.findPaths(srcIP, dstIP);
 					
-					traffic = new TrafficWatch(guiNodes, guiConnections, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
+					traffic = new TrafficWatch(guiNodes, guiConnections, logBox, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
 					Thread trafficThread = new Thread(traffic);
 					threads.add(trafficThread);
 					trafficThread.start();
@@ -336,7 +336,7 @@ public class GuiFx extends Application {
 //					testThread.start();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					System.out.println("WE FAILED!!! find paths");
+					LogBox.println("WE FAILED!!! find paths");
 					e1.printStackTrace();
 				}
 			}

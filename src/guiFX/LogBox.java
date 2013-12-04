@@ -39,7 +39,7 @@ public class LogBox implements Runnable{
 		stage.setResizable(false);
         stage.setTitle("Log Box");
 		root = new VBox();
-		textArea = new TextArea("All logs will appear here");
+		textArea = new TextArea("All logs will appear here\n");
 		
 		root.getChildren().addAll(textArea);
 		

@@ -1,6 +1,7 @@
 package discovery;
 
 import guiFX.Browser;
+import guiFX.LogBox;
 
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
@@ -47,6 +48,7 @@ public class NetworkDiscovery implements Runnable {
 	private String 				newLine 				= System.getProperty("line.separator");
 
 	Browser						browser;
+	LogBox						logBox;
 	ArrayList<String> 			discoveredIPs;
 	ArrayList<String>			nodeIPs;
 	ArrayList<GuiConnection>	connections;
@@ -74,12 +76,13 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, Button [] buttons, String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, LogBox _logBox, Button [] buttons, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
 		this.browser = browser;
 		this.discoveredIPs = discoveredIPs;
 		this.nodeIPs = nodeIPs;
+		this.logBox = _logBox;
 //		this.connections = connections;
 		this.guiConnections = connections;
 		this.guiNodes = nodes;
@@ -170,9 +173,9 @@ public class NetworkDiscovery implements Runnable {
 	
 	private void printNetwork() throws Exception{
 		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println("Network Summary");
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		LogBox.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		LogBox.println("Network Summary");
+		LogBox.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		
 		
 		/*Get a list of the device names*/
@@ -288,7 +291,7 @@ public class NetworkDiscovery implements Runnable {
 				destNode = edge.getHeadNode();
 			}
 		}
-		System.out.println("Routes from " + startNode.getName() + " to " + destNode.getName());
+		LogBox.println("Routes from " + startNode.getName() + " to " + destNode.getName());
 		PathDiscovery pathTrace = new PathDiscovery(this.graph, startNode, destNode);
 		pathTrace.getPaths();
 	}
@@ -321,7 +324,7 @@ public class NetworkDiscovery implements Runnable {
 
 	@Override
 	public void run(){
-		System.out.println("NetworkDiscovery Thread: " + Thread.currentThread().getName());
+		LogBox.println("NetworkDiscovery Thread: " + Thread.currentThread().getName());
 		
 		//TODO: Testing code (keeping track of startTime)
 		long startTime = System.nanoTime();	
@@ -336,8 +339,8 @@ public class NetworkDiscovery implements Runnable {
 			//Print out the Global graph
 			printNetwork();
 		} catch (Exception e) {
-			System.out.println("NetworkDiscovery Failed");
-			e.printStackTrace();
+			LogBox.println("NetworkDiscovery Failed");
+			LogBox.println(e.toString());
 			
 			for (Button button: buttons)
 				button.setDisable(false);
@@ -353,7 +356,7 @@ public class NetworkDiscovery implements Runnable {
 		/*TODO: Testing code for timing the program execution time*/
 		long endTime = System.nanoTime();
 		
-		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
+		LogBox.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
 		
 		Platform.runLater(new Runnable(){
 			@Override
@@ -365,7 +368,7 @@ public class NetworkDiscovery implements Runnable {
 					//browser.loadTopo(getJsonTopo());
 				} catch (MalformedURLException | FileNotFoundException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LogBox.println(e.toString());
 				}
 			}
 		});

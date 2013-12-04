@@ -23,9 +23,7 @@ public class ConnectionList {
 		this.list.put((srcRouter + "||" + srcInterface).hashCode(), this.connectionNumber);
 		this.list.put((dstRouter + "||" + dstInterface).hashCode(), this.connectionNumber);
 		this.connections.add(this.connectionNumber, connect);
-		//System.out.println("Added at "+ this.connectionNumber + " with " + connect.getInfo());
-		//System.out.println("List is ");
-		//System.out.println(this.list.toString());
+
 		this.connectionNumber+=1;
 		return;
 	}
@@ -44,10 +42,12 @@ public class ConnectionList {
 		return output;
 	}
 	
-	public void printLoss(){
+	public String printLoss(){
+		String result = "";
 		for(GuiConnection connect : this.connections){
-			System.out.println(connect.getInfo());
+			result += (connect.getInfo() + "\n");
 		}
+		return result;
 	}
 	
 	public void addPacketIn(String Router, String Interface){

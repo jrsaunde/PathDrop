@@ -2,6 +2,7 @@ package datapath;
 
 import guiFX.Browser;
 import guiFX.FlowBuffer;
+import guiFX.LogBox;
 
 import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
@@ -23,6 +24,7 @@ public class TrafficWatch implements Runnable{
 	
 	//FlowBuffer buffer;
 	FlowBuffer buffer;
+	LogBox logBox;
 	public Boolean run;
 	
 	private int protocol;
@@ -32,7 +34,8 @@ public class TrafficWatch implements Runnable{
 	private int destPort;
 	
 	public TrafficWatch(NodeList nodes,
-						ConnectionList connections, 
+						ConnectionList connections,
+						LogBox _logBox,
 					    Browser browser, 
 					    ArrayList<String> devices, 
 					    String _protocol,
@@ -41,7 +44,7 @@ public class TrafficWatch implements Runnable{
 					    String _destIP,
 					    int		_destPort){
 		
-		System.out.println("Hello from Traffic Watch");
+		LogBox.println("Hello from Traffic Watch");
 		
 		this.browser = browser;
 		this.connections = connections;
@@ -75,12 +78,12 @@ public class TrafficWatch implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		System.out.println("Starting Traffic Watch");
-		System.out.println(this.devices);
+		LogBox.println("Starting Traffic Watch");
+		LogBox.println(this.devices.toString());
 
 		for(String node : devices){
-			System.out.println("Adding " + node);
-			puppetList.add(new NodePuppet(node, "cisco", "cisco", protocol, sourceIP, sourcePort, destIP, destPort, buffer,run ));
+			LogBox.println("Adding " + node);
+			puppetList.add(new NodePuppet(node, "cisco", "cisco", protocol, sourceIP, sourcePort, destIP, destPort, buffer, run, logBox ));
 		}
 		
 
@@ -91,7 +94,7 @@ public class TrafficWatch implements Runnable{
 				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LogBox.println(e.toString());
 			}
 			
 			while(this.run){
@@ -114,9 +117,9 @@ public class TrafficWatch implements Runnable{
 					}*/
 					//System.out.println(nodes.printNodes() + newLine + connections.printConnections());
 					//System.out.println(connections.printConnections());
-					System.out.println("~~~~~~~~~~~~~Current Loss~~~~~~~~~~~~~");
-					connections.printLoss();
-					//browser.loadTopo(nodes.printNodes() + newLine + connections.printConnections());
+					LogBox.println("~~~~~~~~~~~~~Current Loss~~~~~~~~~~~~~");
+					LogBox.println(connections.printLoss()); //TODO:Move to LogBox
+					
 					Platform.runLater(new Runnable(){
 						@Override
 						public void run(){
@@ -127,21 +130,21 @@ public class TrafficWatch implements Runnable{
 								//browser.loadTopo(getJsonTopo());
 							} catch (MalformedURLException | FileNotFoundException e) {
 								// TODO Auto-generated catch block
-								e.printStackTrace();
+								LogBox.println(e.toString());
 							}
 						}
 					});
 					
 				} catch (InterruptedException  e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LogBox.println(e.toString());
 				}
 
 			}
 		for(NodePuppet puppet : puppetList){
 			puppet.stop();
 		}
-		System.out.println("Finished with Traffic watch");
+		LogBox.println("Finished with Traffic watch");
 	}
 
 }

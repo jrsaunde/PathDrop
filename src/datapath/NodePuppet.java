@@ -1,6 +1,7 @@
 package datapath;
 
 import guiFX.FlowBuffer;
+import guiFX.LogBox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class NodePuppet implements Runnable{
 	public int[] loss = {0,0,0,0,0,0,0,0,0,0};
 	private String 				newLine 				= System.getProperty("line.separator");
 
-	
+	LogBox logBox;
 	public int pktLoss;
 	
 	/**
@@ -62,7 +63,8 @@ public class NodePuppet implements Runnable{
 					   String _dest_ip,
 					   int _dest_port,
 					   FlowBuffer buffer,
-					   boolean _runTime){
+					   boolean _runTime,
+					   LogBox _logBox){
 		this.address = _address;
 		this.user = _user;
 		this.pass = _pass;
@@ -73,14 +75,10 @@ public class NodePuppet implements Runnable{
 		this.dest_port = _dest_port;
 		this.buffer = buffer;
 		this.runTime = _runTime;
+		this.logBox = _logBox;
 		
 	}
 	
-	   
-	public static void main(String[] args){
-		//NodePuppet puppet = new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80);		//invoke the native method
-		//new Thread(puppet).start();
-	}
 
 	@Override
 	public void run() {
@@ -93,7 +91,7 @@ public class NodePuppet implements Runnable{
 					this.dest_ip,
 					this.dest_port);
 		
-		System.out.println("Finished with ProgramNode");
+		LogBox.println("Finished with ProgramNode");
 	}
 	
 	public void setLoss(int index){
@@ -103,7 +101,7 @@ public class NodePuppet implements Runnable{
 	
 	public void stop(){
 		this.runTime = false;
-		System.out.println("Stopping Node: " +this.runTime);
+		LogBox.println("Stopping Node: " +this.runTime);
 	}
 	public int getLoss(int index){
 		return this.loss[index];
@@ -137,5 +135,10 @@ public class NodePuppet implements Runnable{
 		FlowBuffer.addToBuffer(ID, info);
 		return;
 
+	}
+	
+	public void logMessage(String message){
+		LogBox.println(message);
+		return;
 	}
 }
