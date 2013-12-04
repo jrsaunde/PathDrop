@@ -60,7 +60,7 @@ public class GuiConnection {
 		if(this.isActive()){
 			color = getHue(this.getLoss());
 			if(this.getLoss() > 0){
-				connection ="'"+ this.getLoss() + "%'";
+				connection ="'   "+ this.getLoss() + "%'";
 			}
 		}
 		else{
