@@ -56,19 +56,21 @@ public class Browser extends Region {
     
 	public void loadTopo(String midSlice) throws MalformedURLException, FileNotFoundException {
 		// gets the string topo from parameters
-		//Scanner midSliceScn = new Scanner(new File("src/web/topo.json"));
+		Scanner midSliceScn = new Scanner(new File("src/web/topo.json"));
 		Scanner topSliceScn = new Scanner(new File("src/web/topSlice.html"));
 		Scanner botSliceScn = new Scanner(new File("src/web/botSlice.html"));
 
-		//String midSlice = midSliceScn.useDelimiter("\\Z").next();
+		String midSliceSample = midSliceScn.useDelimiter("\\Z").next();
 		String topSlice = topSliceScn.useDelimiter("\\Z").next();
 		String botSlice = botSliceScn.useDelimiter("\\Z").next();
 		
-		//midSliceScn.close();
+		midSliceScn.close();
 		topSliceScn.close();
 		botSliceScn.close();
 
-		String web = topSlice + midSlice + botSlice;
+		String web = topSlice + midSliceSample + botSlice;
+		//String web = topSlice + midSlice + botSlice;
+		
 		try {
 		PrintWriter out = new PrintWriter("src/web/web.html");
 		out.write(web);
@@ -95,5 +97,4 @@ public class Browser extends Region {
         double h = getHeight();
         layoutInArea(browser,0,0,w,h,0, HPos.CENTER, VPos.CENTER);
     }
-
 }
