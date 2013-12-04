@@ -136,16 +136,16 @@ public class GuiFx extends Application {
 		Label targetIPLabel = new Label("Target IP:");
 		final Button discoverButton = new Button("Discover");
 		final Button connectButton = new Button("Connect");
-		final Button traceButton = new Button("Trace");
+		final Button monitorButton = new Button("Monitor");
 		final Button stopButton = new Button("Stop");
-		final Button [] buttons = {discoverButton, connectButton, traceButton};
+		final Button [] buttons = {discoverButton, connectButton, monitorButton};
 		
 		protocolField.getSelectionModel().selectFirst();
 		
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
 				windowLabel, protocolLabel, usernameLabel, passwordLabel, targetIPLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, targetIPField, discoverButton, connectButton, traceButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, targetIPField, discoverButton, connectButton, monitorButton);
 		
 		// topology pane
 		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage); 
@@ -172,13 +172,13 @@ public class GuiFx extends Application {
 		}
 		
 
-		// Stop trace Listener
+		// Stop monitor Listener
 		stopButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
 				fields.getChildren().remove(stopButton);
-				fields.getChildren().add(traceButton);
-				traceButton.requestFocus();
+				fields.getChildren().add(monitorButton);
+				monitorButton.requestFocus();
 				// call stop trace object (inputs)
 				traffic.run = false;
 			}
@@ -245,8 +245,8 @@ public class GuiFx extends Application {
 			}
 		});
 		
-		// Trace Listener
-		traceButton.setOnAction(new EventHandler<ActionEvent>() {
+		// Monitor Listener
+		monitorButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
 				if (Validator.validateIP(srcIPField))
@@ -279,7 +279,7 @@ public class GuiFx extends Application {
 					return;
 				}*/
 				
-				fields.getChildren().remove(traceButton);
+				fields.getChildren().remove(monitorButton);
 				fields.getChildren().add(stopButton);
 				stopButton.requestFocus();
 				
