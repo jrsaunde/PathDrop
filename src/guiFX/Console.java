@@ -1,6 +1,9 @@
 package guiFX;
 
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -36,8 +39,8 @@ public class Console implements Runnable{
 	TextArea textArea;
 	TextField promptField;
 	TextField commandField;
-	String prompt = "R1>";
-	String banner = "Cisco Banner";
+	String prompt = "";
+	String banner = "Warning: This system is for the use of autorhized clients only.";
 	int lineSpace = 10;
 	public Console(final String ip, final String username, final String password) {
 		this.ip = ip;
@@ -50,9 +53,12 @@ public class Console implements Runnable{
         stage.setTitle("VTY Session: "+ username + "@" + ip);
 		VBox root = new VBox();
 		HBox textFieldBox = new HBox();
-		textArea = new TextArea();
+		textArea = new TextArea(banner);
 		promptField = new TextField();
+		promptField.setMinWidth(50);
+		promptField.setPrefWidth(50);;
 		commandField = new TextField();
+		commandField.setPrefWidth(510 - 50);
 		textFieldBox.getChildren().addAll(promptField, commandField);
 		root.getChildren().addAll(textArea, textFieldBox);
 		
@@ -91,9 +97,17 @@ public class Console implements Runnable{
 		this.vty = new VTYSession(ip, username, password);
 		prompt = this.vty.open();
 		
+		
+		AffineTransform affinetransform = new AffineTransform();     
+		FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
+		Font font = new Font("Verdana", Font.PLAIN, 18);
+		System.out.println("x" + prompt + "x");
+		int textwidth = (int)(font.getStringBounds(prompt, frc).getWidth());
+		int textheight = (int)(font.getStringBounds(prompt, frc).getHeight());
 		promptField.setText(prompt);
-		promptField.setPrefWidth(prompt.length()*lineSpace);
-		commandField.setPrefWidth(510-prompt.length()*lineSpace);
+		
+		promptField.setPrefWidth(textwidth);
+		commandField.setPrefWidth(510-textwidth);
 
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
@@ -119,10 +133,19 @@ public class Console implements Runnable{
 					String[] results = vty.write(cmd); // return a string with one or more lines
 					//String output = cmd+"\n"+cmd;
 					prompt = results[0];
-
+					System.out.println("x" + prompt + "x" + prompt.length());
 					promptField.setText(prompt);
-					promptField.setPrefWidth(prompt.length()*lineSpace);
-					commandField.setPrefWidth(510-prompt.length()*lineSpace);
+					
+
+					AffineTransform affinetransform = new AffineTransform();     
+					FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
+					Font font = new Font("Verdana", Font.PLAIN, 18);
+					System.out.println("x" + prompt + "x");
+					int textwidth = (int)(font.getStringBounds(prompt, frc).getWidth());
+					int textheight = (int)(font.getStringBounds(prompt, frc).getHeight());
+					
+					promptField.setPrefWidth(textwidth);
+					commandField.setPrefWidth(510-textwidth);
 					
 					textArea.appendText(results[1]+"\n");
 					textArea.positionCaret(textArea.getLength());

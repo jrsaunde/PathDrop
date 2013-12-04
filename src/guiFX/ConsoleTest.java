@@ -9,7 +9,7 @@ public class ConsoleTest extends Application {
 
 	
 	@Override public void start(Stage stage) throws Exception {
-		Console console = new Console("1.1.1.1", "cisco", "cisco");
+		Console console = new Console("10.192.10.110", "cisco", "cisco");
 		Thread thread = new Thread(console);
 		thread.start();
 	}
