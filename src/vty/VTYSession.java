@@ -3,14 +3,9 @@ package vty;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.cisco.onep.core.exception.OnepConnectionException;
-import com.cisco.onep.core.exception.OnepException;
-import com.cisco.onep.core.exception.OnepIllegalArgumentException;
-import com.cisco.onep.core.exception.OnepInvalidSettingsException;
-import com.cisco.onep.core.exception.OnepRemoteProcedureException;
 import com.cisco.onep.element.NetworkApplication;
 import com.cisco.onep.element.NetworkElement;
-import com.cisco.onep.idl.ExceptionIDL;
+
 import com.cisco.onep.vty.VtyService;
 
 public class VTYSession {

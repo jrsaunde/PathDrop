@@ -46,7 +46,8 @@ public class TopologyDiscovery extends BaseTutorial {
                 System.exit(1);
             }
             System.out.println("Test");
-            Topology topology = tutorial.discoverCDPTopology();
+            @SuppressWarnings("unused")
+			Topology topology = tutorial.discoverCDPTopology();
         } catch (Exception e) {
             tutorial.disconnect();
             tutorial.getLogger().error(e.getLocalizedMessage(), e);
@@ -191,7 +192,8 @@ public class TopologyDiscovery extends BaseTutorial {
         daughterConfig.setPort(OnepConstants.ONEP_PORT);
         
         //Connect to the Network Element
-    	SessionHandle daughterSession = daughter.connect("CISCO", "cisco", daughterConfig);
+    	@SuppressWarnings("unused")
+		SessionHandle daughterSession = daughter.connect("CISCO", "cisco", daughterConfig);
     	
     	/* Create a topology object */
         Topology topology = new Topology(daughter, TopologyType.CDP);

@@ -93,23 +93,23 @@ $('#cy').cytoscape({
         'target-arrow-color': 'data(faveColor)'
       }),elements: { 
 	nodes: [
-		{ data: { id: 'dc-core01', name: 'dc-core01', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
-		{ data: { id: 'R1', name: 'R1', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router1', name: 'Router1', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
+		{ data: { id: 'Router2', name: 'Router2', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
 		{ data: { id: 'Router3', name: 'Router3', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
 		{ data: { id: 'Router4', name: 'Router4', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
 		{ data: { id: 'Router5', name: 'Router5', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } },
 		{ data: { id: 'Router6', name: 'Router6', weight: 65, faveColor: '#0066CC', faveShape: 'ellipse' } }
 	],
 	edges: [
+		{ data: { source: 'Router1', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
 		{ data: { source: 'Router5', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
-		{ data: { source: 'dc-core01', target: 'Router5', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
-		{ data: { source: 'dc-core01', target: 'Router4', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router1', target: 'Router2', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
 		{ data: { source: 'Router5', target: 'Router6', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
-		{ data: { source: 'R1', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
 		{ data: { source: 'Router3', target: 'Router6', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
-		{ data: { source: 'R1', target: 'dc-core01', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router5', target: 'Router2', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
+		{ data: { source: 'Router4', target: 'Router2', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
 		{ data: { source: 'Router5', target: 'Router4', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } },
-		{ data: { source: 'Router3', target: 'dc-core01', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } }
+		{ data: { source: 'Router2', target: 'Router3', label: '', faveColor: 'hsl(360, 0%, 50%)', active: 0.25, strength: 70  } }
 	]
   }
 ,

@@ -9,7 +9,6 @@ public class DiscoveryTest {
 	
 	public static void main(String args[]){
 		String start = args[0];
-		String dest  = args[1];
 		String username = args[2];
 		String password = args[3];
 		

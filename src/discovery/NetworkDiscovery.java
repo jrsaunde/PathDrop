@@ -5,7 +5,6 @@ import guiFX.Browser;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.TreeSet;
 
 import javafx.application.Platform;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import topo.ConnectionList;
 import topo.GuiConnection;
@@ -300,6 +298,7 @@ public class NetworkDiscovery implements Runnable {
 	 * @param longName
 	 * @return shortened name
 	 */
+	@SuppressWarnings("unused")
 	private String shortenName(String longName){
 		
 		if(longName.startsWith("Eth")){

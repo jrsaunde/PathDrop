@@ -28,7 +28,6 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -38,8 +37,6 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.text.DefaultCaret;
 
-import testFlow.TrafficTest;
-import topo.GuiNode;
 import topo.JGui;
 import topo.NetworkDiscovery;
 
@@ -221,8 +218,8 @@ public class SwingGui implements ActionListener{
 			inputPanel.add(protocolLabel, protocolLabelConstraints);
 			
 			/* Add Protocol Input Field */
-			JComboBox protocolInput = new JComboBox();
-			protocolInput.setModel(new DefaultComboBoxModel(new String[] {"TCP", "UDP", "Custom"}));
+			JComboBox<String> protocolInput = new JComboBox<String>();
+			protocolInput.setModel(new DefaultComboBoxModel<String>(new String[] {"TCP", "UDP", "Custom"}));
 			GridBagConstraints protocolInputConstraints = createConstraints(10, 0);
 			inputPanel.add(protocolInput, protocolInputConstraints);
 			
@@ -319,7 +316,7 @@ public class SwingGui implements ActionListener{
 				/* Add List of routers to RouterList */
 				for(String router: network.nodeNames){
 					this.routerList.addElement(router);
-					GuiNode routerNode = new GuiNode(router, router);
+					//GuiNode routerNode = new GuiNode(router, router);
 				}
 				
 				/* list of connections */
@@ -351,8 +348,8 @@ public class SwingGui implements ActionListener{
 					VtyService vtyService = new VtyService(networkElement);
 		            vtyService.open();
 		            
-		            int timeOut = vtyService.getTimeout();
-		            String showOnepStatusCmd = "show onep status";
+		            //int timeOut = vtyService.getTimeout();
+		            //String showOnepStatusCmd = "show onep status";
 		            String command = this.consoleInput.getText();
 		            //String cliResult = vtyService.write(showOnepStatusCmd);
 		            String cliResult = vtyService.write(command);

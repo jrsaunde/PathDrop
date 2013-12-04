@@ -8,7 +8,6 @@ import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
 
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -22,19 +21,13 @@ import javax.swing.JTextPane;
 import javax.swing.JProgressBar;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
 import java.awt.Toolkit;
-import java.awt.GridLayout;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 import javax.swing.border.BevelBorder;
-import javax.swing.border.LineBorder;
 
 import java.awt.Color;
 
@@ -44,8 +37,6 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 
-import javax.swing.border.MatteBorder;
-import javax.swing.plaf.LabelUI;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
@@ -65,7 +56,7 @@ public class Gui {
 	private JTextField textField_2;
 	private JTextField textField_3;
 
-	private BufferedImage image;
+	//private BufferedImage image;
 
 	/**
 	 * Launch the application.
@@ -209,8 +200,8 @@ public class Gui {
 			gbc_tglbtnNewToggleButton.gridy = 0;
 			inputpanel.add(tglbtnNewToggleButton, gbc_tglbtnNewToggleButton);
 			
-			JComboBox comboBox = new JComboBox();
-			comboBox.setModel(new DefaultComboBoxModel(new String[] {"TCP", "UDP", "Custom"}));
+			JComboBox<String> comboBox = new JComboBox<String>();
+			comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"TCP", "UDP", "Custom"}));
 			GridBagConstraints gbc_comboBox = new GridBagConstraints();
 			gbc_comboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
