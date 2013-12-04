@@ -218,7 +218,7 @@ public class GuiFx extends Application {
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
-
+					
 					browser.loadLoader();
 					for (Button button: buttons)
 						button.setDisable(true);

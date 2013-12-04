@@ -94,7 +94,7 @@ public class Console implements Runnable{
 		promptField.setText(prompt);
 		promptField.setPrefWidth(prompt.length()*lineSpace);
 		commandField.setPrefWidth(510-prompt.length()*lineSpace);
-		
+
 		// event listeners
 		textArea.addEventHandler(MouseEvent.MOUSE_CLICKED, 
 			new EventHandler<MouseEvent>() {
