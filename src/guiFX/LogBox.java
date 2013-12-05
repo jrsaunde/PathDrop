@@ -51,12 +51,17 @@ public class LogBox implements Runnable{
 		textArea.setWrapText(true);
 	
 		stage.setResizable(true);
+
 		stage.setScene(new Scene(root, width, height));
+
+
+	}
+	
+	public void show(Stage primaryStage){
 		stage.setX(primaryStage.getX() - 4);
 		stage.setY(primaryStage.getY() + primaryStage.getHeight());
 		stage.show();
 	}
-	
 	public static void println(String str) {
 		textArea.appendText(str + "\n");
 	}

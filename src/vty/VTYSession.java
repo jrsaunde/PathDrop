@@ -1,11 +1,12 @@
 package vty;
 
+import guiFX.LogBox;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import com.cisco.onep.element.NetworkApplication;
 import com.cisco.onep.element.NetworkElement;
-
 import com.cisco.onep.vty.VtyService;
 
 public class VTYSession {
@@ -15,17 +16,18 @@ public class VTYSession {
 	private String password;
 	
 	public VtyService vtyService;
+	LogBox logBox;
 	
-	public VTYSession(String ip, String user, String pass) {
+	public VTYSession(String ip, String user, String pass, LogBox _logBox) {
 		// TODO Auto-generated constructor stub
-		
+		this.logBox = _logBox;
 		try {
 			this.address = InetAddress.getByName(ip);
 			this.username = user;
 			this.password = pass;
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}       
         	}
 
@@ -40,12 +42,12 @@ public class VTYSession {
 			this.vtyService = new VtyService(networkElement);
 	        this.vtyService.open();
 		
-	        //Get inital prompt
+	        //Get initial prompt
 			this.write("whoami");
 			prompt = this.vtyService.getParserState().getPrompt();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}
 		
 		return prompt;
@@ -53,18 +55,14 @@ public class VTYSession {
 	}
 
 	public String[] write(String command) {
-//		if (command.contains("multiple"))
-//			return command+"\n"+command+"\n"+command;
-//		else 
-//			return command;
+
 		String result="";
 		String prompt="";
 		try {
 			result = this.vtyService.write(command);
 			prompt = this.vtyService.getParserState().getPrompt();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}
 		
 		return new String[]{prompt,result};
@@ -77,10 +75,8 @@ public class VTYSession {
 	        this.vtyService.destroy();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}
-
-
 		return;
 	}
 }

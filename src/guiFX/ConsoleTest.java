@@ -7,9 +7,9 @@ import javafx.stage.Stage;
 
 public class ConsoleTest extends Application {
 
-	
+	LogBox logBox = new LogBox(null, null);
 	@Override public void start(Stage stage) throws Exception {
-		Console console = new Console("10.192.10.110", "cisco", "cisco");
+		Console console = new Console("10.192.10.110", "cisco", "cisco", logBox);
 		Thread thread = new Thread(console);
 		thread.start();
 	}

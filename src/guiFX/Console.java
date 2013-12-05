@@ -36,17 +36,19 @@ public class Console implements Runnable{
 	ArrayList<String> cmds;
 	ListIterator itr;
 
+	LogBox logBox;
 	TextArea textArea;
 	TextField promptField;
 	TextField commandField;
 	String prompt = "";
 	String banner = "Warning: This system is for the use of autorhized clients only.";
 	int lineSpace = 10;
-	public Console(final String ip, final String username, final String password) {
+	public Console(final String ip, final String username, final String password, LogBox _logBox) {
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
 		this.cmds = new ArrayList<String>();
+		this.logBox = _logBox;
 
 		Stage stage = new Stage();		
 		stage.setResizable(false);
@@ -92,18 +94,17 @@ public class Console implements Runnable{
 
 	@Override
 	public void run() {
-		System.out.println("Console Thread: " + Thread.currentThread().getName());
+		LogBox.println("Console Thread: " + Thread.currentThread().getName());
 
-		this.vty = new VTYSession(ip, username, password);
+		this.vty = new VTYSession(ip, username, password, logBox);
 		prompt = this.vty.open();
 		
 		
 		AffineTransform affinetransform = new AffineTransform();     
 		FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
 		Font font = new Font("Verdana", Font.PLAIN, 18);
-		System.out.println("x" + prompt + "x");
+		
 		int textwidth = (int)(font.getStringBounds(prompt, frc).getWidth());
-		int textheight = (int)(font.getStringBounds(prompt, frc).getHeight());
 		promptField.setText(prompt);
 		
 		promptField.setPrefWidth(textwidth);
@@ -125,7 +126,7 @@ public class Console implements Runnable{
 				new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent event) {
 				if(event.getCode() == KeyCode.ENTER) {
-					System.out.println("Current Thread: " + Thread.currentThread().getName());
+					LogBox.println("Current Thread: " + Thread.currentThread().getName());
 					String cmd = commandField.getText();
 					cmds.add(0, cmd);
 					if (cmd == null)
@@ -133,7 +134,6 @@ public class Console implements Runnable{
 					String[] results = vty.write(cmd); // return a string with one or more lines
 					//String output = cmd+"\n"+cmd;
 					prompt = results[0];
-					System.out.println("x" + prompt + "x" + prompt.length());
 					promptField.setText(prompt);
 					
 
@@ -142,7 +142,6 @@ public class Console implements Runnable{
 					Font font = new Font("Verdana", Font.PLAIN, 18);
 					System.out.println("x" + prompt + "x");
 					int textwidth = (int)(font.getStringBounds(prompt, frc).getWidth());
-					int textheight = (int)(font.getStringBounds(prompt, frc).getHeight());
 					
 					promptField.setPrefWidth(textwidth);
 					commandField.setPrefWidth(510-textwidth);
@@ -176,7 +175,7 @@ public class Console implements Runnable{
 			public void handle(KeyEvent event) {
 				if(key.length()>0) {
 					if(key.toString().equals(keyComb1)){
-                        System.out.println("Key Combination 1 pressed");
+						LogBox.println("Key Combination 1 pressed");
                         commandField.setText("");
         				String codeStr = event.getCode().toString();
                         int index = key.lastIndexOf("_"+codeStr);

@@ -106,7 +106,7 @@ public class GuiFx extends Application {
 	//FlowBuffer buffer = new FlowBuffer();
 	//private FlowBuffer map = new FlowBuffer();
 
-	private Image loaderImage = new Image("img/loader.gif", true);
+	private Image loaderImage = new Image("img/loader3.gif", true);
 	
 	private final Object lock = new Object();
 	
@@ -148,6 +148,17 @@ public class GuiFx extends Application {
 		
 		protocolField.getSelectionModel().selectFirst();
 		
+		
+		//Setup Banner
+		final Label monitorLabel = new Label();
+		monitorLabel.setVisible(false);
+		
+		//Setup Log
+		logBox = new LogBox(stage,logBoxButton);
+		Thread thread = new Thread(logBox);
+		threads.add(thread);
+		thread.start();
+		
 		/*Add Tooltips for input fields*/
 		
 		srcIPField.setTooltip(new Tooltip("Source IP address of traffic flow"));
@@ -162,7 +173,7 @@ public class GuiFx extends Application {
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
 				windowLabel, protocolLabel, usernameLabel, passwordLabel, targetIPLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, this.targetIPField, logBoxButton, discoverButton, connectButton, monitorButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, this.targetIPField, monitorLabel, logBoxButton, discoverButton, connectButton, monitorButton);
 		
 		// topology pane
 		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage);
@@ -188,15 +199,12 @@ public class GuiFx extends Application {
 				field.setMaxWidth(100);
 			}
 		}
-		// Stop monitor Listener
+		// Log button Listener
 		logBoxButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-				logBox = new LogBox(stage,logBoxButton);
-				Thread thread = new Thread(logBox);
-				threads.add(thread);
-				thread.start();
 				logBoxButton.setDisable(true);
+				logBox.show(stage);
 			}
 		});
 		
@@ -255,7 +263,7 @@ public class GuiFx extends Application {
 					return;
 				}
 					
-				Console console = new Console(targetIP, username, password);
+				Console console = new Console(targetIP, username, password, logBox);
 				Thread thread = new Thread(console);
 				threads.add(thread);
 				thread.start();
@@ -309,7 +317,9 @@ public class GuiFx extends Application {
 					Validator.setFalse(dstIPField);
 					return;
 				}
-				
+				monitorLabel.setText("Monitoring");
+				monitorLabel.setTextFill(Color.RED);
+				monitorLabel.setVisible(true);
 				// call  trace object (inputs)
 				try {
 					//network.findPaths(srcIP, dstIP);
@@ -336,7 +346,7 @@ public class GuiFx extends Application {
 //					testThread.start();
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					LogBox.println("WE FAILED!!! find paths");
+					LogBox.println("WE FAILED!!! Traffic Watch");
 					e1.printStackTrace();
 				}
 			}
@@ -350,6 +360,7 @@ public class GuiFx extends Application {
 				fields.getChildren().add(monitorButton);
 				monitorButton.requestFocus();
 				// call stop trace object (inputs)
+				monitorLabel.setVisible(false);
 				traffic.run = false;
 			}
 		});
