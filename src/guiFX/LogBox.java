@@ -3,6 +3,9 @@ package guiFX;
 import java.awt.Font;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
@@ -25,6 +28,7 @@ public class LogBox implements Runnable{
 
 	Stage stage;
 	VBox root;
+	private static PrintWriter writer;
 	private Button logBoxButton;
 	private static TextArea textArea;
 	private int width;
@@ -50,6 +54,11 @@ public class LogBox implements Runnable{
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
 	
+		try {
+			writer = new PrintWriter("logfile.txt");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} 
 		stage.setResizable(true);
 
 		stage.setScene(new Scene(root, width, height));
@@ -64,6 +73,8 @@ public class LogBox implements Runnable{
 	}
 	public static void println(String str) {
 		textArea.appendText(str + "\n");
+		writer.println(str);
+		writer.flush();
 	}
 		
 	@Override
