@@ -1,3 +1,23 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package datapath;
 
 import guiFX.Browser;
@@ -10,9 +30,12 @@ import java.util.ArrayList;
 
 import javafx.application.Platform;
 import topo.ConnectionList;
-import topo.GuiConnection;
 import topo.NodeList;
 
+/**
+ * This class is for the DPSS service to monitor each router and to watch for the specified traffic flow
+ *
+ */
 public class TrafficWatch implements Runnable{
 
 	public ConnectionList connections;
@@ -33,6 +56,19 @@ public class TrafficWatch implements Runnable{
 	private String destIP;
 	private int destPort;
 	
+	/**
+	 * Constructor for the Traffic watch object
+	 * @param nodes - reference to the NodeList object
+	 * @param connections - reference to the ConnectionList object
+	 * @param _logBox - reference to the Logbox object
+	 * @param browser - reference to the Browser object
+	 * @param devices - ArrayList<String> of the IP addresses of each router in the network
+	 * @param _protocol - String of the protocol to watch for 
+	 * @param _sourceIP - String of the source IP Address
+	 * @param _sourcePort - (int) of the source port number
+	 * @param _destIP - String of the destination IP Address
+	 * @param _destPort - (int) of the destination port number
+	 */
 	public TrafficWatch(NodeList nodes,
 						ConnectionList connections,
 						LogBox _logBox,
@@ -75,6 +111,7 @@ public class TrafficWatch implements Runnable{
 		}
 		
 	}
+	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub

@@ -1,3 +1,23 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package discovery;
 
 import guiFX.Browser;
@@ -20,8 +40,6 @@ import topo.GuiNode;
 import topo.NodeList;
 
 import com.cisco.onep.core.exception.OnepException;
-import com.cisco.onep.core.exception.OnepIllegalArgumentException;
-import com.cisco.onep.core.exception.OnepInvalidSettingsException;
 import com.cisco.onep.core.util.OnepConstants;
 import com.cisco.onep.element.NetworkApplication;
 import com.cisco.onep.element.NetworkElement;
@@ -36,6 +54,10 @@ import com.cisco.onep.topology.Node;
 import com.cisco.onep.topology.Topology;
 import com.cisco.onep.topology.Topology.TopologyType;
 
+/**
+ * This class will discovery the specificed network and display it on the GUI
+ *
+ */
 public class NetworkDiscovery implements Runnable {
 
 	public Graph 				graph 					= null;
@@ -51,7 +73,6 @@ public class NetworkDiscovery implements Runnable {
 	LogBox						logBox;
 	ArrayList<String> 			discoveredIPs;
 	ArrayList<String>			nodeIPs;
-	ArrayList<GuiConnection>	connections;
 	ConnectionList				guiConnections;
 	NodeList					guiNodes;
 	NetworkElement				node;
@@ -61,21 +82,23 @@ public class NetworkDiscovery implements Runnable {
 	String						password;
 	
 	Button [] buttons;
-	
-	/**
-	 * Discovers the network from the startAddress and generates a graph object
-	 * @param browser 
-	 * @param nodes 
-	 * @param traceButton 
-	 * @param connectButton 
-	 * 
-	 * @param startAddress 	the InetAddress of the start node
-	 * @param username		the username for all devices
-	 * @param password		the password for all devices
-	 * @throws Exception 
-	 * @throws OnepInvalidSettingsException 
-	 * @throws OnepIllegalArgumentException 
-	 */
+
+
+/**
+ * Discovers the network from the startAddress and generates a graph object
+ * @param browser - Global reference to Browser object to display network topology
+ * @param discoveredIPs - Global reference to ArrayList<String> of discovered IP addresses
+ * @param nodeIPs - 
+ * @param nodes - Global reference to NodeList of nodes
+ * @param connections - Global reference to ConnectionList of all connections
+ * @param _logBox - Global reference to the LogBox for logging
+ * @param buttons - Button[] reference to buttons in the Gui
+ * @param srcIP - String of the source IP address
+ * @param dstIP - String of the destination IP address
+ * @param username - the username for all devices in the network
+ * @param password - the password for all devices in the network
+ * @throws Exception
+ */
 	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, LogBox _logBox, Button [] buttons, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
@@ -83,7 +106,6 @@ public class NetworkDiscovery implements Runnable {
 		this.discoveredIPs = discoveredIPs;
 		this.nodeIPs = nodeIPs;
 		this.logBox = _logBox;
-//		this.connections = connections;
 		this.guiConnections = connections;
 		this.guiNodes = nodes;
 		this.startAddress = InetAddress.getByName(srcIP);
@@ -98,12 +120,13 @@ public class NetworkDiscovery implements Runnable {
 		return;	
 	}
 	
-	/** This will do what??
+	/** This will recursively run through each router in the network and get a list of neighbors and add those neighbors 
+	 * to the master topology
 	 * 
 	 * @param node				The network element we are checking
 	 * @param username			The username for the device
 	 * @param password			The password for the device
-	 * @return
+	 * @return ONEpk Graph object
 	 * @throws OnepException
 	 */
 	private Graph getNeighbors(NetworkElement node, String username, String password) throws OnepException{
@@ -171,6 +194,10 @@ public class NetworkDiscovery implements Runnable {
 		
 	}
 	
+	/**
+	 * Prints the discovered network topology and saves it to the ConnectionList and NodeList objects
+	 * @throws Exception
+	 */
 	private void printNetwork() throws Exception{
 		
 		LogBox.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -250,6 +277,10 @@ public class NetworkDiscovery implements Runnable {
 		return(devices);
 	}
 	
+	/**
+	 * This method will return all the nodes in the topology
+	 * @return - all the nodes in the Cytoscape.js format
+	 */
 	public String getNodes(){
 		String devices = "elements: { " + newLine + "	nodes: [" + newLine;
 
@@ -270,8 +301,8 @@ public class NetworkDiscovery implements Runnable {
 	
 	/**
 	 * This will find all the paths from start to destination
-	 * @param start - IP address of the start node
-	 * @param dest  - IP address of the destination node
+	 * @param srcIP - IP address of the start node
+	 * @param dstIP  - IP address of the destination node
 	 * @throws Exception 
 	 */
 	public void findPaths(String srcIP, String dstIP) throws Exception{

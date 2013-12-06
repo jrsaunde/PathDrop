@@ -1,40 +1,55 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package guiFX;
 
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.ListIterator;
 
-import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vty.VTYSession;
 
+/**
+ * This class represents the Console window to each device
+ *
+ */
 public class Console implements Runnable{
 	String ip;
 	String username;
 	String password;
 	VTYSession vty;
 	ArrayList<String> cmds;
-	ListIterator itr;
+	ListIterator<String> itr;
 
 	LogBox logBox;
 	TextArea textArea;
@@ -43,6 +58,14 @@ public class Console implements Runnable{
 	String prompt = "";
 	String banner = "Warning: This system is for the use of autorhized clients only.";
 	int lineSpace = 10;
+	
+	/**
+	 * Constructor for a new Console window
+	 * @param ip - IP address of the Router that we are connecting to
+	 * @param username - username for the router
+	 * @param password - password for the router
+	 * @param _logBox - reference to the LogBox object
+	 */
 	public Console(final String ip, final String username, final String password, LogBox _logBox) {
 		this.ip = ip;
 		this.username = username;

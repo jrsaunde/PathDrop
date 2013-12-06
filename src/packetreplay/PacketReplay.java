@@ -1,11 +1,38 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
+
 package packetreplay;
 
 import net.sourceforge.jpcap.capture.*;
 import net.sourceforge.jpcap.net.*;
 
 
+/**
+ * This is a future planned class to capture the packets we see in the specificed traffic flow and replay them 
+ * passing through the network in an offline mode.
+ * 
+ * 
+ */
 public class PacketReplay {
-	private static final int INFINITE = -1;
+	//private static final int INFINITE = -1;
 	private static final int PACKET_COUNT = 10; 
 
 	// BPF filter for capturing any packet
@@ -34,7 +61,8 @@ public class PacketReplay {
 	  m_pcap.capture(PACKET_COUNT);
 	  }
 
-	  public static void main(String[] args) {
+	  @SuppressWarnings("unused")
+	public static void main(String[] args) {
 	    try {
 	      PacketReplay example = new PacketReplay();
 	    } catch(Exception e) {

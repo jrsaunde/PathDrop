@@ -1,38 +1,46 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package tests;
 
 import guiFX.FlowBuffer;
 import guiFX.LogBox;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import topo.ConnectionList;
 import datapath.NodePuppet;
 
+/**
+ * This is a test class for developers, testing the C ProgramNode program from Java using JNI.
+ * It will program 3 nodes to watch for traffic 
+ *
+ */
 public class JNITest{
 	public static void main(String args[]){
-		String start = args[0];
-		String username = args[1];
-		String password = args[2];
-		int protocol = 256; //default to all
-		if(args[3].equals("tcp")){
-			protocol = 6;
-		}else if (args[3].equals("udp")){
-			protocol = 17;
-		}
-		String sourceIP = args[4];
-		int sourcePort = Integer.parseInt(args[5]);
-		String destIP = args[6];
-		int destPort = Integer.parseInt(args[7]);
+		
 		ConnectionList list = new ConnectionList();
 		ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
-		//Map<Integer, List<String>> map = new HashMap<Integer, List<String>>();
 		FlowBuffer buffer = new FlowBuffer(list);
 		LogBox logBox = new LogBox(null, null);
-		String[] sArray = {"10.192.10.120", "10.192.40.140"};
+		//String[] sArray = {"10.192.10.120", "10.192.40.140"};
 		//puppetList.add(new NodePuppet(sArray, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
 		//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "10.192.1.1", 0, "10.192.40.140", 80));
 		puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer, true, logBox));

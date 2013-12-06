@@ -1,3 +1,23 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package datapath;
 
 import guiFX.FlowBuffer;
@@ -5,7 +25,6 @@ import guiFX.LogBox;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 public class NodePuppet implements Runnable{
@@ -54,6 +73,20 @@ public class NodePuppet implements Runnable{
 	FlowBuffer buffer;
 	private Boolean runTime;
 	
+	/**
+	 * Constructor method for NodePuppet. This saves all local variables
+	 * @param _address - IP Address of Router
+	 * @param _user - Username for Router
+	 * @param _pass - Password for Router
+	 * @param _protocol - Protocol integer for traffic
+	 * @param _source_ip - Source IP Address
+	 * @param _source_port - Source port number
+	 * @param _dest_ip - Destination IP address
+	 * @param _dest_port - Destination port number
+	 * @param buffer - reference to the FlowBuffer object
+	 * @param _runTime - inital state of the run variable
+	 * @param _logBox - reference to the LogBox object
+	 */
 	public NodePuppet(String _address,
 					   String _user,
 					   String _pass,
@@ -94,19 +127,38 @@ public class NodePuppet implements Runnable{
 		LogBox.println("Finished with ProgramNode");
 	}
 	
+	/**
+	 * This method will set the loss of a specific connection
+	 * @param index - index to which connection
+	 */
 	public void setLoss(int index){
 		this.loss[index] += 1;
 		return;
 	}
 	
+	/**
+	 * This method sets the runTime variable to false, which should stop the c program from monitoring
+	 */
 	public void stop(){
 		this.runTime = false;
 		LogBox.println("Stopping Node: " +this.runTime);
 	}
+	
+	/**
+	 * This method returns the loss percentage for a connection (UNUSED)
+	 * @param index - index of the connection number
+	 * @return - percentage of packet loss (0-100%)
+	 */
 	public int getLoss(int index){
 		return this.loss[index];
 	}
 	
+	/**
+	 * This method removes a packet from the FlowBuffer when we see it come in an interface
+	 * @param ID - Unique packet ID
+	 * @param name - Router hostname
+	 * @param intf - Router interface name
+	 */
 	public void removeIncoming(int ID, String name, String intf){
 			//this.buffer.remove(ID);
 			//System.out.println("Removed " + ID + " from " + name + newLine);
@@ -117,6 +169,12 @@ public class NodePuppet implements Runnable{
 		//}
 	}
 	
+	/**
+	 * This method adds a packet to the FlowBuffer when we see it leave an interface
+	 * @param ID - Unique packet ID
+	 * @param name - Router hostname
+	 * @param intf - Router interface name
+	 */
 	public void sendOutgoing(int ID, String name, String intf){
 		
 	
@@ -137,6 +195,10 @@ public class NodePuppet implements Runnable{
 
 	}
 	
+	/**
+	 * This method will print the message to the LogBox in the GUI
+	 * @param message - String of the message to print to the log
+	 */
 	public void logMessage(String message){
 		LogBox.println(message);
 		return;

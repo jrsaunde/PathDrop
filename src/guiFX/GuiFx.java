@@ -1,12 +1,25 @@
-package guiFX;
-
-/**
-
- * Copyright (c) 2008, 2012 Oracle and/or its affiliates.
-
- * All rights reserved. Use is subject to license terms.
-
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
  */
+
+package guiFX;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -17,52 +30,30 @@ import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.web.PopupFeatures;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.util.Callback;
-
-import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
-import datapath.NodePuppet;
 import datapath.TrafficWatch;
 import discovery.NetworkDiscovery;
-import discovery.PathDiscovery;
-//import tests.pktLoss;
 import topo.ConnectionList;
-import topo.GuiConnection;
 import topo.NodeList;
-import vty.VTYSession;
 
+/**
+ * This class is for the main program GUI as well as the main operation of the program
+ *
+ */
 public class GuiFx extends Application {
 
 	private Iterator<Node> i;
@@ -72,14 +63,14 @@ public class GuiFx extends Application {
 	private String targetIP;
 	private int srcPort;
 	private int dstPort;
-	private int window;
+	//private int window;
 	//private String protocol;
 	private String username;
 	private String password;
 	private ArrayList<Thread>threads = new ArrayList<Thread>();
 	private static ArrayList<String>discoveredIPs = new ArrayList<String>();
 	private static ArrayList<String>nodeIPs = new ArrayList<String>();
-	private static ArrayList<GuiConnection> connections = new ArrayList<GuiConnection>();
+	//private static ArrayList<GuiConnection> connections = new ArrayList<GuiConnection>();
 	private static NodeList guiNodes = new NodeList();
 	private static ConnectionList guiConnections = new ConnectionList();
 	
@@ -101,13 +92,14 @@ public class GuiFx extends Application {
 	LogBox logBox;
 	Thread logBoxThread;
 
-	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
+	//private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
 	//FlowBuffer buffer = new FlowBuffer();
 	//private FlowBuffer map = new FlowBuffer();
 
 	private Image loaderImage = new Image("img/loader3.gif", true);
 	
+	@SuppressWarnings("unused")
 	private final Object lock = new Object();
 	
 	@Override public void start(final Stage stage) throws Exception {
@@ -345,7 +337,6 @@ public class GuiFx extends Application {
 //					Thread testThread = new Thread(tester);
 //					testThread.start();
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					LogBox.println("WE FAILED!!! Traffic Watch");
 					e1.printStackTrace();
 				}
@@ -367,7 +358,7 @@ public class GuiFx extends Application {
 		
 		// close operation
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-		    @SuppressWarnings("deprecation")
+		    //@SuppressWarnings("deprecation")
 			@Override public void handle(WindowEvent t) {
 		    	Platform.exit();
 		    	for(Thread thread: threads)

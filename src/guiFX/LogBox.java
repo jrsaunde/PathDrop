@@ -1,29 +1,40 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package guiFX;
 
-import java.awt.Font;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.AffineTransform;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.ListIterator;
 
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import vty.VTYSession;
 
+/**
+ * This class is used to create a log of what happens during the program operation. It will also save the log to
+ * a file
+ */
 public class LogBox implements Runnable{
 
 	Stage stage;
@@ -34,6 +45,11 @@ public class LogBox implements Runnable{
 	private int width;
 	private int height;
 	
+	/**
+	 * Constructor for the LogBox
+	 * @param primaryStage - Stage for the main Application, used to determine where to place the logBox window
+	 * @param logBoxButton - reference to the LogBox button in the GUI
+	 */
 	public LogBox(Stage primaryStage, Button logBoxButton) {
 		width = 1008;
 		height = 100;
@@ -66,11 +82,20 @@ public class LogBox implements Runnable{
 
 	}
 	
+	/**
+	 * This method will show the logBox under the main window
+	 * @param primaryStage - reference to the main application window
+	 */
 	public void show(Stage primaryStage){
 		stage.setX(primaryStage.getX() - 4);
 		stage.setY(primaryStage.getY() + primaryStage.getHeight());
 		stage.show();
 	}
+	
+	/**
+	 * Appends the input string to the logBox and file
+	 * @param str - Line(s) to be written to the log
+	 */
 	public static void println(String str) {
 		textArea.appendText(str + "\n");
 		writer.println(str);

@@ -1,3 +1,23 @@
+/* PathDrop - Topology Visualizer and Packet Loss Indicator
+ * Copyright (c) 2013 
+ * Jamie Saunders <jrsaunde@ncsu.edu>
+ * Thomas Paradis <tmparadi@ncsu.edu>
+ * Hank Liu <hliu9@ncsu.edu>
+ * Ryan Coble <rlcoble@ncsu.edu>
+ * Isaac Choe <ichoe@ncsu.edu>
+ * 
+ * All rights reserved
+ * 
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ */
 package guiFX;
 
 import java.io.File;
@@ -6,22 +26,20 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.util.Scanner;
 
-import javafx.application.Application;
 import javafx.geometry.HPos;
-import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import javafx.stage.Stage;
 
+/**
+ * This class is for the topology portion of the GUI
+ */
 public class Browser extends Region {
  
     final WebView browser = new WebView();
@@ -31,6 +49,13 @@ public class Browser extends Region {
     ImageView image;
     Image loaderImage;
     
+    /**
+     * Constructor for the browser object
+     * @param topSlice - file where the top of the Cytoscape.js data is
+     * @param botSlice - file where the bottom of the Cytoscape.js data is
+     * @param loaderImage - loading image location
+     * @throws MalformedURLException
+     */
     public Browser(String topSlice, String botSlice, Image loaderImage) throws MalformedURLException {
     	
     	//initialize globals
@@ -45,6 +70,9 @@ public class Browser extends Region {
         getChildren().add(browser);
     }
     
+    /**
+     * Loads the temporary loading image while network discovery is happening
+     */
     public void loadLoader() {
     	// load default image
         image = new ImageView();
@@ -54,6 +82,13 @@ public class Browser extends Region {
         getChildren().add(image);
     }
     
+    /**
+     * This method will load the topology based on the topSlice, midSlice, and bottomSlice of 
+     * the Cytoscape.js files 
+     * @param midSlice - The GuiNodes and GuiConnections in Cytoscape.js format
+     * @throws MalformedURLException
+     * @throws FileNotFoundException
+     */
 	public void loadTopo(String midSlice) throws MalformedURLException, FileNotFoundException {
 		// gets the string topo from parameters
 		//Scanner midSliceScn = new Scanner(new File("src/web/topo.json"));
@@ -86,12 +121,20 @@ public class Browser extends Region {
 		webEngine.load(file.toURI().toURL().toString());
     }
 	
-    private Node createSpacer() {
+	/**
+	 * This will create a space for each node
+	 * @return Node object
+	 */
+    @SuppressWarnings("unused")
+	private Node createSpacer() {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         return spacer;
     }
  
+    /**
+     * This method will setup the layout of the children
+     */
     @Override protected void layoutChildren() {
         double w = getWidth();
         double h = getHeight();
