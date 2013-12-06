@@ -25,6 +25,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -53,10 +54,13 @@ import java.util.List;
 import java.util.Map;
 
 import datapath.NodePuppet;
+import datapath.TrafficWatch;
 import discovery.NetworkDiscovery;
 import discovery.PathDiscovery;
-import tests.pktLoss;
+//import tests.pktLoss;
+import topo.ConnectionList;
 import topo.GuiConnection;
+import topo.NodeList;
 import vty.VTYSession;
 
 public class GuiFx extends Application {
@@ -65,6 +69,7 @@ public class GuiFx extends Application {
 	
 	private String srcIP;
 	private String dstIP;
+	private String targetIP;
 	private int srcPort;
 	private int dstPort;
 	private int window;
@@ -75,46 +80,54 @@ public class GuiFx extends Application {
 	private static ArrayList<String>discoveredIPs = new ArrayList<String>();
 	private static ArrayList<String>nodeIPs = new ArrayList<String>();
 	private static ArrayList<GuiConnection> connections = new ArrayList<GuiConnection>();
+	private static NodeList guiNodes = new NodeList();
+	private static ConnectionList guiConnections = new ConnectionList();
 	
 	private TextField srcIPField = new TextField("10.192.10.110");
 	private TextField dstIPField = new TextField("10.192.40.140");
-	private TextField srcPortField = new TextField("22");
-	private TextField dstPortField = new TextField("23");
+	private TextField srcPortField = new TextField("0");
+	private TextField dstPortField = new TextField("80");
 	private TextField windowField = new TextField("100");
-	private ChoiceBox protocolField = new ChoiceBox(FXCollections.observableArrayList("TCP", "UDP", "DCCP", "SCTP", "RSVP"));
+	private ChoiceBox<String> protocolField = new ChoiceBox<String>(FXCollections.observableArrayList("TCP", "UDP", "ICMP", "EGP", "RSVP", "IGRP", "GRE", "ESP", "AH", "ALL"));
 	private TextField usernameField = new TextField("cisco");
 	private TextField passwordField = new TextField("cisco");
+	private TextField targetIPField = new TextField("1.1.1.1");
 	private NetworkDiscovery network;
+	private TrafficWatch traffic;
 	private Browser browser;
-	private pktLoss tester;
+	//private pktLoss tester;
+	
+	// Log Box
+	LogBox logBox;
+	Thread logBoxThread;
 
 	private ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 	//public static Map<Integer, List<String>> synchMap = Collections.synchronizedMap(new HashMap<Integer, List<String>>());
-	FlowBuffer buffer = new FlowBuffer();
+	//FlowBuffer buffer = new FlowBuffer();
 	//private FlowBuffer map = new FlowBuffer();
 
-	private Image loaderImage = new Image("img/loader.gif", true);
+	private Image loaderImage = new Image("img/loader3.gif", true);
 	
 	private final Object lock = new Object();
 	
-	@Override public void start(Stage stage) throws Exception {
+	@Override public void start(final Stage stage) throws Exception {
 		Group root = new Group();
-		Scene scene = new Scene(root, 800, 600);
+		Scene scene = new Scene(root, 1000, 800);
 		HBox body = new HBox();
 		root.getChildren().add(body);
 		HBox controlPane = new HBox();
 		controlPane.setStyle("-fx-background-image: url('img/left_banner.png');");
-		controlPane.setPrefSize(260, 600);
+		controlPane.setPrefSize(260, 810);
 		controlPane.setPadding(new Insets(10));
 		VBox viewPane = new VBox();
-		viewPane.setPrefSize(540, 600);
+		viewPane.setPrefSize(740, 800);
 		body.getChildren().addAll(controlPane, viewPane);
 		
 		// control pane
-		final VBox labels = new VBox(21);
-		final VBox fields = new VBox(16);
-		labels.setPadding(new Insets(168, 8, 8, 8));
-		fields.setPadding(new Insets(166, 6, 6, 6));
+		final VBox labels = new VBox(26);
+		final VBox fields = new VBox(21);
+		labels.setPadding(new Insets(188, 8, 8, 8));
+		fields.setPadding(new Insets(186, 6, 6, 6));
 		controlPane.getChildren().addAll(labels,fields);
 		
 		Label srcIPLabel = new Label("Source IP:");
@@ -125,20 +138,46 @@ public class GuiFx extends Application {
 		Label protocolLabel = new Label("Protocol:");
 		Label usernameLabel = new Label("Username:");
 		Label passwordLabel = new Label("Password:");
-		Button discoverButton = new Button("Discover");
-		Button connectButton = new Button("Connect");
-		
-		final Button traceButton = new Button("Trace");
+		Label targetIPLabel = new Label("Target IP:");
+		final Button logBoxButton = new Button("Log Box");
+		final Button discoverButton = new Button("Discover");
+		final Button connectButton = new Button("Connect");
+		final Button monitorButton = new Button("Monitor");
 		final Button stopButton = new Button("Stop");
+		final Button [] ctrlButtons = {discoverButton, connectButton, monitorButton};
+		
 		protocolField.getSelectionModel().selectFirst();
 		
+		
+		//Setup Banner
+		final Label monitorLabel = new Label();
+		monitorLabel.setVisible(false);
+		
+		//Setup Log
+		logBox = new LogBox(stage,logBoxButton);
+		Thread thread = new Thread(logBox);
+		threads.add(thread);
+		thread.start();
+		
+		/*Add Tooltips for input fields*/
+		
+		srcIPField.setTooltip(new Tooltip("Source IP address of traffic flow"));
+		dstIPField.setTooltip(new Tooltip("Destination IP address of traffic flow"));
+		srcPortField.setTooltip(new Tooltip("Source port number of traffic flow (0 for any port)"));
+		dstPortField.setTooltip(new Tooltip("Destination port number of traffic flow (0 for any port)"));
+		windowField.setTooltip(new Tooltip("How long to look for this traffic flow"));
+		usernameField.setTooltip(new Tooltip("Username for all devices in the network"));
+		passwordField.setTooltip(new Tooltip("Password for all devices in the network"));
+		targetIPField.setTooltip(new Tooltip("IP address to open a VTY session to"));
+		
 		labels.getChildren().addAll(srcIPLabel, dstIPLabel,srcPortLabel, dstPortLabel, 
-				windowLabel, protocolLabel, usernameLabel, passwordLabel);
+				windowLabel, protocolLabel, usernameLabel, passwordLabel, targetIPLabel);
 		fields.getChildren().addAll(this.srcIPField, this.dstIPField, this.srcPortField, this.dstPortField, 
-				this.windowField, this.protocolField, this.usernameField, this.passwordField, discoverButton, connectButton, traceButton);
+				this.windowField, this.protocolField, this.usernameField, this.passwordField, this.targetIPField, monitorLabel, logBoxButton, discoverButton, connectButton, monitorButton);
 		
 		// topology pane
-		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage); 
+		browser = new Browser("src/web/topSlice.html", "src/web/botSlice.html", loaderImage);
+		browser.setPrefSize(740, 800);
 		viewPane.getChildren().add(browser);
 		
 		// format labels
@@ -160,57 +199,12 @@ public class GuiFx extends Application {
 				field.setMaxWidth(100);
 			}
 		}
-		
-		// Trace Listener
-		traceButton.setOnAction(new EventHandler<ActionEvent>() {
+		// Log button Listener
+		logBoxButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-				if (Validator.validateIP(srcIPField))
-					srcIP = srcIPField.getText().trim();
-				else
-					return;
-				
-				if (Validator.validateIP(dstIPField))
-					dstIP = dstIPField.getText().trim();
-				else 
-					return;
-				fields.getChildren().remove(traceButton);
-				fields.getChildren().add(stopButton);
-				stopButton.requestFocus();
-				// call  trace object (inputs)
-				try {
-					network.findPaths(srcIP, dstIP);
-//					for(String node : nodeIPs){
-//						puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, map));
-//					}
-					puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-					for(NodePuppet puppet: puppetList){
-						new Thread(puppet).start();
-						Thread.sleep(2000);
-					}
-//					tester = new pktLoss(connections, browser, network);
-//					Thread testThread = new Thread(tester);
-//					testThread.start();
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					System.out.println("WE FAILED!!! find paths");
-					e1.printStackTrace();
-				}
-			}
-		});
-		
-		// Stop trace Listener
-		stopButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-
-				fields.getChildren().remove(stopButton);
-				fields.getChildren().add(traceButton);
-				traceButton.requestFocus();
-				// call stop trace object (inputs)
-				
+				logBoxButton.setDisable(true);
+				logBox.show(stage);
 			}
 		});
 		
@@ -231,11 +225,14 @@ public class GuiFx extends Application {
 					return;
 				
 				try {
-					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, connections, srcIP, dstIP, username, password);
+					network = new NetworkDiscovery(browser, discoveredIPs, nodeIPs, guiNodes, guiConnections, logBox, ctrlButtons, srcIP, dstIP, username, password);
 					Thread thread = new Thread(network);
 					threads.add(thread);
 					thread.start();
+					
 					browser.loadLoader();
+					for (Button button: ctrlButtons)
+						button.setDisable(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -246,8 +243,8 @@ public class GuiFx extends Application {
 		// console into a box
 		connectButton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				if (Validator.validateIP(srcIPField))
-					srcIP = srcIPField.getText().trim();
+				if (Validator.validateIP(targetIPField))
+					targetIP = targetIPField.getText().trim();
 				else 
 					return;
 				if (Validator.validateUsername(usernameField))
@@ -259,20 +256,115 @@ public class GuiFx extends Application {
 				else 
 					return;
 				
-				for (String ip : discoveredIPs) // checks to see if node exist in disicoverey list
-					System.out.println(ip);
-				if (!discoveredIPs.contains(srcIP)) {
-					Validator.setFalse(srcIPField);
+				/*for (String ip : discoveredIPs) // checks to see if node exist in disicoverey list
+					System.out.println(ip);*/
+				if (!discoveredIPs.contains(targetIP)) {
+					Validator.setFalse(targetIPField);
 					return;
 				}
 					
-				Console console = new Console(srcIP, username, password, threads);
+				Console console = new Console(targetIP, username, password, logBox);
 				Thread thread = new Thread(console);
 				threads.add(thread);
 				thread.start();
 			}
 		});
-
+		
+		// Monitor Listener
+		monitorButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				if (Validator.validateIP(srcIPField))
+					srcIP = srcIPField.getText().trim();
+				else
+					return;
+				
+				if (Validator.validateIP(dstIPField))
+					dstIP = dstIPField.getText().trim();
+				else 
+					return;
+				
+				if (Validator.validatePort(dstPortField))
+					dstPort = Integer.parseInt(dstPortField.getText().trim());
+				else 
+					return;
+				
+				if (Validator.validatePort(srcPortField))
+					srcPort = Integer.parseInt(srcPortField.getText().trim());
+				else 
+					return;
+				
+				/*if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}
+				
+				if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}*/
+				
+				fields.getChildren().remove(monitorButton);
+				fields.getChildren().add(stopButton);
+				stopButton.requestFocus();
+				
+				/*if (!discoveredIPs.contains(srcIP)) {
+					Validator.setFalse(srcIPField);
+					return;
+				}*/
+				
+				if (!discoveredIPs.contains(dstIP)) {
+					Validator.setFalse(dstIPField);
+					return;
+				}
+				monitorLabel.setText("Monitoring");
+				monitorLabel.setTextFill(Color.RED);
+				monitorLabel.setVisible(true);
+				// call  trace object (inputs)
+				try {
+					//network.findPaths(srcIP, dstIP);
+					
+					traffic = new TrafficWatch(guiNodes, guiConnections, logBox, browser, nodeIPs, protocolField.getSelectionModel().getSelectedItem(), srcIP, srcPort, dstIP, dstPort);
+					Thread trafficThread = new Thread(traffic);
+					threads.add(trafficThread);
+					trafficThread.start();
+					//for(String node : nodeIPs){
+					//	puppetList.add(new NodePuppet(node, "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//}
+					//puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
+					//for(NodePuppet puppet: puppetList){
+					//	new Thread(puppet).start();
+					//	Thread.sleep(2000);
+					//}
+					//Thread.sleep(10000);
+					//buffer.printBuffer();
+					
+//					tester = new pktLoss(connections, browser, network);
+//					Thread testThread = new Thread(tester);
+//					testThread.start();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					LogBox.println("WE FAILED!!! Traffic Watch");
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		// Stop monitor Listener
+		stopButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				fields.getChildren().remove(stopButton);
+				fields.getChildren().add(monitorButton);
+				monitorButton.requestFocus();
+				// call stop trace object (inputs)
+				monitorLabel.setVisible(false);
+				traffic.run = false;
+			}
+		});
+		
 		// close operation
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 		    @SuppressWarnings("deprecation")
@@ -284,7 +376,7 @@ public class GuiFx extends Application {
 		});
 		
 		// core stage
-		stage.setTitle("PathDrop - Kickass Network Visualizer & Packet Tracer");
+		stage.setTitle("PathDrop - Network Visualizer & Packet Tracer");
 		stage.setScene(scene);
 		stage.getIcons().add(new Image("img/cisco_blue.png"));
 		stage.show();

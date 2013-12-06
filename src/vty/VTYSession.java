@@ -1,16 +1,12 @@
 package vty;
 
+import guiFX.LogBox;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.cisco.onep.core.exception.OnepConnectionException;
-import com.cisco.onep.core.exception.OnepException;
-import com.cisco.onep.core.exception.OnepIllegalArgumentException;
-import com.cisco.onep.core.exception.OnepInvalidSettingsException;
-import com.cisco.onep.core.exception.OnepRemoteProcedureException;
 import com.cisco.onep.element.NetworkApplication;
 import com.cisco.onep.element.NetworkElement;
-import com.cisco.onep.idl.ExceptionIDL;
 import com.cisco.onep.vty.VtyService;
 
 public class VTYSession {
@@ -20,51 +16,56 @@ public class VTYSession {
 	private String password;
 	
 	public VtyService vtyService;
+	LogBox logBox;
 	
-	public VTYSession(String ip, String user, String pass) {
+	public VTYSession(String ip, String user, String pass, LogBox _logBox) {
 		// TODO Auto-generated constructor stub
-		
+		this.logBox = _logBox;
 		try {
 			this.address = InetAddress.getByName(ip);
 			this.username = user;
 			this.password = pass;
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}       
         	}
 
-	public void open() {
+	public String open() {
 		// TODO Auto-generated method stub
 		NetworkApplication networkApplication = NetworkApplication.getInstance();
 		NetworkElement networkElement;
+		String prompt = "";
 		try {
 			networkElement = networkApplication.getNetworkElement(this.address);
 			networkElement.connect(this.username, this.password);
 			this.vtyService = new VtyService(networkElement);
 	        this.vtyService.open();
+		
+	        //Get initial prompt
+			this.write("whoami");
+			prompt = this.vtyService.getParserState().getPrompt();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}
 		
+		return prompt;
 
 	}
 
-	public String write(String command) {
-//		if (command.contains("multiple"))
-//			return command+"\n"+command+"\n"+command;
-//		else 
-//			return command;
+	public String[] write(String command) {
+
 		String result="";
+		String prompt="";
 		try {
 			result = this.vtyService.write(command);
+			prompt = this.vtyService.getParserState().getPrompt();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}
 		
-		return result;
+		return new String[]{prompt,result};
 		
 	}
 	
@@ -74,10 +75,8 @@ public class VTYSession {
 	        this.vtyService.destroy();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogBox.println(e.toString());
 		}
-
-
 		return;
 	}
 }

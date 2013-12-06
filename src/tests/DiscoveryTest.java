@@ -9,7 +9,6 @@ public class DiscoveryTest {
 	
 	public static void main(String args[]){
 		String start = args[0];
-		String dest  = args[1];
 		String username = args[2];
 		String password = args[3];
 		
@@ -19,10 +18,10 @@ public class DiscoveryTest {
 							   "/" + password);
 			/*InetAddress startNode 	= InetAddress.getByName(start);
 			InetAddress destNode	= InetAddress.getByName(dest);*/
-			NetworkDiscovery network = new NetworkDiscovery(start, dest, username, password);
+			//NetworkDiscovery network = new NetworkDiscovery(start, dest, username, password);
 			
 			//Print out topology in JS format
-			System.out.println(network.convertTopology());
+			//System.out.println(network.convertTopology());
 			
 		} catch (Exception e){
 			e.printStackTrace();

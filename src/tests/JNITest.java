@@ -1,6 +1,7 @@
 package tests;
 
 import guiFX.FlowBuffer;
+import guiFX.LogBox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import topo.ConnectionList;
 import datapath.NodePuppet;
 
 public class JNITest{
@@ -25,16 +27,17 @@ public class JNITest{
 		int sourcePort = Integer.parseInt(args[5]);
 		String destIP = args[6];
 		int destPort = Integer.parseInt(args[7]);
-		
+		ConnectionList list = new ConnectionList();
 		ArrayList<NodePuppet> puppetList = new ArrayList<NodePuppet>();
 		//Map<Integer, List<String>> map = new HashMap<Integer, List<String>>();
-		FlowBuffer buffer = new FlowBuffer();
+		FlowBuffer buffer = new FlowBuffer(list);
+		LogBox logBox = new LogBox(null, null);
 		String[] sArray = {"10.192.10.120", "10.192.40.140"};
 		//puppetList.add(new NodePuppet(sArray, username, password, protocol, sourceIP, sourcePort, destIP, destPort));
 		//puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "10.192.1.1", 0, "10.192.40.140", 80));
-		puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-		puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));
-		puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer));		
+		puppetList.add(new NodePuppet("10.192.10.120", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer, true, logBox));
+		puppetList.add(new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer, true, logBox));
+		puppetList.add(new NodePuppet("10.192.40.140", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80, buffer, true, logBox));		
 		
 		for(NodePuppet puppet: puppetList){
 			new Thread(puppet).start();

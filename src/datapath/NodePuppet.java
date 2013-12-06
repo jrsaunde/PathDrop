@@ -1,6 +1,7 @@
 package datapath;
 
 import guiFX.FlowBuffer;
+import guiFX.LogBox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,8 @@ public class NodePuppet implements Runnable{
 	private String errBuf = "";
 	public int[] loss = {0,0,0,0,0,0,0,0,0,0};
 	private String 				newLine 				= System.getProperty("line.separator");
-	
+
+	LogBox logBox;
 	public int pktLoss;
 	
 	/**
@@ -50,7 +52,7 @@ public class NodePuppet implements Runnable{
 	private int dest_port;
 	
 	FlowBuffer buffer;
-	
+	private Boolean runTime;
 	
 	public NodePuppet(String _address,
 					   String _user,
@@ -60,7 +62,9 @@ public class NodePuppet implements Runnable{
 					   int _source_port,
 					   String _dest_ip,
 					   int _dest_port,
-					   FlowBuffer buffer){
+					   FlowBuffer buffer,
+					   boolean _runTime,
+					   LogBox _logBox){
 		this.address = _address;
 		this.user = _user;
 		this.pass = _pass;
@@ -70,14 +74,11 @@ public class NodePuppet implements Runnable{
 		this.dest_ip = _dest_ip;
 		this.dest_port = _dest_port;
 		this.buffer = buffer;
+		this.runTime = _runTime;
+		this.logBox = _logBox;
 		
 	}
 	
-	   
-	public static void main(String[] args){
-		//NodePuppet puppet = new NodePuppet("10.192.10.110", "cisco", "cisco", 6, "192.168.56.1", 0, "10.192.40.140", 80);		//invoke the native method
-		//new Thread(puppet).start();
-	}
 
 	@Override
 	public void run() {
@@ -89,6 +90,8 @@ public class NodePuppet implements Runnable{
 					this.source_port,
 					this.dest_ip,
 					this.dest_port);
+		
+		LogBox.println("Finished with ProgramNode");
 	}
 	
 	public void setLoss(int index){
@@ -96,15 +99,21 @@ public class NodePuppet implements Runnable{
 		return;
 	}
 	
+	public void stop(){
+		this.runTime = false;
+		LogBox.println("Stopping Node: " +this.runTime);
+	}
 	public int getLoss(int index){
 		return this.loss[index];
 	}
 	
-	public void removeIncoming(int ID, String name){
-		//if(this.buffer.containsKey(ID)){
+	public void removeIncoming(int ID, String name, String intf){
 			//this.buffer.remove(ID);
 			//System.out.println("Removed " + ID + " from " + name + newLine);
-			FlowBuffer.removeFrombuffer(ID, name);
+			List<String> info = new ArrayList<String>();
+			info.add(name);
+			info.add(intf);
+			FlowBuffer.removeFrombuffer(ID, info);
 		//}
 	}
 	
@@ -116,7 +125,7 @@ public class NodePuppet implements Runnable{
 		//}else if((name.equals("Router1")) && (intf.equals("GigabitEthernet0/0"))){
 		//	System.out.println("packet: " + ID + " is leaving the network from " + name + "[" + intf + "]"+ newLine);
 		//}else{
-		//	System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
+			//System.out.println("Added " + ID + " on " + name + " " + intf + newLine);
 			List<String> info = new ArrayList<String>();
 			info.add(name);
 			info.add(intf);
@@ -126,5 +135,10 @@ public class NodePuppet implements Runnable{
 		FlowBuffer.addToBuffer(ID, info);
 		return;
 
+	}
+	
+	public void logMessage(String message){
+		LogBox.println(message);
+		return;
 	}
 }

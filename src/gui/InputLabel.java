@@ -5,9 +5,9 @@ import java.awt.Font;
 
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-import javax.swing.plaf.metal.MetalLabelUI;
 
 
+@SuppressWarnings("serial")
 public class InputLabel extends JLabel {
 	
 	InputLabel(String text){

@@ -1,11 +1,11 @@
 package discovery;
 
 import guiFX.Browser;
+import guiFX.LogBox;
 
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.TreeSet;
 
 import javafx.application.Platform;
-import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import topo.ConnectionList;
 import topo.GuiConnection;
 import topo.GuiNode;
+import topo.NodeList;
 
 import com.cisco.onep.core.exception.OnepException;
 import com.cisco.onep.core.exception.OnepIllegalArgumentException;
@@ -46,19 +48,26 @@ public class NetworkDiscovery implements Runnable {
 	private String 				newLine 				= System.getProperty("line.separator");
 
 	Browser						browser;
+	LogBox						logBox;
 	ArrayList<String> 			discoveredIPs;
 	ArrayList<String>			nodeIPs;
 	ArrayList<GuiConnection>	connections;
+	ConnectionList				guiConnections;
+	NodeList					guiNodes;
 	NetworkElement				node;
 	InetAddress					startAddress;
 	InetAddress					destAddress;
 	String						username;
 	String						password;
 	
+	Button [] buttons;
+	
 	/**
 	 * Discovers the network from the startAddress and generates a graph object
 	 * @param browser 
 	 * @param nodes 
+	 * @param traceButton 
+	 * @param connectButton 
 	 * 
 	 * @param startAddress 	the InetAddress of the start node
 	 * @param username		the username for all devices
@@ -67,20 +76,25 @@ public class NetworkDiscovery implements Runnable {
 	 * @throws OnepInvalidSettingsException 
 	 * @throws OnepIllegalArgumentException 
 	 */
-	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, ArrayList<GuiConnection> connections, String srcIP, String dstIP, String username, String password) throws Exception{
+	public NetworkDiscovery(Browser browser, ArrayList<String> discoveredIPs, ArrayList<String> nodeIPs, NodeList nodes, ConnectionList connections, LogBox _logBox, Button [] buttons, String srcIP, String dstIP, String username, String password) throws Exception{
 
 		/*Initialize globals*/
 		this.browser = browser;
 		this.discoveredIPs = discoveredIPs;
 		this.nodeIPs = nodeIPs;
-		this.connections = connections;
+		this.logBox = _logBox;
+//		this.connections = connections;
+		this.guiConnections = connections;
+		this.guiNodes = nodes;
 		this.startAddress = InetAddress.getByName(srcIP);
 		this.destAddress = InetAddress.getByName(dstIP);
+		this.buttons = buttons;
 		this.username = username;
 		this.password = password;
 		this.nodeConfig = new SessionConfig(SessionTransportMode.SOCKET);
 		this.nodeConfig.setPort(OnepConstants.ONEP_PORT);
 		this.addresses = new ArrayList<InetAddress>();		
+		
 		return;	
 	}
 	
@@ -159,9 +173,9 @@ public class NetworkDiscovery implements Runnable {
 	
 	private void printNetwork() throws Exception{
 		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println("Network Summary");
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		LogBox.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		LogBox.println("Network Summary");
+		LogBox.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		
 		
 		/*Get a list of the device names*/
@@ -169,29 +183,36 @@ public class NetworkDiscovery implements Runnable {
 
 		for(Node device: nodes){
 			GuiNode node = new GuiNode(device.getName(), device.getName());
-			System.out.println(node.getNode());
+			//System.out.println(node.getNode());
 			this.nodeNames.add(node.getNode());
+			this.guiNodes.addNode(device.getName());
 		}
 		
 		/*Print out all of the connections*/
 		List<Edge> edges = this.graph.getEdgeList(Edge.EdgeType.UNDIRECTED);
 		
-		int pktLoss = 0;
+		int pktLoss = -10;
 		for(Edge edge: edges){
 			pktLoss+=10;
+//			GuiConnection connection = new GuiConnection(edge.getHeadNode().getName(),
+//														 shortenName(edge.getHeadNodeConnector().getName()),
+//														 edge.getTailNode().getName(),
+//														 shortenName(edge.getTailNodeConnector().getName()),
+//														 pktLoss);
 			GuiConnection connection = new GuiConnection(edge.getHeadNode().getName(),
-														 shortenName(edge.getHeadNodeConnector().getName()),
-														 edge.getTailNode().getName(),
-														 shortenName(edge.getTailNodeConnector().getName()),
-														 pktLoss);
-			System.out.println(connection.getConnection());
-			this.connections.add(connection);
+					 edge.getHeadNodeConnector().getName(),
+					 edge.getTailNode().getName(),
+					 edge.getTailNodeConnector().getName(),
+					 pktLoss);
+
+			//System.out.println(connection.getConnection());
+			//this.connections.add(connection);
+			this.guiConnections.addConnection(edge.getHeadNode().getName(), edge.getHeadNodeConnector().getName(), edge.getTailNode().getName(), edge.getTailNodeConnector().getName());
 			this.connectionStrings.add(connection.getConnection());
 		}
 		
 		
 
-		
 		//Generate JSON for GUI
  		//generateJson();
 	}
@@ -215,15 +236,16 @@ public class NetworkDiscovery implements Runnable {
 		devices = devices + "	]," + newLine + "	edges: [" + newLine;
 
 		/* Prepare connections */
-		int j = 1;
+		devices = devices + this.guiConnections.printConnections();
+		/*int j = 1;
 		for(String connection: this.connectionStrings){
 			if(j++ < this.connectionStrings.size()){
 				devices = devices + "		" +connection + "," + newLine;
 			}else{
 				devices = devices + "		" +connection + newLine;
 			}
-		}
-		devices = devices + "	]" + newLine +    "  }" + newLine;
+		}*/
+		//devices = devices + "	]" + newLine +    "  }" + newLine;
 		
 		return(devices);
 	}
@@ -269,7 +291,7 @@ public class NetworkDiscovery implements Runnable {
 				destNode = edge.getHeadNode();
 			}
 		}
-		System.out.println("Routes from " + startNode.getName() + " to " + destNode.getName());
+		LogBox.println("Routes from " + startNode.getName() + " to " + destNode.getName());
 		PathDiscovery pathTrace = new PathDiscovery(this.graph, startNode, destNode);
 		pathTrace.getPaths();
 	}
@@ -279,6 +301,7 @@ public class NetworkDiscovery implements Runnable {
 	 * @param longName
 	 * @return shortened name
 	 */
+	@SuppressWarnings("unused")
 	private String shortenName(String longName){
 		
 		if(longName.startsWith("Eth")){
@@ -301,7 +324,7 @@ public class NetworkDiscovery implements Runnable {
 
 	@Override
 	public void run(){
-		System.out.println("NetworkDiscovery Thread: " + Thread.currentThread().getName());
+		LogBox.println("NetworkDiscovery Thread: " + Thread.currentThread().getName());
 		
 		//TODO: Testing code (keeping track of startTime)
 		long startTime = System.nanoTime();	
@@ -316,7 +339,11 @@ public class NetworkDiscovery implements Runnable {
 			//Print out the Global graph
 			printNetwork();
 		} catch (Exception e) {
-				System.out.println("NetworkDiscovery Failed");
+			LogBox.println("NetworkDiscovery Failed");
+			LogBox.println(e.toString());
+			
+			for (Button button: buttons)
+				button.setDisable(false);
 		}
 
 		/*// simulating the discoverying *delay
@@ -329,17 +356,19 @@ public class NetworkDiscovery implements Runnable {
 		/*TODO: Testing code for timing the program execution time*/
 		long endTime = System.nanoTime();
 		
-		System.out.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
+		LogBox.println("Total Program took: " + ((endTime - startTime)/(Math.pow(10, 9))) + " seconds (" + (endTime - startTime) + ") ns");
 		
 		Platform.runLater(new Runnable(){
 			@Override
 			public void run(){
 				try {
 					browser.loadTopo(getJsonTopo());
+					for (Button button: buttons)
+						button.setDisable(false);
 					//browser.loadTopo(getJsonTopo());
 				} catch (MalformedURLException | FileNotFoundException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LogBox.println(e.toString());
 				}
 			}
 		});

@@ -49,7 +49,7 @@ public class Browser extends Region {
     	// load default image
         image = new ImageView();
         image.setImage(this.loaderImage);
-        image.relocate((540-165)/2, (600-165)/2);
+        image.relocate((740-165)/2, (800-165)/2);
 		webEngine.load("");
         getChildren().add(image);
     }
@@ -60,7 +60,7 @@ public class Browser extends Region {
 		Scanner topSliceScn = new Scanner(new File("src/web/topSlice.html"));
 		Scanner botSliceScn = new Scanner(new File("src/web/botSlice.html"));
 
-		//String midSlice = midSliceScn.useDelimiter("\\Z").next();
+		//String midSliceSample = midSliceScn.useDelimiter("\\Z").next();
 		String topSlice = topSliceScn.useDelimiter("\\Z").next();
 		String botSlice = botSliceScn.useDelimiter("\\Z").next();
 		
@@ -68,7 +68,9 @@ public class Browser extends Region {
 		topSliceScn.close();
 		botSliceScn.close();
 
+		//String web = topSlice + midSliceSample + botSlice;
 		String web = topSlice + midSlice + botSlice;
+		
 		try {
 		PrintWriter out = new PrintWriter("src/web/web.html");
 		out.write(web);
@@ -95,5 +97,4 @@ public class Browser extends Region {
         double h = getHeight();
         layoutInArea(browser,0,0,w,h,0, HPos.CENTER, VPos.CENTER);
     }
-
 }

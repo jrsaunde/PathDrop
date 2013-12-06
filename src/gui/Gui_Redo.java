@@ -11,7 +11,6 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
@@ -20,7 +19,6 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
@@ -168,8 +166,8 @@ public class Gui_Redo {
 			gbc_tglbtnNewToggleButton.gridy = 0;
 			inputpanel.add(tglbtnNewToggleButton, gbc_tglbtnNewToggleButton);
 			
-			JComboBox comboBox = new JComboBox();
-			comboBox.setModel(new DefaultComboBoxModel(new String[] {"TCP", "UDP", "Custom"}));
+			JComboBox<String> comboBox = new JComboBox<String>();
+			comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"TCP", "UDP", "Custom"}));
 			GridBagConstraints gbc_comboBox = new GridBagConstraints();
 			gbc_comboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;

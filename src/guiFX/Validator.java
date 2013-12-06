@@ -4,7 +4,7 @@ import javafx.scene.control.TextField;
 public class Validator {
 	
 	public static void setFalse(TextField textField) {
-		System.out.println("Please provide valid source IP address");
+		LogBox.println("Please provide valid source IP address");
 		textField.requestFocus();
 		textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
 	}
@@ -15,13 +15,13 @@ public class Validator {
 	
 	public static boolean validateIP(TextField textField) {
 		if (textField.getText().isEmpty()) {
-			System.out.println("Please provide valid source IP address");
+			LogBox.println("Please provide valid source IP address");
 			textField.requestFocus();
 			textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
 			return false;
 		} else {
 			if (!Validator.validateIPLogic(textField.getText().trim())) {
-				System.out.println("Please provide valid source IP address");
+				LogBox.println("Please provide valid source IP address");
 				textField.requestFocus();
 				textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
 				return false;
@@ -34,7 +34,7 @@ public class Validator {
 	
 	public static boolean validateUsername(TextField textField) {
 		if (textField.getText().isEmpty()) {
-			System.out.println("Please provide valid username");
+			LogBox.println("Please provide valid username");
 			textField.requestFocus();
 			textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
 			return false;
@@ -46,7 +46,7 @@ public class Validator {
 	
 	public static boolean validatePassword(TextField textField) {
 		if (textField.getText().isEmpty()) {
-			System.out.println("Please provide valid password");
+			LogBox.println("Please provide valid password");
 			textField.requestFocus();
 			textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
 			return false;
@@ -67,7 +67,27 @@ public class Validator {
 		return true;
 	}
 
-	public static boolean validatePortLogic(String str) {
+	public static boolean validatePort(TextField textField) {
+		if (textField.getText().isEmpty()) {
+			LogBox.println("Please provide valid Port");
+			textField.requestFocus();
+			textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
+			return false;
+		} else {
+			if (!Validator.validatePortLogic(textField.getText().trim())) {
+				LogBox.println("Please provide valid port");
+				textField.requestFocus();
+				textField.setStyle("-fx-background-color: red, -fx-text-box-border, -fx-control-inner-background;");
+				return false;
+			} else {
+				textField.setStyle("-fx-text-box-border, -fx-control-inner-background;");
+				return true;
+			}
+		}
+	}
+	
+	public static boolean validatePortLogic(String str){
+		
 		try {
 			int num = Integer.parseInt(str);
 			if (num>65535)

@@ -43,7 +43,7 @@ public class NetworkDiscovery {
 	public NetworkApplication discoveryApplication = NetworkApplication.getInstance();
 	public SessionConfig nodeConfig;		
 	public Collection<String> nodeNames = new TreeSet<String>(Collator.getInstance());
-	public ArrayList<String> connectionStrings = new ArrayList();
+	public ArrayList<String> connectionStrings = new ArrayList<String>();
 	
 	
 	public static void main(String args[]) {
