@@ -73,7 +73,7 @@ public class GuiFx extends Application {
 	private int srcPort;
 	private int dstPort;
 	private int window;
-	private String protocol;
+	//private String protocol;
 	private String username;
 	private String password;
 	private ArrayList<Thread>threads = new ArrayList<Thread>();
